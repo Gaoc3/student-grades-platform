@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}تسجيل الدخول{% endblock %}
+
+{% block topbar_actions %}
+<button id="langToggleBtn" class="ghost-btn icon-btn lang-btn" type="button" title="Language" aria-label="Language">EN</button>
+{% endblock %}
+
+{% block content %}
+<section class="auth-card">
+  <h1 data-i18n="loginTitle">تسجيل دخول الدكاترة</h1>
+  <p class="muted" data-i18n="loginSubtitle">الدخول مخصص لأعضاء الهيئة التدريسية فقط لإدارة درجات الطلبة ونشر النتائج.</p>
+
+  <form id="loginForm" class="auth-form">
+    <div class="auth-field">
+      <label data-i18n="emailLabel">البريد الإلكتروني</label>
+      <input type="email" name="email" class="auth-input" placeholder="doctor@university.edu" required />
+    </div>
+
+    <div class="auth-field">
+      <label data-i18n="passwordLabel">كلمة المرور</label>
+      <input type="password" name="password" class="auth-input" placeholder="••••••••" required />
+    </div>
+
+    <label class="row-inline check-row" style="margin: 4px 0;">
+      <input type="checkbox" name="remember_me" checked />
+      <span data-i18n="rememberMe" style="font-size: 14px;">تذكرني على هذا المتصفح</span>
+    </label>
+
+    <button type="submit" class="auth-btn" data-i18n="loginAction">دخول</button>
+    
+    <div class="auth-footer">
+      <span data-i18n="noAccount">ليس لديك حساب؟</span>
+      <a href="/signup" data-i18n="createAccount">إنشاء حساب جديد</a>
+    </div>
+  </form>
+
+  <p id="msg" class="muted" style="margin: 0; min-height: 1.2em;"></p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="/static/js/login.js?v=200"></script>
+{% endblock %}

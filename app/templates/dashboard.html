@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+{% block title %}لوحة التحكم الأكاديمية{% endblock %}
+
+
+{% block content %}
+<div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+<div id="semesterSelection" class="gateway-overlay">
+  <div class="gateway-content">
+    <h1 class="gateway-title" data-i18n="selectCourseGateway">يرجى اختيار الكورس الدراسي</h1>
+    <p class="gateway-desc" data-i18n="selectCourseGatewayDesc">كل كورس يعمل كبوابة مستقلة ببياناته ودرجاته الخاصة</p>
+    <div class="gateway-cards">
+      <div class="gateway-card" data-select-semester="1">
+        <div class="gateway-icon"><i class="ri-book-2-line"></i></div>
+        <h2 data-i18n="course1">الكورس الأول</h2>
+        <p class="gateway-desc" data-i18n="course1Desc">الدخول إلى بوابة درجات الكورس الأول</p>
+      </div>
+      <div class="gateway-card" data-select-semester="2">
+        <div class="gateway-icon"><i class="ri-book-read-line"></i></div>
+        <h2 data-i18n="course2">الكورس الثاني</h2>
+        <p class="gateway-desc" data-i18n="course2Desc">الدخول إلى بوابة درجات الكورس الثاني</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="dashboardApp" class="dashboard-shell" style="display:none">
+  <aside id="dashboardSidebar" class="card sidebar-card">
+    <div class="sidebar-head">
+      <div class="sidebar-title-wrap">
+        <h2 data-i18n="dashboardSections">أقسام الداشبورد</h2>
+        <p class="muted small-text" data-i18n="dashboardSectionsHint">تنقّل سريع بين كل الأجزاء</p>
+      </div>
+      <button id="sidebarCloseBtn" class="ghost-btn icon-btn sidebar-close" type="button" aria-label="Close menu"><svg
+          width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg></button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebarNav">
+      <button class="nav-btn" type="button" data-section="overview" data-i18n-tooltip="navOverviewTip">
+        <span class="nav-icon"><i class="ri-dashboard-fill" style="font-size: 18px;"></i></span>
+        <span data-i18n="navOverview">نظرة عامة</span>
+      </button>
+      <button class="nav-btn" type="button" data-section="students" data-i18n-tooltip="navStudentsTip">
+        <span class="nav-icon"><i class="ri-group-fill" style="font-size: 18px;"></i></span>
+        <span data-i18n="navStudents">الطلبة</span>
+      </button>
+      <button class="nav-btn" type="button" data-section="grading" data-i18n-tooltip="navGradingTip">
+        <span class="nav-icon"><i class="ri-survey-fill" style="font-size: 18px;"></i></span>
+        <span data-i18n="navGrading">التقييم</span>
+      </button>
+      <button class="nav-btn" type="button" data-section="publish" data-i18n-tooltip="navPublishTip">
+        <span class="nav-icon"><i class="ri-qr-code-line" style="font-size: 18px;"></i></span>
+        <span data-i18n="navPublish">النشر</span>
+      </button>
+      <button class="nav-btn" type="button" data-section="gradebook" data-i18n-tooltip="navGradebookTip">
+        <span class="nav-icon"><i class="ri-bar-chart-box-fill" style="font-size: 18px;"></i></span>
+        <span data-i18n="navGradebook">سجل الدرجات</span>
+      </button>
+
+      <div class="line"></div>
+
+      <button class="nav-btn nav-btn-danger" type="button" id="switchSemesterBtn">
+        <span class="nav-icon"><i class="ri-loop-left-fill" style="font-size: 18px;"></i></span>
+        <span data-i18n="switchSemester">تبديل الكورس</span>
+      </button>
+    </nav>
+
+    <div class="line"></div>
+
+    <div class="sidebar-students-wrap">
+      <h3 class="panel-subtitle" data-i18n="quickStudentsList">قائمة الطلبة السريعة</h3>
+      <ul id="studentsQuickList" class="sidebar-students-list"></ul>
+    </div>
+  </aside>
+
+  <div class="dashboard-main">
+    <section id="overviewSection" class="dashboard-pane section-stack" data-pane="overview">
+      <section class="card hero-card">
+        <div>
+          <h1 id="heroTitle" data-subject="{{ doctor.subject_name }}">لوحة متابعة المقرر: {{ doctor.subject_name }}</h1>
+          <p id="heroSubtitle" data-doctor="{{ doctor.full_name }}" class="muted">مرحبًا دكتور {{ doctor.full_name }} —
+            إدارة الدرجات ونشر النتائج من واجهة موحدة</p>
+        </div>
+      </section>
+
+      <section class="stats-grid">
+        <article class="card stat-card">
+          <p class="stat-label" data-i18n="studentsCount">عدد الطلبة</p>
+          <h3 id="statStudents">0</h3>
+        </article>
+
+        <article class="card stat-card">
+          <p class="stat-label" data-i18n="componentsCount">عدد عناصر التقييم</p>
+          <h3 id="statComponents">0</h3>
+        </article>
+
+        <article class="card stat-card">
+          <p class="stat-label" data-i18n="courseworkTotal">إجمالي الدرجة (من)</p>
+          <h3 id="statMaxTotal" aria-label="Total max score">0</h3>
+          <p id="distributionHint" class="muted small-text" style="margin-top: 8px; font-weight: 600;"></p>
+        </article>
+      </section>
+    </section>
+
+    <section id="studentsSection" class="dashboard-pane" data-pane="students">
+      <div class="card panel-card">
+        <div class="panel-title-row">
+          <h2 data-i18n="studentsManagement">إدارة الطلبة</h2>
+          <span class="badge-soft" data-i18n="badgeStudents">شؤون الطلبة</span>
+        </div>
+
+        <form id="addStudentForm" class="stack compact-stack">
+          <input type="text" name="full_name" data-i18n-placeholder="studentNamePlaceholder" placeholder="اسم الطالب"
+            required />
+          <input type="email" name="email" data-i18n-placeholder="studentEmailPlaceholder"
+            placeholder="البريد الإلكتروني (اختياري)" />
+          <button class="primary-btn" type="submit" data-i18n="addStudent">إضافة طالب</button>
+        </form>
+
+        <div class="line"></div>
+
+        <input id="searchInput" type="text" data-i18n-placeholder="searchStudentPlaceholder"
+          placeholder="بحث سريع باسم الطالب" />
+
+        <div class="line"></div>
+
+        <h3 class="panel-subtitle" data-i18n="quickImport">استيراد سريع (name:email)</h3>
+        <form id="importForm" class="stack compact-stack">
+          <div class="file-picker-wrap">
+            <input id="importFileInput" class="file-native" type="file" name="file" accept=".txt,.csv" required />
+            <label for="importFileInput" class="ghost-btn file-pick" data-i18n="chooseFile">اختيار الملف</label>
+            <span id="importFileName" class="file-meta" data-i18n="noFileSelected">لم يتم اختيار ملف بعد</span>
+          </div>
+          <button class="ghost-btn" type="submit" data-i18n="uploadFile">رفع الملف</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="gradingSection" class="dashboard-pane" data-pane="grading">
+      <div class="card panel-card">
+        <div class="panel-title-row">
+          <h2 data-i18n="assessmentSetup">تهيئة عناصر التقييم</h2>
+          <span class="badge-soft" data-i18n="badgeGradingSetup">ضبط التقييم</span>
+        </div>
+
+        <div id="componentsBuilderWrap">
+          <div class="coursework-section">
+            <div class="panel-title-row">
+              <h3 data-i18n="courseworkSectionTitle">📝 السعي</h3>
+            </div>
+            <div id="courseworkComponentsList" class="components-grid"></div>
+            <button class="ghost-btn add-comp-btn" data-cat="coursework" data-i18n="addComponent">+ إضافة عنصر
+              تقييم</button>
+          </div>
+
+          <div class="line"></div>
+
+          <div class="final-section">
+            <div class="panel-title-row">
+              <h3 data-i18n="finalSectionTitle">🎓 الفاينل</h3>
+            </div>
+            <div id="finalComponentsList" class="components-grid"></div>
+            <button class="ghost-btn add-comp-btn" data-cat="final" data-i18n="addComponent">+ إضافة عنصر تقييم</button>
+          </div>
+        </div>
+
+        <!-- Add Component Modal/Form inline -->
+        <form id="addComponentForm" class="stack compact-stack"
+          style="display:none; margin-top:20px; padding:20px; border:2px dashed var(--primary); border-radius:12px;">
+          <h4 data-i18n="newComponent">عنصر جديد</h4>
+          <input type="hidden" id="newCompSemester" value="1">
+          <input type="hidden" id="newCompCategory" value="coursework">
+          <div style="display: block;">
+            <label data-i18n="compName">اسم العنصر (يمكنك تغييره مثلاً إلى "عملي الفاينل")</label>
+            <input type="text" id="newCompLabel" />
+          </div>
+          <label data-i18n="compMaxScore">الدرجة العظمى (من كم؟)</label>
+          <input type="number" id="newCompMax" min="1" step="0.5" required />
+          <div class="row-inline">
+            <button type="submit" class="primary-btn" data-i18n="save">حفظ</button>
+            <button type="button" class="ghost-btn" id="cancelAddComp" data-i18n="cancel">إلغاء</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section id="publishSection" class="dashboard-pane" data-pane="publish">
+      <div class="card panel-card">
+        <div class="panel-title-row">
+          <h2 data-i18n="publishGrades">نشر الدرجات عبر QR</h2>
+          <span class="badge-soft" data-i18n="badgePublishing">النشر</span>
+        </div>
+
+        <form id="publishForm" class="stack compact-stack">
+          <!-- Step 1 -->
+          <div class="publish-step">
+            <div class="step-header">
+              <span class="step-badge">1</span>
+              <h3 class="step-title" data-i18n="selectComponentsPublish">حدد عناصر التقييم المراد نشرها</h3>
+            </div>
+            <div id="publishComponents" class="chips"></div>
+          </div>
+
+          <div class="publish-divider"></div>
+
+          <!-- Step 2 -->
+          <div class="publish-step">
+            <div class="step-header">
+              <span class="step-badge">2</span>
+              <h3 class="step-title" data-i18n="publishTargetLabel">الجمهور المستهدف للنشر</h3>
+            </div>
+            <div class="publish-options-grid">
+              <label class="check-card">
+                <input type="radio" name="publish_mode" value="all" checked />
+                <span data-i18n="publishModeAll" style="font-weight: 600;">إذاعة لجميع الطلبة</span>
+              </label>
+              <label class="check-card">
+                <input type="radio" name="publish_mode" value="manual" />
+                <span data-i18n="publishModeManual" style="font-weight: 600;">تحديد يدوي</span>
+              </label>
+            </div>
+            <div id="manualStudentSelection" class="stack student-selection-box" style="display: none;"></div>
+          </div>
+
+          <div class="publish-divider"></div>
+
+          <!-- Step 3 -->
+          <div class="publish-step">
+            <div class="step-header">
+              <span class="step-badge">3</span>
+              <h3 class="step-title" data-i18n="publishSettings">خيارات النشر الإضافية</h3>
+            </div>
+            <div class="publish-settings-stack">
+              <label class="check-card">
+                <input type="checkbox" name="send_email" checked />
+                <span data-i18n="sendQrByEmail" style="font-weight: 600;">إرسال QR إلى البريد الإلكتروني للطلبة</span>
+              </label>
+              <label class="check-card">
+                <input type="checkbox" name="force_new_token" />
+                <span data-i18n="forceNewQr" style="font-weight: 600;">إنشاء QR جديد حتى لو لم يُفتح الرابط السابق</span>
+              </label>
+            </div>
+          </div>
+
+          <button class="primary-btn publish-submit-btn" type="submit" data-i18n="publishNow">نشر الآن</button>
+        </form>
+
+        <div id="publishResult" style="display: none;"></div>
+      </div>
+    </section>
+
+    <section id="gradebookSection" class="dashboard-pane" data-pane="gradebook">
+      <div class="card panel-card">
+        <div class="panel-title-row">
+          <h2 data-i18n="gradebook">سجل الدرجات</h2>
+          <span class="badge-soft" data-i18n="badgeGradebook">السجل الأكاديمي</span>
+        </div>
+        <div class="table-wrap modern-table">
+          <table id="gradeTable"></table>
+        </div>
+      </div>
+    </section>
+
+    <p id="msg" class="status-msg"></p>
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block topbar_actions %}
+<!-- Notifications Dropdown (Dashboard Only) -->
+<div class="notification-wrapper" style="position: relative;">
+  <button id="notifToggle" class="ghost-btn icon-btn" title="الإشعارات" aria-label="Notifications"
+    style="position: relative;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+    <span id="notifBadge"
+      style="display: none; position: absolute; top: 0; right: 0; background: var(--danger); color: white; border-radius: 50%; font-size: 10px; width: 16px; height: 16px; align-items: center; justify-content: center; font-weight: bold; border: 2px solid var(--card);">0</span>
+  </button>
+  <div id="notifDropdown" class="card"
+    style="display: none; position: absolute; top: 100%; width: 320px; max-height: 400px; overflow-y: auto; margin-top: 8px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 1px solid var(--line); padding: 0; inset-inline-end: 0;">
+    <div
+      style="padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 800; display: flex; justify-content: space-between; align-items: center; background: color-mix(in oklab, var(--card) 90%, var(--primary));">
+      <span data-i18n="notifTitle">الإشعارات</span>
+      <button id="clearNotifsBtn" style="font-size: 11px; font-weight: 700; padding: 5px 12px; color: var(--danger); background: color-mix(in oklab, var(--danger) 8%, transparent); border: 1px solid color-mix(in oklab, var(--danger) 18%, transparent); border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); line-height: 1;"
+        onmouseenter="this.style.background='color-mix(in oklab, var(--danger) 16%, transparent)'; this.style.borderColor='color-mix(in oklab, var(--danger) 30%, transparent)';"
+        onmouseleave="this.style.background='color-mix(in oklab, var(--danger) 8%, transparent)'; this.style.borderColor='color-mix(in oklab, var(--danger) 18%, transparent)';"
+        data-i18n="notifClearAll">🗑️ مسح الكل</button>
+    </div>
+    <div id="notifList" style="display: flex; flex-direction: column;">
+      <div style="padding: 24px; text-align: center; color: var(--muted); font-size: 13px;">لا توجد إشعارات</div>
+    </div>
+  </div>
+</div>
+<button id="sidebarToggleBtn" class="ghost-btn icon-btn" type="button" aria-label="Open menu"><svg width="20"
+    height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+    stroke-linejoin="round">
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  </svg></button>
+<button id="langToggleBtn" class="ghost-btn icon-btn lang-btn" type="button" title="Language"
+  aria-label="Language">EN</button>
+<button id="logoutBtn" class="ghost-btn icon-btn" type="button" data-i18n-title="logout" aria-label="Logout"><svg
+    width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+    stroke-linejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
+  </svg></button>
+{% endblock %}
+
+{% block scripts %}
+  <script src="/static/js/dashboard.js?v=54"></script>
+{% endblock %}

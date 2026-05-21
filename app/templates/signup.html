@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}إنشاء حساب{% endblock %}
+
+{% block topbar_actions %}
+<button id="langToggleBtn" class="ghost-btn icon-btn lang-btn" type="button" title="Language" aria-label="Language">EN</button>
+{% endblock %}
+
+{% block content %}
+<section class="auth-card">
+  <h1 data-i18n="signupTitle">إنشاء حساب دكتور جديد</h1>
+  <p class="muted" data-i18n="signupSubtitle">سيتم إنشاء مساحة بيانات مستقلة ومؤمنة خاصة بمادتك العلمية.</p>
+
+  <form id="signupForm" class="auth-form">
+    <div class="auth-row">
+      <div class="auth-field">
+        <label data-i18n="fullNameLabel">الاسم الكامل</label>
+        <input type="text" name="full_name" class="auth-input" placeholder="د. أحمد علي" required minlength="2" />
+      </div>
+
+      <div class="auth-field">
+        <label data-i18n="subjectLabel">اسم المادة الدراسية</label>
+        <input type="text" name="subject_name" class="auth-input" placeholder="أمن الشبكات" required />
+      </div>
+    </div>
+
+    <div class="auth-field">
+      <label data-i18n="emailLabel">البريد الإلكتروني</label>
+      <input type="email" name="email" class="auth-input" placeholder="doctor@university.edu" required />
+    </div>
+
+    <div class="auth-field">
+      <label data-i18n="passwordLabel">كلمة المرور</label>
+      <input type="password" name="password" class="auth-input" placeholder="••••••••" required minlength="8" />
+    </div>
+
+    <button type="submit" class="auth-btn" data-i18n="signupAction">إنشاء الحساب</button>
+    
+    <div class="auth-footer">
+      <span data-i18n="haveAccount">لديك حساب بالفعل؟</span>
+      <a href="/login" data-i18n="loginRedirect">تسجيل الدخول</a>
+    </div>
+  </form>
+
+  <p id="msg" class="muted" style="margin: 0; min-height: 1.2em;"></p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/signup.js?v=3"></script>
+{% endblock %}

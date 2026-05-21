@@ -1,0 +1,48 @@
+
+.check-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--card-strong) 80%, transparent);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.check-card:hover {
+  border-color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 2%, transparent);
+}
+.check-card input[type="radio"],
+.check-card input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.chip-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  background: color-mix(in oklab, var(--card-strong) 80%, transparent);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.chip-check:hover {
+  border-color: var(--primary);
+}
+.chip-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}

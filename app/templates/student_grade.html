@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}درجتي{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h1>نتيجة الطالب: {{ student.full_name }}</h1>
+  <p class="muted">المادة: {{ subject }}</p>
+</section>
+
+<section class="card">
+  <h2>الدرجات المنشورة</h2>
+  {% if grade_rows %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>المكون</th>
+          <th>الدرجة</th>
+          <th>من</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for g in grade_rows %}
+        <tr>
+          <td>{{ g.label }}</td>
+          <td>{{ g.score }}</td>
+          <td>{{ g.max_score }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p>لا توجد درجات منشورة حالياً.</p>
+  {% endif %}
+</section>
+{% endblock %}
