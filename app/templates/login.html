@@ -21,9 +21,9 @@
       <input type="password" name="password" class="auth-input" placeholder="••••••••" required />
     </div>
 
-    <label class="row-inline check-row" style="margin: 4px 0;">
-      <input type="checkbox" name="remember_me" checked />
-      <span data-i18n="rememberMe" style="font-size: 14px;">تذكرني على هذا المتصفح</span>
+    <label class="check-card">
+      <input type="checkbox" name="remember_me" />
+      <span data-i18n="rememberMe">حفظ تسجيل الدخول</span>
     </label>
 
     <button type="submit" class="auth-btn" data-i18n="loginAction">دخول</button>
@@ -39,5 +39,5 @@
 {% endblock %}
 
 {% block scripts %}
-  <script src="/static/js/login.js?v=200"></script>
+  <script src="/static/js/login.js?v=201"></script>
 {% endblock %}

@@ -257,6 +257,9 @@ let state = {
   activeSemester: null
 };
 
+const autosaveRowTimers = new Map();
+const autosaveComponentTimers = new Map();
+
 function getTranslatedLabel(label) {
   if (state.lang !== 'ar') return label;
   const map = {
