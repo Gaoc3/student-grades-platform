@@ -853,13 +853,15 @@ function renderGradeTable() {
     const scoreInputs = [...coursework, ...finals].map((c) => {
       const existing = row.scores[c.component_key];
       const val = existing ? existing.score : '';
-      const pubBadge = existing?.published ? `<div style="position: absolute; top: -6px; left: -6px; background: var(--ok); color: white; border-radius: 50%; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; font-size: 10px;" title="${t('badgePublished')}">✓</div>` : '';
+      const pubBadge = existing?.published ? `<div class="pub-badge" style="position: absolute; top: -6px; inset-inline-start: -6px; background: var(--ok); color: white; border-radius: 50%; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; font-size: 10px;" title="${t('badgePublished')}">✓</div>` : '';
       return `
-        <td style="text-align: center; vertical-align: middle;">
+        <td class="gradebook-cell">
+          <span class="cell-label">${getTranslatedLabel(c.label)}</span>
           <div style="position: relative; display: inline-block;">
             <input type="number" step="0.5" min="0" max="${c.max_score}" data-score="${c.component_key}" value="${val}" class="tiny-input" />
             ${pubBadge}
           </div>
+          <span class="max-score-badge">/ ${c.max_score}</span>
         </td>
       `;
     }).join('');
@@ -874,17 +876,17 @@ function renderGradeTable() {
 
     return `
       <tr data-student-id="${row.student.id}" style="transition: all 0.2s ease;">
-        <td style="padding: 12px 16px;">
+        <td class="student-info-cell" style="padding: 12px 16px;">
           <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-strong)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; box-shadow: 0 4px 10px color-mix(in oklab, var(--primary) 30%, transparent);">${initials}</div>
+            <div class="student-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-strong)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; box-shadow: 0 4px 10px color-mix(in oklab, var(--primary) 30%, transparent);">${initials}</div>
             <div>
               <div style="font-weight: 800; color: var(--text); font-size: 15px; margin-bottom: 2px;">${row.student.full_name}</div>
-              <div class="editable-email" title="انقر لتعديل الإيميل" onclick="startEditEmail(this, ${row.student.id}, '${row.student.full_name.replace(/'/g, "\\'")}')">${row.student.email || 'لا يوجد بريد'}</div>
+              <div class="editable-email" title="${row.student.email || ''} (انقر للتعديل)" onclick="startEditEmail(this, ${row.student.id}, '${row.student.full_name.replace(/'/g, "\\'")}')">${row.student.email || 'لا يوجد بريد'}</div>
             </div>
           </div>
         </td>
         ${scoreInputs}
-        <td style="vertical-align: middle; text-align: center;">
+        <td class="totals-cell" style="vertical-align: middle; text-align: center;">
           <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
             <div style="font-weight: 800; color: var(--text); font-size: 14px; background: color-mix(in oklab, var(--primary) 8%, transparent); padding: 4px 10px; border-radius: 8px; border: 1px solid color-mix(in oklab, var(--primary) 15%, transparent); display: inline-flex; align-items: center; gap: 4px;">
               <span style="font-size: 11px; font-weight: 600; color: var(--muted); margin-inline-end: 2px;">${state.lang === 'ar' ? 'المجموع' : 'Total'}:</span>
@@ -901,7 +903,7 @@ function renderGradeTable() {
             </div>
           </div>
         </td>
-        <td style="vertical-align: middle; text-align: center;">
+        <td class="actions-cell" style="vertical-align: middle; text-align: center;">
           <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
             <button class="ghost-btn icon-btn" data-action="save-row" 
               style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; padding: 0; font-size: 1.2rem; line-height: 1; border: 1px solid color-mix(in oklab, var(--primary) 18%, transparent); background: color-mix(in oklab, var(--primary) 8%, transparent); color: var(--primary); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;"
@@ -960,11 +962,11 @@ async function loadGradebook() {
 
 // Sidebar, Auth, Search, Publish Logic remains standard
 function closeSidebar() {
-  if (window.innerWidth > 1024) document.body.classList.add('sidebar-collapsed');
+  if (window.innerWidth > 768) document.body.classList.add('sidebar-collapsed');
   else document.body.classList.remove('sidebar-open');
 }
 function toggleSidebar() {
-  if (window.innerWidth > 1024) document.body.classList.toggle('sidebar-collapsed');
+  if (window.innerWidth > 768) document.body.classList.toggle('sidebar-collapsed');
   else document.body.classList.toggle('sidebar-open');
 }
 
@@ -972,8 +974,8 @@ sidebarToggleBtn?.addEventListener('click', toggleSidebar);
 sidebarCloseBtn?.addEventListener('click', closeSidebar);
 sidebarBackdrop?.addEventListener('click', closeSidebar);
 window.addEventListener('resize', () => {
-  if (window.innerWidth > 1024) {
-    document.body.classList.remove('sidebar-open', 'sidebar-collapsed');
+  if (window.innerWidth > 768) {
+    document.body.classList.remove('sidebar-open');
   }
 });
 
@@ -990,7 +992,7 @@ function setActiveSection(section) {
 
 sectionNavButtons.forEach(btn => btn.addEventListener('click', () => {
   setActiveSection(btn.dataset.section || 'overview');
-  if (window.innerWidth <= 1024) closeSidebar();
+  if (window.innerWidth <= 768) closeSidebar();
 }));
 
 langToggleBtn?.addEventListener('click', () => applyLanguage(state.lang === 'ar' ? 'en' : 'ar', true));
@@ -1147,7 +1149,7 @@ async function bootstrap() {
       state.activeSemester = parseInt(savedSem, 10);
       semesterSelection.style.display = 'none';
       dashboardApp.style.display = '';
-      if (window.innerWidth > 1024) document.body.classList.remove('sidebar-collapsed');
+      if (window.innerWidth > 768) document.body.classList.remove('sidebar-collapsed');
       await loadGradebook();
     }
 
@@ -1166,7 +1168,7 @@ document.querySelectorAll('.gateway-card').forEach(card => {
     semesterSelection.style.display = 'none';
     dashboardApp.style.display = ''; // Removes inline display:none, falls back to CSS grid
     setActiveSection('overview'); // Force the user back to the overview when entering a course
-    if (window.innerWidth > 1024) document.body.classList.remove('sidebar-collapsed');
+    if (window.innerWidth > 768) document.body.classList.remove('sidebar-collapsed');
     await loadGradebook();
   });
 });
