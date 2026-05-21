@@ -92,6 +92,10 @@ const I18N = {
     studentNamePlaceholder: 'اسم الطالب',
     studentEmailPlaceholder: 'البريد الإلكتروني (اختياري)',
     searchStudentPlaceholder: 'بحث سريع باسم الطالب',
+    searchGradebookPlaceholder: 'ابحث باسم الطالب أو البريد الإلكتروني في السجل...',
+    filterAll: 'جميع الطلبة',
+    filterPassing: 'الناجحين (≥ 50%)',
+    filterFailing: 'الراسبين / المكملين (< 50%)',
 
     heroTitle: 'لوحة متابعة المقرر: {subject}',
     heroSubtitle: 'مرحبًا دكتور {doctor} — إدارة الدرجات ونشر النتائج من واجهة موحدة',
@@ -206,6 +210,10 @@ const I18N = {
     studentNamePlaceholder: 'Student name',
     studentEmailPlaceholder: 'Email (optional)',
     searchStudentPlaceholder: 'Search by student name',
+    searchGradebookPlaceholder: 'Search student name or email in gradebook...',
+    filterAll: 'All Students',
+    filterPassing: 'Passing (≥ 50%)',
+    filterFailing: 'Failing (< 50%)',
 
     heroTitle: 'Course Monitoring Dashboard: {subject}',
     heroSubtitle: 'Welcome, Dr. {doctor} — Manage grading and results publishing through one unified interface',
@@ -342,7 +350,6 @@ function showConfirm(title, message) {
     document.getElementById('modalConfirmBtn').addEventListener('click', () => cleanup(true));
     document.getElementById('modalCancelBtn').addEventListener('click', () => cleanup(false));
 
-    // Also close on background click
     modal.onclick = (e) => {
       if (e.target === modal) cleanup(false);
     };
@@ -371,6 +378,51 @@ function applyStaticTranslations() {
     el.title = tip;
     el.setAttribute('aria-label', tip);
   });
+}
+
+// منظومة الفلترة والبحث المتقدمة لسجل الدرجات
+function updateGradebookFilters() {
+  const gradebookSearchInput = document.getElementById('gradebookSearchInput');
+  if (!gradebookSearchInput) {
+    renderGradeTable();
+    return;
+  }
+  
+  const query = gradebookSearchInput.value.trim().toLowerCase();
+  const checkedRadio = document.querySelector('input[name="gradebook_filter"]:checked');
+  const filterType = checkedRadio ? checkedRadio.value : 'all';
+  
+  const clearGradebookSearch = document.getElementById('clearGradebookSearch');
+  if (clearGradebookSearch) {
+    clearGradebookSearch.style.display = query ? 'inline-flex' : 'none';
+  }
+  
+  const currentComponents = state.components.filter(c => c.semester === state.activeSemester);
+  const totalMax = currentComponents.reduce((sum, c) => sum + c.max_score, 0);
+  const passThreshold = totalMax / 2;
+  const semKey = `c${state.activeSemester}`;
+  
+  state.rows = state.fullRows.filter(row => {
+    const matchesText = row.student.full_name.toLowerCase().includes(query) || 
+                        (row.student.email && row.student.email.toLowerCase().includes(query));
+    if (!matchesText) return false;
+    
+    const totalSum = row.sums[`${semKey}_total`] || 0;
+    if (filterType === 'passing') return totalSum >= passThreshold;
+    if (filterType === 'failing') return totalSum < passThreshold;
+    return true;
+  });
+  
+  const counterEl = document.getElementById('searchCounterBadge');
+  if (counterEl) {
+    if (state.lang === 'ar') {
+      counterEl.textContent = `يظهر ${state.rows.length} من أصل ${state.fullRows.length} طالب`;
+    } else {
+      counterEl.textContent = `Showing ${state.rows.length} of ${state.fullRows.length} students`;
+    }
+  }
+  
+  renderGradeTable();
 }
 
 function showToast(message, type = 'info') {
@@ -406,7 +458,6 @@ function showToast(message, type = 'info') {
     setTimeout(() => toast.remove(), 300);
   }, 4000);
 
-  // Pause auto-close on hover
   toast.addEventListener('mouseenter', () => clearTimeout(autoClose));
   toast.addEventListener('mouseleave', () => {
     setTimeout(() => {
@@ -463,17 +514,15 @@ function renderNotifications() {
     `;
   }).join('');
 
-  // Attach swipe-to-dismiss on each notification item
   listEl.querySelectorAll('.notif-item').forEach(item => initNotifSwipe(item));
 }
 
-/* ── Swipe-to-dismiss logic for individual notifications ── */
 function initNotifSwipe(el) {
   let startX = 0, currentX = 0, isDragging = false;
-  const THRESHOLD = 80; // px needed to trigger dismiss
+  const THRESHOLD = 80;
 
   el.addEventListener('pointerdown', (e) => {
-    if (e.target.closest('.notif-delete-btn')) return; // don't interfere with X button
+    if (e.target.closest('.notif-delete-btn')) return;
     isDragging = true;
     startX = e.clientX;
     currentX = 0;
@@ -484,7 +533,6 @@ function initNotifSwipe(el) {
   el.addEventListener('pointermove', (e) => {
     if (!isDragging) return;
     currentX = e.clientX - startX;
-    // Allow swiping in both directions
     el.style.transform = `translateX(${currentX}px)`;
     el.style.opacity = Math.max(0, 1 - Math.abs(currentX) / 200).toString();
   });
@@ -495,14 +543,12 @@ function initNotifSwipe(el) {
     el.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
 
     if (Math.abs(currentX) > THRESHOLD) {
-      // Dismiss!
       const direction = currentX > 0 ? 1 : -1;
       el.style.transform = `translateX(${direction * 400}px)`;
       el.style.opacity = '0';
       const notifId = el.dataset.notifId;
       setTimeout(() => deleteNotification(notifId), 250);
     } else {
-      // Snap back
       el.style.transform = 'translateX(0)';
       el.style.opacity = '1';
     }
@@ -516,7 +562,6 @@ function initNotifSwipe(el) {
   });
 }
 
-/* ── Delete a single notification ── */
 async function deleteNotification(notifId) {
   try {
     await api(`/api/notifications/${notifId}`, { method: 'DELETE' });
@@ -533,7 +578,6 @@ async function fetchNotifications() {
     if (!res.ok) return;
     const data = await res.json();
 
-    // Check for new notifications
     if (notificationsList.length > 0) {
       const newNotifs = data.filter(n => n.id > notificationsList[0].id && n.id > lastSeenNotifId);
       newNotifs.reverse().forEach(n => {
@@ -577,7 +621,7 @@ function applyLanguage(lang, animate = false) {
       renderStats();
       renderComponentsBuilder();
       renderPublishOptions();
-      renderGradeTable();
+      updateGradebookFilters(); // تفعيل نظام البحث والفرز المحدث
       renderStudentsQuickList();
     } else {
       document.getElementById('semesterSelection').style.display = 'flex';
@@ -587,7 +631,6 @@ function applyLanguage(lang, animate = false) {
 
   if (!animate) { doSwitch(); return; }
 
-  /* Animate: fade-blur out -> switch -> fade-blur in */
   const pageWrap = document.querySelector('.page-wrap');
   if (!pageWrap) { doSwitch(); return; }
 
@@ -599,7 +642,6 @@ function applyLanguage(lang, animate = false) {
   setTimeout(() => {
     doSwitch();
 
-    /* Reset and animate back in */
     pageWrap.classList.add('lang-switch-animate');
     pageWrap.style.transition = '';
     pageWrap.style.opacity = '';
@@ -658,8 +700,6 @@ function renderComponentsBuilder() {
   c1f.innerHTML = finals.map(makeCard).join('');
 }
 
-// Gateway card click handling is consolidated at the end of the file
-
 document.getElementById('switchSemesterBtn')?.addEventListener('click', () => {
   state.activeSemester = null;
   localStorage.removeItem('active_semester');
@@ -667,7 +707,6 @@ document.getElementById('switchSemesterBtn')?.addEventListener('click', () => {
   closeSidebar();
 });
 
-// Notifications Dropdown Logic
 const notifToggle = document.getElementById('notifToggle');
 const notifDropdown = document.getElementById('notifDropdown');
 if (notifToggle && notifDropdown) {
@@ -676,7 +715,6 @@ if (notifToggle && notifDropdown) {
     const isVisible = notifDropdown.style.display === 'block';
     notifDropdown.style.display = isVisible ? 'none' : 'block';
     if (!isVisible) {
-      // Mark as seen when opening
       if (notificationsList.length > 0) {
         lastSeenNotifId = notificationsList[0].id;
         localStorage.setItem('last_seen_notif_id', lastSeenNotifId);
@@ -706,7 +744,6 @@ document.getElementById('clearNotifsBtn')?.addEventListener('click', async (e) =
   }
 });
 
-// Delegated click for individual notification X buttons
 document.getElementById('notifDropdown')?.addEventListener('click', (e) => {
   const delBtn = e.target.closest('[data-delete-notif]');
   if (delBtn) {
@@ -715,9 +752,8 @@ document.getElementById('notifDropdown')?.addEventListener('click', (e) => {
   }
 });
 
-// Poll notifications every 10 seconds
 setInterval(fetchNotifications, 10000);
-fetchNotifications(); // Initial fetch
+fetchNotifications();
 
 document.querySelectorAll('.add-comp-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -725,7 +761,6 @@ document.querySelectorAll('.add-comp-btn').forEach(btn => {
     document.getElementById('newCompSemester').value = state.activeSemester;
     document.getElementById('newCompCategory').value = cat;
 
-    // Auto-generate name
     const existingCount = state.components.filter(c => c.semester === state.activeSemester && c.category === cat).length;
     const defaultName = cat === 'final'
       ? (existingCount === 0 ? 'الفاينل' : `الفاينل ${existingCount + 1}`)
@@ -733,7 +768,6 @@ document.querySelectorAll('.add-comp-btn').forEach(btn => {
     document.getElementById('newCompLabel').value = defaultName;
 
     addComponentForm.style.display = 'grid';
-    // Focus the name input so they can change it to "الفاينل العملي" if they want
     document.getElementById('newCompLabel').focus();
     document.getElementById('newCompLabel').select();
   });
@@ -789,8 +823,6 @@ document.addEventListener('click', async (e) => {
       setStatus(err.message, 'error');
     }
   }
-
-
 
   if (btn.dataset.action === 'delete-component') {
     if (!confirm(t('confirmDeleteComp'))) return;
@@ -871,7 +903,6 @@ function renderGradeTable() {
     const finalSum = row.sums[`${semKey}_final`];
     const totalSum = row.sums[`${semKey}_total`];
 
-    // Generate avatar initials
     const initials = row.student.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
     return `
@@ -960,7 +991,6 @@ async function loadGradebook() {
   applyLanguage(state.lang, false);
 }
 
-// Sidebar, Auth, Search, Publish Logic remains standard
 function closeSidebar() {
   if (window.innerWidth > 768) document.body.classList.add('sidebar-collapsed');
   else document.body.classList.remove('sidebar-open');
@@ -1166,28 +1196,48 @@ document.querySelectorAll('.gateway-card').forEach(card => {
     state.activeSemester = parseInt(card.dataset.selectSemester, 10);
     localStorage.setItem('active_semester', state.activeSemester);
     semesterSelection.style.display = 'none';
-    dashboardApp.style.display = ''; // Removes inline display:none, falls back to CSS grid
-    setActiveSection('overview'); // Force the user back to the overview when entering a course
+    dashboardApp.style.display = '';
+    setActiveSection('overview');
     if (window.innerWidth > 768) document.body.classList.remove('sidebar-collapsed');
     await loadGradebook();
   });
 });
 
+// ربط مستمعي الأحداث لمنظومة البحث الفائقة لضمان سرعة الاستجابة المباشرة (Real-time Filtering)
+document.addEventListener('input', (e) => {
+  if (e.target && e.target.id === 'gradebookSearchInput') {
+    updateGradebookFilters();
+  }
+});
 
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'clearGradebookSearch') {
+    const input = document.getElementById('gradebookSearchInput');
+    if (input) {
+      input.value = '';
+      updateGradebookFilters();
+      input.focus();
+    }
+  }
+});
+
+document.addEventListener('change', (e) => {
+  if (e.target && e.target.name === 'gradebook_filter') {
+    updateGradebookFilters();
+  }
+});
 
 document.addEventListener('DOMContentLoaded', bootstrap);
 
 window.startEditEmail = function (el, studentId, fullName) {
-  if (el.querySelector('input')) return; // Already editing
+  if (el.querySelector('input')) return;
   el.classList.add('editing');
   const currentEmail = el.textContent === 'لا يوجد بريد' ? '' : el.textContent;
 
-  // Rely on app.css for premium styling and animation
   el.innerHTML = `<input type="email" value="${currentEmail}" placeholder="example@gmail.com" />`;
 
   const input = el.querySelector('input');
   
-  // Dynamically auto-grow input width to match content length
   const updateWidth = () => {
     const len = input.value ? input.value.length : (input.placeholder ? input.placeholder.length : 15);
     input.style.width = `${len + 1}ch`;
