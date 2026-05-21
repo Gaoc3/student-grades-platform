@@ -788,17 +788,8 @@ document.addEventListener('click', async (e) => {
 
   if (btn.dataset.action === 'save-component') {
     const id = btn.dataset.id;
-    const input = document.querySelector(`input[data-update-id="${id}"]`);
-    const max_score = parseFloat(input.value);
-    const comp = state.components.find(c => c.id == id);
-    if (!comp || isNaN(max_score)) return;
-
     try {
-      await api(`/api/components/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: comp.label, semester: comp.semester, category: comp.category, max_score, order_index: comp.order_index }),
-      });
+      await saveComponentScoreById(id);
       await loadGradebook();
       setStatus(t('statusComponentUpdated'), 'ok');
     } catch (err) {
@@ -1030,17 +1021,8 @@ document.addEventListener('click', async (e) => {
 
   if (btn.dataset.action === 'save-row') {
     const tr = btn.closest('tr');
-    const studentId = tr.dataset.studentId;
-    const scores = {};
-    tr.querySelectorAll('input[data-score]').forEach(inp => {
-      if (inp.value !== '') scores[inp.dataset.score] = Number(inp.value);
-    });
     try {
-      await api(`/api/students/${studentId}/scores`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scores }),
-      });
+      await saveRowScores(tr);
       await loadGradebook();
       setStatus(t('statusScoresSaved'), 'ok');
     } catch (err) {
@@ -1078,6 +1060,73 @@ searchInput?.addEventListener('input', (e) => {
   const value = e.target.value.trim().toLowerCase();
   state.rows = !value ? [...state.fullRows] : state.fullRows.filter(r => r.student.full_name.toLowerCase().includes(value));
   renderGradeTable();
+});
+
+async function saveRowScores(tr) {
+  if (!tr) return;
+  const studentId = tr.dataset.studentId;
+  const scores = {};
+  tr.querySelectorAll('input[data-score]').forEach(inp => {
+    if (inp.value !== '') scores[inp.dataset.score] = Number(inp.value);
+  });
+
+  await api(`/api/students/${studentId}/scores`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ scores }),
+  });
+}
+
+async function saveComponentScoreById(componentId) {
+  const input = document.querySelector(`input[data-update-id="${componentId}"]`);
+  const max_score = parseFloat(input?.value);
+  const comp = state.components.find(c => c.id == componentId);
+  if (!comp || Number.isNaN(max_score)) return;
+
+  await api(`/api/components/${componentId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ label: comp.label, semester: comp.semester, category: comp.category, max_score, order_index: comp.order_index }),
+  });
+}
+
+document.addEventListener('input', (e) => {
+  const scoreInput = e.target.closest('input[data-score]');
+  if (scoreInput) {
+    const tr = scoreInput.closest('tr[data-student-id]');
+    if (!tr) return;
+    const studentId = tr.dataset.studentId;
+
+    if (autosaveRowTimers.has(studentId)) clearTimeout(autosaveRowTimers.get(studentId));
+    const timer = setTimeout(async () => {
+      try {
+        await saveRowScores(tr);
+        setStatus(t('statusScoresSaved'), 'ok');
+      } catch (err) {
+        setStatus(err.message, 'error');
+      }
+    }, 700);
+    autosaveRowTimers.set(studentId, timer);
+    return;
+  }
+
+  const compInput = e.target.closest('input[data-update-id]');
+  if (compInput) {
+    const componentId = compInput.dataset.updateId;
+    if (autosaveComponentTimers.has(componentId)) clearTimeout(autosaveComponentTimers.get(componentId));
+
+    const timer = setTimeout(async () => {
+      try {
+        await saveComponentScoreById(componentId);
+        await loadGradebook();
+        setStatus(t('statusComponentUpdated'), 'ok');
+      } catch (err) {
+        setStatus(err.message, 'error');
+      }
+    }, 750);
+
+    autosaveComponentTimers.set(componentId, timer);
+  }
 });
 
 const publishForm = document.getElementById('publishForm');
@@ -1171,6 +1220,7 @@ async function bootstrap() {
   } finally {
     document.documentElement.classList.remove('dashboard-preload');
   }
+  
 }
 
 document.querySelectorAll('.gateway-card').forEach(card => {

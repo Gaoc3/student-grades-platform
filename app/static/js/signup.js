@@ -19,7 +19,7 @@ const I18N = {
     switchToArabic: 'التبديل إلى العربية',
   },
   en: {
-    signupTitle: 'Create Faculty Account',
+    signupTitle: 'Create Account',
     signupSubtitle: 'A dedicated and secure data space will be created for your subject.',
     fullNameLabel: 'Full Name',
     emailLabel: 'Email Address',

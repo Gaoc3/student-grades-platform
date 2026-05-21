@@ -2970,3 +2970,9 @@ tbody tr, .notif-item {
 #notifDropdown > div:first-child {
   background: color-mix(in oklab, var(--card-strong) 94%, var(--primary)) !important; /* تعتيم هيدر الإشعارات */
 }
+
+/* منع ظهور عناصر الصفحة قبل اكتمال تحديد اللغة */
+html.preload-lang body {
+  opacity: 0;
+  visibility: hidden;
+}

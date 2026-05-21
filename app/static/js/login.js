@@ -1,3 +1,4 @@
+
 const form = document.getElementById('loginForm');
 const msg = document.getElementById('msg');
 const langToggleBtn = document.getElementById('langToggleBtn');
@@ -18,7 +19,7 @@ const I18N = {
     switchToArabic: 'التبديل إلى العربية',
   },
   en: {
-    loginTitle: 'Faculty Login',
+    loginTitle: 'Login',
     loginSubtitle: 'Access is restricted to faculty members only for student grade management.',
     emailLabel: 'Email Address',
     passwordLabel: 'Password',
