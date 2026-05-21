@@ -2040,6 +2040,20 @@ hr {
 
   .notification-wrapper {
     margin-inline-start: auto;
+    position: static !important; /* تحرير الأيقونة على الموبايل */
+  }
+
+  #notifDropdown {
+    position: absolute !important;
+    top: 100% !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    inset-inline-end: auto !important;
+    inset-inline-start: auto !important;
+    box-shadow: 0 12px 32px rgba(2, 6, 23, 0.18) !important;
+    border-radius: 18px !important;
   }
 
   .brand-sub {
@@ -2947,4 +2961,12 @@ tbody tr, .notif-item {
   animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
   backdrop-filter: var(--glass-blur) !important;
   -webkit-backdrop-filter: var(--glass-blur) !important;
+}
+/* إصلاح الشفافية ومنع تداخل النصوص في قائمة الإشعارات */
+#notifDropdown {
+  background: var(--card-strong) !important; /* جعل خلفية القائمة معتمة بالكامل بناءً على الثيم نشط */
+}
+
+#notifDropdown > div:first-child {
+  background: color-mix(in oklab, var(--card-strong) 94%, var(--primary)) !important; /* تعتيم هيدر الإشعارات */
 }
