@@ -52,3 +52,7 @@ uvicorn app.main:app --reload
   "support_email": "support@university.edu"
 }
 ```
+
+## Auto Git Sync
+This repository is configured with auto-sync, automatically backing up changes to GitHub.
+
