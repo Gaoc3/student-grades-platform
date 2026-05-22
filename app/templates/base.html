@@ -2,7 +2,6 @@
 <html lang="ar" dir="rtl">
 
 <head>
-  
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}Student Grades{% endblock %}</title>
@@ -11,19 +10,45 @@
       const savedTheme = localStorage.getItem('theme') || 'light';
       document.documentElement.dataset.theme = savedTheme;
 
-      const savedLang = localStorage.getItem('dashboard_lang') || 'ar';
-      document.documentElement.lang = savedLang;
-      document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+      const savedLang = localStorage.getItem('dashboard_lang');
+      const resolvedLang = savedLang || 'ar';
+      document.documentElement.lang = resolvedLang;
+      document.documentElement.dir = resolvedLang === 'ar' ? 'rtl' : 'ltr';
 
       if (window.location.pathname === '/dashboard') {
         document.documentElement.classList.add('dashboard-preload');
         document.documentElement.style.backgroundColor = savedTheme === 'dark' ? '#020617' : '#f8fafc';
       }
+
+      const isAuthPage = /^\/(?:login|signup)\/?$/.test(window.location.pathname);
+      if (savedLang === 'en' && isAuthPage) {
+        document.documentElement.classList.add('auth-loading');
+        document.documentElement.dataset.authReady = '0';
+
+        const releaseAuthLoading = (deadline) => {
+          if (document.documentElement.dataset.authReady === '1' || Date.now() >= deadline) {
+            document.documentElement.classList.remove('auth-loading');
+            return;
+          }
+
+          setTimeout(() => releaseAuthLoading(deadline), 50);
+        };
+
+        setTimeout(() => releaseAuthLoading(Date.now() + 1200), 150);
+      }
     })();
   </script>
-  <link rel="stylesheet" href="/static/css/app.css?v=1779354102" />
-  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
   <style>
+    html.auth-loading body {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    html.auth-loading .auth-card {
+      opacity: 0 !important;
+      visibility: hidden !important;
+    }
+
     /* ========== VIEW TRANSITIONS FOR THEME ========== */
     ::view-transition-old(root) {
       animation: none !important;
@@ -44,6 +69,8 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/static/css/app.css?v=1779360439" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 
 <body>
@@ -130,8 +157,6 @@
           localStorage.setItem('theme', next);
         });
 
-
-
         transition.finished.finally(() => { _themeAnimating = false; });
       });
     }
@@ -161,7 +186,6 @@
         particle.className = 'magic-dust-particle';
 
         const size = 4 + Math.random() * 8;
-        // Tighter drift for better precision
         const driftX = `${Math.round(Math.random() * 60 - 30)}px`;
         const driftY = `${Math.round(-30 - Math.random() * 80)}px`;
         const duration = `${1800 + Math.round(Math.random() * 900)}ms`;
@@ -181,7 +205,6 @@
 
       function burst(x, y, count) {
         for (let index = 0; index < count; index += 1) {
-          // Centered spawn for pinpoint accuracy
           spawnParticle(x + (Math.random() * 6 - 3), y + (Math.random() * 6 - 3));
         }
       }
@@ -215,12 +238,11 @@
       }, { passive: true });
     })();
   </script>
-  <!-- Custom Confirmation Modal -->
   <div id="customModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <div class="modal-body">
         <h3 id="modalTitle">تأكيد الإجراء</h3>
-        <p id="modalMessage">هل أنت متأكد؟</p>
+        <p id="modalMessage">هل أنت متأكد?</p>
       </div>
       <div class="modal-footer">
         <button id="modalCancelBtn" class="ghost-btn">إلغاء</button>

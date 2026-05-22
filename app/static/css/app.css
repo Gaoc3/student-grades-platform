@@ -755,7 +755,7 @@ body.sidebar-collapsed .sidebar-card {
 }
 
 .section-stack {
-  gap: 32px;
+  gap: 16px;
 }
 
 .sidebar-card {
@@ -774,7 +774,7 @@ body.sidebar-collapsed .sidebar-card {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 24px;
-  margin-top: 32px;
+  margin-top: 0;
 }
 
 .stats-grid .stat-card {
@@ -937,16 +937,19 @@ html[dir="rtl"] .sidebar-close:focus-visible {
 }
 
 .nav-btn:hover {
-  transform: translateX(4px);
-  color: var(--text);
+  transform: translateY(-3px);
+  color: var(--primary-strong);
+  border-color: color-mix(in oklab, var(--primary) 28%, transparent);
+  background: linear-gradient(135deg, color-mix(in oklab, var(--primary) 12%, var(--card)), color-mix(in oklab, var(--primary) 4%, var(--card)));
+  box-shadow: 0 14px 28px -12px color-mix(in oklab, var(--primary) 28%, transparent);
 }
 
 html[lang="ar"] .nav-btn:hover {
-  transform: translateX(-4px);
+  transform: translateY(-3px);
 }
 
 .nav-btn:hover::before {
-  opacity: 0.04;
+  opacity: 0.12;
 }
 
 .nav-btn.is-active {
@@ -979,7 +982,10 @@ html[lang="ar"] .nav-btn.is-active {
 }
 
 .nav-btn:hover .nav-icon {
-  transform: scale(1.08);
+  transform: scale(1.16);
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 14%, transparent);
 }
 
 .nav-btn.is-active .nav-icon {
@@ -1149,7 +1155,7 @@ html[lang="ar"] .nav-btn.is-active {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
-  margin-top: 24px;
+  margin-top: 0;
 }
 
 .stat-card {
@@ -2975,4 +2981,76 @@ tbody tr, .notif-item {
 html.preload-lang body {
   opacity: 0;
   visibility: hidden;
+}
+
+
+/* ==========================================================================
+   إصلاح نهائي للإشعارات (تداخل النصوص + تجاوب الموبايل للثيم الداكن والفاتح)
+   ========================================================================== */
+#notifDropdown {
+  background: var(--card-strong) !important;
+}
+#notifDropdown > div:first-child {
+  background: color-mix(in oklab, var(--card-strong) 94%, var(--primary)) !important;
+}
+
+/* سحق الشفافية وإجبار الثيم الداكن على خلفية مصمتة فخمة لحجب النصوص الخلفية */
+html[data-theme="dark"] #notifDropdown,
+[data-theme="dark"] #notifDropdown,
+.dark-mode #notifDropdown,
+.dark #notifDropdown {
+  background: #111422 !important;
+}
+html[data-theme="dark"] #notifDropdown > div:first-child,
+[data-theme="dark"] #notifDropdown > div:first-child,
+.dark-mode #notifDropdown > div:first-child,
+.dark #notifDropdown > div:first-child {
+  background: #171b2f !important;
+  border-bottom: 1px solid color-mix(in oklab, var(--line) 40%, transparent) !important;
+}
+
+@media (max-width: 768px) {
+  .notification-wrapper {
+    position: static !important;
+  }
+  #notifDropdown {
+    position: absolute !important;
+    top: 100% !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    inset-inline-end: auto !important;
+    inset-inline-start: auto !important;
+    box-shadow: 0 12px 32px rgba(2, 6, 23, 0.25) !important;
+    border-radius: 18px !important;
+  }
+}
+
+html.auth-loading .auth-card {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+[data-theme="dark"] #notifDropdown {
+  background: #111422 !important;
+}
+
+[data-theme="dark"] #notifDropdown > div:first-child {
+  background: #171b2f !important;
+}
+
+@media (max-width: 768px) {
+  .notification-wrapper {
+    position: static !important;
+  }
+
+  #notifDropdown {
+    position: absolute !important;
+    top: 100% !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+  }
 }
