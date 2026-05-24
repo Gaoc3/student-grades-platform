@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import ipaddress
 import os
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -24,9 +26,26 @@ templates = Jinja2Templates(directory="app/templates")
 
 def _resolve_public_base_url(request: Request) -> str:
     configured_base_url = os.getenv("PUBLIC_BASE_URL", "").strip()
-    if configured_base_url:
+    if configured_base_url and not _is_private_base_url(configured_base_url):
         return configured_base_url.rstrip("/")
     return str(request.base_url).rstrip("/")
+
+
+def _is_private_base_url(base_url: str) -> bool:
+    parsed = urlparse(base_url)
+    hostname = parsed.hostname
+    if not hostname:
+        return False
+
+    if hostname in {"localhost", "127.0.0.1", "::1"}:
+        return True
+
+    try:
+        host_ip = ipaddress.ip_address(hostname)
+    except ValueError:
+        return False
+
+    return host_ip.is_private or host_ip.is_loopback or host_ip.is_link_local
 
 
 def _as_utc(dt: datetime | None) -> datetime | None:
