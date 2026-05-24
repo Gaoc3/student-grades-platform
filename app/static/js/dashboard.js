@@ -363,6 +363,23 @@ function applyStaticTranslations() {
   });
 }
 
+function normalizeText(str) {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .trim()
+    // Remove Arabic diacritics (Harakat)
+    .replace(/[\u064B-\u065F]/g, '')
+    // Normalize Alif variations
+    .replace(/[أإآ]/g, 'ا')
+    // Normalize Yaa / Alif Maksura
+    .replace(/[ى]/g, 'ي')
+    // Normalize Taa Marbuta / Haa
+    .replace(/ة/g, 'ه')
+    // Unify multiple spaces to single space
+    .replace(/\s+/g, ' ');
+}
+
 function updateGradebookFilters() {
   const gradebookSearchInput = document.getElementById('gradebookSearchInput');
   if (!gradebookSearchInput) {
@@ -370,14 +387,17 @@ function updateGradebookFilters() {
     return;
   }
   
-  const query = gradebookSearchInput.value.trim().toLowerCase();
+  const rawQuery = gradebookSearchInput.value;
   const checkedRadio = document.querySelector('input[name="gradebook_filter"]:checked');
   const filterType = checkedRadio ? checkedRadio.value : 'all';
   
   const clearGradebookSearch = document.getElementById('clearGradebookSearch');
   if (clearGradebookSearch) {
-    clearGradebookSearch.style.display = query ? 'inline-flex' : 'none';
+    clearGradebookSearch.style.display = rawQuery.trim() ? 'inline-flex' : 'none';
   }
+  
+  const normalizedQuery = normalizeText(rawQuery);
+  const queryTerms = normalizedQuery.split(' ').filter(term => term.length > 0);
   
   const currentComponents = state.components.filter(c => c.semester === state.activeSemester);
   const totalMax = currentComponents.reduce((sum, c) => sum + c.max_score, 0);
@@ -385,9 +405,10 @@ function updateGradebookFilters() {
   const semKey = `c${state.activeSemester}`;
   
   state.rows = state.fullRows.filter(row => {
-    const matchesText = row.student.full_name.toLowerCase().includes(query) || 
-                        (row.student.email && row.student.email.toLowerCase().includes(query));
-    if (!matchesText) return false;
+    // Smart name-only matching
+    const normalizedName = normalizeText(row.student.full_name);
+    const matchesName = queryTerms.every(term => normalizedName.includes(term));
+    if (!matchesName) return false;
     
     const totalSum = row.sums[`${semKey}_total`] || 0;
     if (filterType === 'passing') return totalSum >= passThreshold;
