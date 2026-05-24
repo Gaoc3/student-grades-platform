@@ -458,6 +458,16 @@ html[dir="ltr"] .brand-wrap {
   border-color: color-mix(in oklab, var(--primary) 20%, var(--topbar-island-border));
 }
 
+html[dir="rtl"] .topbar-actions {
+  direction: rtl !important;
+  flex-direction: row !important;
+}
+
+html[dir="ltr"] .topbar-actions {
+  direction: ltr !important;
+  flex-direction: row !important;
+}
+
 #sidebarToggleBtn {
   display: inline-flex;
   order: 1;
