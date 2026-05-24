@@ -3054,3 +3054,148 @@ html.auth-loading .auth-card {
     max-width: none !important;
   }
 }
+
+/* ========== GRADEBOOK SEARCH HUB ========== */
+.gradebook-search-hub {
+  margin: 22px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Search bar wrapper */
+.gradebook-search-bar-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.gradebook-search-icon {
+  position: absolute;
+  inset-inline-start: 16px;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  font-size: 20px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  z-index: 1;
+}
+
+.gradebook-search-input {
+  width: 100%;
+  height: 52px;
+  padding-inline-start: 50px;
+  padding-inline-end: 52px;
+  font-size: 14.5px;
+  font-weight: 600;
+  border-radius: 16px;
+  border: 1.5px solid color-mix(in oklab, var(--primary) 20%, var(--line));
+  background: color-mix(in oklab, var(--card-strong) 95%, var(--primary) 2%);
+  color: var(--text);
+  box-sizing: border-box;
+  outline: none;
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  caret-color: var(--primary);
+}
+
+.gradebook-search-input::placeholder {
+  color: var(--muted);
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+.gradebook-search-input:focus {
+  border-color: var(--primary);
+  background: color-mix(in oklab, var(--card-strong) 97%, var(--primary) 3%);
+  box-shadow:
+    0 0 0 4px color-mix(in oklab, var(--primary) 10%, transparent),
+    0 4px 20px color-mix(in oklab, var(--primary) 8%, transparent);
+}
+
+.gradebook-search-input:focus + .gradebook-search-clear,
+.gradebook-search-bar-wrap:focus-within .gradebook-search-icon {
+  opacity: 1;
+}
+
+/* Clear (×) button */
+.gradebook-search-clear {
+  position: absolute;
+  inset-inline-end: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: color-mix(in oklab, var(--text) 6%, transparent);
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.gradebook-search-clear:hover {
+  background: color-mix(in oklab, var(--danger) 12%, transparent);
+  color: var(--danger);
+  transform: scale(1.1);
+}
+
+/* Filters + counter row */
+.gradebook-search-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 2px 4px;
+}
+
+/* Filter label colors */
+.filter-passing-label {
+  color: var(--ok);
+  font-weight: 700;
+}
+
+.filter-failing-label {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* Results counter */
+.search-counter-badge {
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklab, var(--primary) 20%, transparent);
+  background: color-mix(in oklab, var(--primary) 7%, transparent);
+  color: var(--primary);
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 10px color-mix(in oklab, var(--primary) 6%, transparent);
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+/* Highlighted search match */
+.search-highlight {
+  background: color-mix(in oklab, var(--primary) 20%, transparent);
+  color: var(--primary);
+  border-radius: 3px;
+  padding: 0 2px;
+  font-weight: 800;
+}
+
+/* Empty state when no results */
+#gradeTable .no-results-row td {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 15px;
+}
