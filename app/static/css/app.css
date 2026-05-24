@@ -302,12 +302,12 @@ body > main {
 
 html[dir="rtl"] .topbar {
   direction: rtl !important;
-  flex-direction: row !important;
+  flex-direction: row-reverse !important;
 }
 
 html[dir="ltr"] .topbar {
   direction: ltr !important;
-  flex-direction: row !important;
+  flex-direction: row-reverse !important;
 }
 
 html[dir="rtl"] .brand-wrap {
@@ -2351,6 +2351,7 @@ hr {
 
 @media (max-width: 768px) {
   .topbar {
+    flex-direction: row !important;
     flex-wrap: wrap;
     padding: 16px 12px 8px;
     gap: 12px;
