@@ -35,6 +35,12 @@
   --auth-bg: linear-gradient(135deg, color-mix(in oklab, var(--card-strong) 85%, transparent), color-mix(in oklab, var(--card) 60%, transparent));
   --auth-input-bg: rgba(255, 255, 255, 0.6);
   --auth-input-border: color-mix(in oklab, var(--primary) 20%, transparent);
+
+  /* Student Avatar (Light Mode) */
+  --avatar-bg: linear-gradient(135deg, color-mix(in oklab, var(--primary) 12%, #ffffff), color-mix(in oklab, var(--primary) 22%, #ffffff));
+  --avatar-color: var(--primary-strong);
+  --avatar-border: 1px solid color-mix(in oklab, var(--primary) 18%, transparent);
+  --avatar-shadow: 0 4px 12px -2px color-mix(in oklab, var(--primary) 8%, transparent);
 }
 
 :root[data-theme="dark"] {
@@ -70,6 +76,12 @@
   --auth-bg: color-mix(in oklab, var(--card) 70%, transparent);
   --auth-input-bg: color-mix(in oklab, var(--bg) 40%, transparent);
   --auth-input-border: rgba(255, 255, 255, 0.15);
+
+  /* Student Avatar (Dark Mode - Softer and more pleasant for eye comfort) */
+  --avatar-bg: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(59, 130, 246, 0.2));
+  --avatar-color: #60a5fa;
+  --avatar-border: 1px solid rgba(59, 130, 246, 0.22);
+  --avatar-shadow: none;
 }
 
 * {
