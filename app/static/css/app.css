@@ -2920,7 +2920,60 @@ tbody tr, .notif-item {
   border-radius: 20px !important;
   background: var(--card) !important;
   backdrop-filter: var(--glass-blur) !important;
-  animation: smoothPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translateY(12px) scale(0.95) !important;
+  transform-origin: top right !important;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+#notifDropdown.show {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) scale(1) !important;
+}
+
+/* ========== NOTIFICATION BELL ANIMATIONS ========== */
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(15deg); }
+  30% { transform: rotate(-15deg); }
+  45% { transform: rotate(10deg); }
+  60% { transform: rotate(-10deg); }
+  75% { transform: rotate(4deg); }
+  85% { transform: rotate(-4deg); }
+}
+
+.ring-bell svg {
+  animation: bellRing 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+#notifToggle.active svg {
+  color: var(--primary) !important;
+  transform: scale(1.1);
+  transition: transform 0.2s, color 0.2s;
+}
+
+/* ========== GRADEBOOK SEARCH RESULT ROW STAGGER ANIMATION ========== */
+@keyframes rowFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+#gradeTable tbody tr {
+  animation: rowFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+#gradeTable tbody tr.no-results-row {
+  animation: rowFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .notif-dropdown-head {
