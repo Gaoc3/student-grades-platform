@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import delete, select
 
@@ -10,7 +10,7 @@ from app.models import Doctor, Notification, PublicationToken
 
 
 def cleanup_expired_tokens_and_notifications() -> None:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     notification_threshold = now - timedelta(days=settings.notification_retention_days)
 
     with MainSessionLocal() as main_db:

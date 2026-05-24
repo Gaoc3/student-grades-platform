@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -19,6 +20,21 @@ from app.services.qr_service import create_token, make_qr_base64
 
 router = APIRouter(tags=["publishing"])
 templates = Jinja2Templates(directory="app/templates")
+
+
+def _resolve_public_base_url(request: Request) -> str:
+    configured_base_url = os.getenv("PUBLIC_BASE_URL", "").strip()
+    if configured_base_url:
+        return configured_base_url.rstrip("/")
+    return str(request.base_url).rstrip("/")
+
+
+def _as_utc(dt: datetime | None) -> datetime | None:
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 @router.post("/api/publish")
@@ -126,7 +142,7 @@ def publish_grades(
         token_row = PublicationToken(student_id=st.id, token=token, expires_at=expires_at)
         db.add(token_row)
 
-        base_url = str(request.base_url).rstrip('/')
+        base_url = _resolve_public_base_url(request)
         grade_url = f"{base_url}/grade/{token}"
         qr_base64 = make_qr_base64(grade_url)
         ok, detail = send_grade_qr_email(
@@ -226,7 +242,8 @@ def grade_page(request: Request, token: str):
                 status_code=404,
             )
 
-        if token_row.expires_at < now:
+        expires_at = _as_utc(token_row.expires_at)
+        if not expires_at or expires_at < now:
             db.delete(token_row)
             db.commit()
             return templates.TemplateResponse(
