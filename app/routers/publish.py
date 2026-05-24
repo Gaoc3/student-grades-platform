@@ -156,6 +156,11 @@ def publish_grades(
             skipped.append({"student": st.full_name, "reason": "Active unseen token already exists"})
             continue
 
+        if payload.force_new_token:
+            db.execute(
+                delete(PublicationToken).where(PublicationToken.student_id == st.id)
+            )
+
         token = create_token()
         expires_at = now + timedelta(days=settings.qr_expiry_days)
         token_row = PublicationToken(student_id=st.id, token=token, expires_at=expires_at)
