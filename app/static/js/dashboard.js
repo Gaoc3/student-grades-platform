@@ -139,6 +139,14 @@ const I18N = {
     publishTargetLabel: 'الجمهور المستهدف للنشر',
     publishModeAll: 'إذاعة لجميع الطلبة',
     publishModeManual: 'تحديد يدوي',
+    publishDetailsTitle: 'تفاصيل عملية النشر',
+    openResult: 'فتح النتيجة',
+    skippedLabel: 'تم التخطي (لم يتم النشر لـ):',
+    reasonActiveToken: 'يوجد رابط فعال لم يفتحه الطالب بعد',
+    reasonNoEmail: 'لا يوجد بريد إلكتروني مسجل',
+    reasonQrRegenerated: 'تم تجديد الـ QR بنجاح',
+    reasonSent: 'تم إرسال البريد بنجاح',
+    reasonFailed: 'فشل الإرسال',
   },
   en: {
     toggleTheme: 'Theme',
@@ -255,6 +263,14 @@ const I18N = {
     publishTargetLabel: 'Target Audience',
     publishModeAll: 'Broadcast to all students',
     publishModeManual: 'Manual Selection',
+    publishDetailsTitle: 'Publishing Process Details',
+    openResult: 'Open Grade Page',
+    skippedLabel: 'Skipped (Not published for):',
+    reasonActiveToken: 'Active unseen link/token already exists',
+    reasonNoEmail: 'No registered email address',
+    reasonQrRegenerated: 'QR code regenerated successfully',
+    reasonSent: 'Email sent successfully',
+    reasonFailed: 'Email delivery failed',
   },
 };
 
@@ -293,6 +309,15 @@ function t(key, vars = {}) {
     text = text.replaceAll(`{${k}}`, String(v));
   }
   return text;
+}
+
+function getLocalizedReason(reason) {
+  if (reason === 'Active unseen token already exists') return t('reasonActiveToken');
+  if (reason === 'No email') return t('reasonNoEmail');
+  if (reason === 'QR regenerated') return t('reasonQrRegenerated');
+  if (reason === 'sent') return t('reasonSent');
+  if (reason === 'failed') return t('reasonFailed');
+  return reason;
 }
 
 function escapeHtml(value) {
@@ -555,7 +580,8 @@ function showToast(message, type = 'info', options = {}) {
 function getLocalizedNotifMessage(n) {
   let payload = {};
   try {
-    payload = n.payload_json ? JSON.parse(n.payload_json) : {};
+    const payloadStr = n.payload || n.payload_json;
+    payload = payloadStr ? JSON.parse(payloadStr) : {};
   } catch(e) {
     console.error("Failed to parse payload", e);
   }
@@ -1355,37 +1381,37 @@ publishForm?.addEventListener('submit', async (e) => {
     publishResult.innerHTML = `
       <div style="background: color-mix(in oklab, var(--card) 60%, transparent); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-top: 16px;">
         <h3 style="margin-top:0; margin-bottom: 16px; font-size: 16px; color: var(--text); display: flex; align-items: center; gap: 8px;">
-          <i class="ri-history-line" style="color: var(--primary);"></i> تفاصيل عملية النشر
+          <i class="ri-history-line" style="color: var(--primary);"></i> ${t('publishDetailsTitle')}
         </h3>
         ${payload.emailed && payload.emailed.length ? `
         <ul style="padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: ${payload.skipped && payload.skipped.length ? '20px' : '0'};">
           ${payload.emailed.map(l => `
-            <li style="padding: 12px 16px; background: color-mix(in oklab, var(--card-strong) 40%, transparent); border: 1px solid var(--line); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; direction: rtl;">
+            <li style="padding: 12px 16px; background: color-mix(in oklab, var(--card-strong) 40%, transparent); border: 1px solid var(--line); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; direction: ${state.lang === 'ar' ? 'rtl' : 'ltr'};">
               <div style="display: flex; align-items: center; gap: 12px;">
                 <div style="font-size: 26px; line-height: 1; display: flex; align-items: center; justify-content: center;">
                   ${l.status === 'sent' ? '<i class="ri-mail-send-fill" style="color: var(--primary);"></i>' : l.status === 'generated' ? '<i class="ri-qr-code-line" style="color: var(--ok);"></i>' : '<i class="ri-error-warning-fill" style="color: var(--danger);"></i>'}
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: right;">
+                <div style="display: flex; flex-direction: column; gap: 4px; align-items: start; text-align: start;">
                   <strong style="font-size: 14px; color: var(--text); font-weight: 800; margin: 0; line-height: 1;">${l.student}</strong>
                   <span style="font-size: 12px; font-weight: 700; color: ${(l.status === 'sent' || l.status === 'generated') ? 'var(--ok)' : 'var(--danger)'}; margin: 0; line-height: 1;">
-                    ${l.status === 'sent' ? '<i class="ri-check-line"></i> تم إرسال الإيميل بنجاح' : l.status === 'generated' ? '<i class="ri-check-line"></i> تم إصدار QR جديد بنجاح' : `<i class="ri-close-line"></i> فشل الإرسال (${l.detail})`}
+                    ${l.status === 'sent' ? `<i class="ri-check-line"></i> ${t('reasonSent')}` : l.status === 'generated' ? `<i class="ri-check-line"></i> ${t('reasonQrRegenerated')}` : `<i class="ri-close-line"></i> ${t('reasonFailed')} (${getLocalizedReason(l.detail)})`}
                   </span>
                 </div>
               </div>
-              ${l.grade_url ? `<a href="${l.grade_url}" target="_blank" class="primary-btn" style="padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 2px 6px color-mix(in oklab, var(--primary) 30%, transparent);">فتح النتيجة <i class="ri-external-link-line"></i></a>` : ''}
+              ${l.grade_url ? `<a href="${l.grade_url}" target="_blank" class="primary-btn" style="padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 2px 6px color-mix(in oklab, var(--primary) 30%, transparent);">${t('openResult')} <i class="ri-external-link-line"></i></a>` : ''}
             </li>
           `).join('')}
         </ul>` : ''}
       
       ${payload.skipped && payload.skipped.length ? `
         <h4 style="margin: 0 0 12px; font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 6px;">
-          <i class="ri-skip-forward-line"></i> تم التخطي (لم يتم النشر لـ):
+          <i class="ri-skip-forward-line"></i> ${t('skippedLabel')}
         </h4>
         <ul style="padding: 0; list-style: none; display: grid; gap: 8px;">
           ${payload.skipped.map(s => `
-            <li style="padding: 10px 14px; background: color-mix(in oklab, var(--danger) 10%, transparent); border: 1px solid color-mix(in oklab, var(--danger) 20%, transparent); border-radius: 8px; font-size: 13px; display: flex; align-items: center; gap: 8px; color: var(--text);">
+            <li style="padding: 10px 14px; background: color-mix(in oklab, var(--danger) 10%, transparent); border: 1px solid color-mix(in oklab, var(--danger) 20%, transparent); border-radius: 8px; font-size: 13px; display: flex; align-items: center; gap: 8px; color: var(--text); direction: ${state.lang === 'ar' ? 'rtl' : 'ltr'};">
               <i class="ri-information-line" style="color: var(--danger);"></i>
-              <div><strong style="font-weight: 800;">${s.student}:</strong> ${s.reason}</div>
+              <div style="text-align: start;"><strong style="font-weight: 800;">${s.student}:</strong> ${getLocalizedReason(s.reason)}</div>
             </li>
           `).join('')}
         </ul>

@@ -17,7 +17,7 @@
 
       if (window.location.pathname === '/dashboard') {
         document.documentElement.classList.add('dashboard-preload');
-        document.documentElement.style.backgroundColor = savedTheme === 'dark' ? '#020617' : '#f8fafc';
+        document.documentElement.style.backgroundColor = savedTheme === 'dark' ? '#020617' : '#f0f4f9';
       }
 
       const isAuthPage = /^\/(?:login|signup)\/?$/.test(window.location.pathname);
@@ -146,6 +146,9 @@
         if (!document.startViewTransition) {
           document.documentElement.dataset.theme = next;
           localStorage.setItem('theme', next);
+          if (window.location.pathname === '/dashboard') {
+            document.documentElement.style.backgroundColor = next === 'dark' ? '#020617' : '#f0f4f9';
+          }
           return;
         }
 
@@ -155,6 +158,9 @@
         const transition = document.startViewTransition(() => {
           document.documentElement.dataset.theme = next;
           localStorage.setItem('theme', next);
+          if (window.location.pathname === '/dashboard') {
+            document.documentElement.style.backgroundColor = next === 'dark' ? '#020617' : '#f0f4f9';
+          }
         });
 
         transition.finished.finally(() => { _themeAnimating = false; });
