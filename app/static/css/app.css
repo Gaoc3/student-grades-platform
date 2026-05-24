@@ -2669,11 +2669,23 @@ hr {
 .student-selection-box {
   max-height: 200px;
   overflow-y: auto;
+  overflow-x: hidden;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-content: start;
+  gap: 10px;
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 12px;
   margin-top: 12px;
   background: color-mix(in oklab, var(--card-strong) 80%, transparent);
+}
+
+.student-selection-box .check-card {
+  width: 100%;
+  margin: 0 !important;
+  box-sizing: border-box;
+  justify-content: space-between;
 }
 
 .publish-settings-stack {

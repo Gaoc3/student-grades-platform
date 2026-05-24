@@ -873,7 +873,7 @@ function renderPublishOptions() {
   const manualContainer = document.getElementById('manualStudentSelection');
   if (manualContainer) {
     manualContainer.innerHTML = state.fullRows.map(row => `
-      <label class="check-card" style="margin-bottom: 8px;">
+      <label class="check-card">
         <input type="checkbox" name="student_ids" value="${row.student.id}" />
         <span>${row.student.full_name} <small class="muted">(${row.student.email || '-'})</small></span>
       </label>
@@ -885,7 +885,7 @@ document.querySelectorAll('input[name="publish_mode"]').forEach(radio => {
   radio.addEventListener('change', (e) => {
     const manualDiv = document.getElementById('manualStudentSelection');
     if (manualDiv) {
-      manualDiv.style.display = e.target.value === 'manual' ? 'flex' : 'none';
+      manualDiv.style.display = e.target.value === 'manual' ? 'grid' : 'none';
     }
   });
 });
