@@ -57,12 +57,6 @@ class PublishRequest(BaseModel):
     force_new_token: bool = False
     semester: int = Field(ge=1, le=2, default=1)
 
-    @model_validator(mode="after")
-    def validate_publish_mode(self):
-        if self.send_email and self.force_new_token:
-            raise ValueError("Choose only one publish option at a time")
-        return self
-
 
 class StudentOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)

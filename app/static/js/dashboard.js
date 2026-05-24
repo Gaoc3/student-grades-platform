@@ -1302,38 +1302,9 @@ document.addEventListener('input', (e) => {
 });
 
 const publishForm = document.getElementById('publishForm');
-function syncPublishOptionLocks() {
-  if (!publishForm) return;
-
-  const sendEmail = publishForm.querySelector('input[name="send_email"]');
-  const forceNewToken = publishForm.querySelector('input[name="force_new_token"]');
-
-  if (!sendEmail || !forceNewToken) return;
-
-  if (sendEmail.checked) {
-    forceNewToken.checked = false;
-    forceNewToken.disabled = true;
-    sendEmail.disabled = false;
-  } else if (forceNewToken.checked) {
-    sendEmail.checked = false;
-    sendEmail.disabled = true;
-    forceNewToken.disabled = false;
-  } else {
-    sendEmail.disabled = false;
-    forceNewToken.disabled = false;
-  }
-}
-
-if (publishForm) {
-  publishForm.querySelectorAll('input[name="send_email"], input[name="force_new_token"]').forEach((input) => {
-    input.addEventListener('change', syncPublishOptionLocks);
-  });
-  syncPublishOptionLocks();
-}
 
 publishForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  syncPublishOptionLocks();
   const fd = new FormData(publishForm);
   const mode = fd.get('publish_mode');
 
