@@ -56,6 +56,7 @@ const I18N = {
     clearOldNotifications: 'تنظيف الإشعارات القديمة',
     notifTitle: 'الإشعارات',
     notifClearAll: 'مسح الكل<i class="ri-delete-bin-6-line" style="vertical-align: middle; margin-inline-start: 6px;"></i>',
+    noEmailAddress: 'لا يوجد بريد إلكتروني',
     notifStudentOpened: 'طالب فتح الرابط: {msg}',
     notifAllCleared: 'تم مسح جميع الإشعارات',
     notifDelete: 'حذف',
@@ -169,6 +170,7 @@ const I18N = {
     clearOldNotifications: 'Clear old notifications',
     notifTitle: 'Notifications',
     notifClearAll: 'Clear All<i class="ri-delete-bin-6-line" style="vertical-align: middle; margin-inline-start: 6px;"></i>',
+    noEmailAddress: 'No email address',
     notifStudentOpened: 'Student opened link: {msg}',
     notifAllCleared: 'All notifications cleared.',
     notifDelete: 'Delete',
@@ -288,6 +290,15 @@ function t(key, vars = {}) {
     text = text.replaceAll(`{${k}}`, String(v));
   }
   return text;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 function setStatus(text = '', type = 'info') {
@@ -873,9 +884,12 @@ function renderPublishOptions() {
   const manualContainer = document.getElementById('manualStudentSelection');
   if (manualContainer) {
     manualContainer.innerHTML = state.fullRows.map(row => `
-      <label class="check-card">
-        <input type="checkbox" name="student_ids" value="${row.student.id}" />
-        <span>${row.student.full_name} <small class="muted">(${row.student.email || '-'})</small></span>
+      <label class="check-card student-choice-card">
+        <span class="student-choice-content">
+          <span class="student-choice-name" title="${escapeHtml(row.student.full_name)}">${escapeHtml(row.student.full_name)}</span>
+          <span class="student-choice-email" dir="ltr" title="${escapeHtml(row.student.email || t('noEmailAddress'))}">${escapeHtml(row.student.email || t('noEmailAddress'))}</span>
+        </span>
+        <input type="checkbox" name="student_ids" value="${row.student.id}" aria-label="${escapeHtml(row.student.full_name)} ${escapeHtml(row.student.email || t('noEmailAddress'))}" />
       </label>
     `).join('');
   }
