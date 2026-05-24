@@ -24,6 +24,7 @@ templates = Jinja2Templates(directory="app/templates")
 @router.post("/api/publish")
 def publish_grades(
     payload: PublishRequest,
+    request: Request,
     doctor: Doctor = Depends(get_current_doctor),
     db: Session = Depends(get_tenant_db),
 ) -> dict[str, object]:
@@ -125,7 +126,15 @@ def publish_grades(
         token_row = PublicationToken(student_id=st.id, token=token, expires_at=expires_at)
         db.add(token_row)
 
-        grade_url = f"{settings.public_base_url.rstrip('/')}/grade/{token}"
+        # Dynamically determine the base URL using request headers (supporting Cloudflare tunnel and proxy hosts)
+        forwarded_proto = request.headers.get("x-forwarded-proto")
+        forwarded_host = request.headers.get("x-forwarded-host")
+        if forwarded_proto and forwarded_host:
+            base_url = f"{forwarded_proto}://{forwarded_host}"
+        else:
+            base_url = str(request.base_url).rstrip('/')
+
+        grade_url = f"{base_url}/grade/{token}"
         qr_base64 = make_qr_base64(grade_url)
         ok, detail = send_grade_qr_email(
             to_email=st.email,
