@@ -261,34 +261,38 @@
           <span class="badge-soft" data-i18n="badgeGradebook">السجل الأكاديمي</span>
         </div>
 
-        <div class="gradebook-search-hub" style="margin: 22px 0; display: flex; flex-direction: column; gap: 16px;">
-          <div style="position: relative; display: flex; align-items: center; width: 100%;">
-            <span style="position: absolute; inset-inline-start: 16px; color: var(--primary); display: flex; align-items: center; pointer-events: none; opacity: 0.85;">
-              <i class="ri-search-2-line" style="font-size: 20px;"></i>
+        <div class="gradebook-search-hub">
+          <!-- Search Bar -->
+          <div class="gradebook-search-bar-wrap">
+            <span class="gradebook-search-icon">
+              <i class="ri-search-2-line"></i>
             </span>
-            <input id="gradebookSearchInput" type="text" data-i18n-placeholder="searchGradebookPlaceholder" placeholder="ابحث باسم الطالب أو البريد الإلكتروني في السجل..." 
-              style="padding-inline-start: 48px; padding-inline-end: 48px; height: 52px; font-size: 14.5px; font-weight: 600; border-radius: 16px; border-color: color-mix(in oklab, var(--primary) 25%, var(--line)); background: color-mix(in oklab, var(--card-strong) 95%, transparent); width: 100%; box-sizing: border-box;" />
-            <button id="clearGradebookSearch" class="icon-btn" type="button" style="position: absolute; inset-inline-end: 12px; width: 34px; height: 34px; display: none; align-items: center; justify-content: center; font-size: 14px; color: var(--muted); background: color-mix(in oklab, var(--text) 5%, transparent); border-radius: 50%; border: none; cursor: pointer; transition: all 0.2s;"
-              onmouseenter="this.style.color='var(--danger)'; this.style.background='color-mix(in oklab, var(--danger) 10%, transparent)'"
-              onmouseleave="this.style.color='var(--muted)'; this.style.background='color-mix(in oklab, var(--text) 5%, transparent)'">✕</button>
+            <input id="gradebookSearchInput" type="text"
+              class="gradebook-search-input"
+              data-i18n-placeholder="searchGradebookPlaceholder"
+              placeholder="ابحث باسم الطالب أو البريد الإلكتروني..." />
+            <button id="clearGradebookSearch" class="gradebook-search-clear" type="button" aria-label="مسح البحث" style="display:none;">
+              <i class="ri-close-line"></i>
+            </button>
           </div>
-          
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; padding: 2px 4px;">
-            <div class="chips" id="gradebookFilters" style="display: flex; gap: 10px; flex-wrap: wrap;">
+
+          <!-- Filters + Counter Row -->
+          <div class="gradebook-search-meta">
+            <div class="chips" id="gradebookFilters">
               <label class="chip-check">
                 <input type="radio" name="gradebook_filter" value="all" checked />
                 <span data-i18n="filterAll">الكل</span>
               </label>
               <label class="chip-check">
                 <input type="radio" name="gradebook_filter" value="passing" />
-                <span data-i18n="filterPassing" style="color: var(--ok); font-weight: 700;">الناجحين</span>
+                <span data-i18n="filterPassing" class="filter-passing-label">الناجحين ✓</span>
               </label>
               <label class="chip-check">
                 <input type="radio" name="gradebook_filter" value="failing" />
-                <span data-i18n="filterFailing" style="color: var(--danger); font-weight: 700;">الراسبين / المكملين</span>
+                <span data-i18n="filterFailing" class="filter-failing-label">الراسبين ✗</span>
               </label>
             </div>
-            <div id="searchCounterBadge" class="badge-soft" style="font-size: 12.5px; font-weight: 700; padding: 8px 16px; border-radius: 12px; background: color-mix(in oklab, var(--primary) 8%, transparent); border-color: color-mix(in oklab, var(--primary) 20%, transparent); color: var(--primary-strong); letter-spacing: 0.2px; box-shadow: var(--shadow-soft);">
+            <div id="searchCounterBadge" class="search-counter-badge">
               جاري حساب الإحصائيات...
             </div>
           </div>
