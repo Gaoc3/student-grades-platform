@@ -122,7 +122,7 @@ def publish_grades(
 
     sent: list[dict[str, str]] = []
     skipped: list[dict[str, str]] = []
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
 
     for st in students:
         rows = db.scalars(
@@ -138,7 +138,7 @@ def publish_grades(
         for row in rows:
             row.published = True
 
-        if payload.force_new_token:
+        if payload.force_new_token and not payload.send_email:
             db.execute(delete(PublicationToken).where(PublicationToken.student_id == st.id))
 
             token = create_token()
@@ -204,7 +204,11 @@ def publish_grades(
         Notification(
             event_type="publish",
             message=f"Grades published for {len(students)} student(s) in {doctor.subject_name}",
-            payload_json=json.dumps({"components": selected_component_keys}),
+            payload_json=json.dumps({
+                "components": selected_component_keys,
+                "student_count": len(students),
+                "subject": doctor.subject_name
+            }),
         )
     )
     db.commit()
@@ -245,7 +249,7 @@ def delete_notification(notif_id: int, db: Session = Depends(get_tenant_db)):
 
 @router.get("/grade/{token}", response_class=HTMLResponse)
 def grade_page(request: Request, token: str):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
 
     found = None
     doctor_info = None
@@ -285,7 +289,7 @@ def grade_page(request: Request, token: str):
                 status_code=404,
             )
 
-        expires_at = _as_utc(token_row.expires_at)
+        expires_at = token_row.expires_at
         if not expires_at or expires_at < now:
             db.delete(token_row)
             db.commit()
@@ -317,7 +321,11 @@ def grade_page(request: Request, token: str):
             Notification(
                 event_type="grade_viewed",
                 message=f"{student.full_name} فتح صفحة الدرجات",
-                payload_json=json.dumps({"student_id": student.id, "email": student.email}),
+                payload_json=json.dumps({
+                    "student_id": student.id,
+                    "email": student.email,
+                    "student_name": student.full_name
+                }),
             )
         )
         db.commit()

@@ -1,7 +1,6 @@
 document.documentElement.dataset.authReady = '1';
 
 const form = document.getElementById('loginForm');
-const msg = document.getElementById('msg');
 const langToggleBtn = document.getElementById('langToggleBtn');
 
 const I18N = {
@@ -36,6 +35,111 @@ const I18N = {
 };
 
 let currentLang = localStorage.getItem('dashboard_lang') || 'ar';
+
+function ensureToastStack() {
+  let stack = document.getElementById('toastStack');
+  if (stack) {
+    return stack;
+  }
+
+  stack = document.createElement('div');
+  stack.id = 'toastStack';
+  stack.className = 'toast-stack';
+  stack.setAttribute('aria-live', 'polite');
+  stack.setAttribute('aria-atomic', 'true');
+  document.body.appendChild(stack);
+  return stack;
+}
+
+function showToast(message, type = 'info', options = {}) {
+  const normalizedMessage = message == null ? '' : String(message).trim();
+  if (!normalizedMessage) {
+    return null;
+  }
+
+  const toastType = type === 'ok' ? 'success' : type;
+  const duration = options.duration ?? (toastType === 'error' ? 3000 : 2200);
+  const stack = ensureToastStack();
+  stack.dir = document.documentElement.lang === 'ar' ? 'rtl' : 'ltr';
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast--${toastType}`;
+  toast.dataset.type = toastType;
+  toast.setAttribute('role', toastType === 'error' ? 'alert' : 'status');
+  toast.setAttribute('aria-live', toastType === 'error' ? 'assertive' : 'polite');
+  toast.style.setProperty('--toast-duration', `${duration}ms`);
+
+  const iconWrap = document.createElement('div');
+  iconWrap.className = 'toast-icon';
+  const icon = document.createElement('i');
+  icon.className = toastType === 'success'
+    ? 'ri-checkbox-circle-fill'
+    : toastType === 'error'
+      ? 'ri-close-circle-fill'
+      : 'ri-information-fill';
+  iconWrap.appendChild(icon);
+
+  const content = document.createElement('div');
+  content.className = 'toast-content';
+
+  const messageEl = document.createElement('div');
+  messageEl.className = 'toast-message';
+  messageEl.textContent = normalizedMessage;
+  content.appendChild(messageEl);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'toast-close';
+  closeBtn.setAttribute('aria-label', document.documentElement.lang === 'ar' ? 'إغلاق' : 'Close');
+  closeBtn.textContent = '×';
+
+  const progress = document.createElement('div');
+  progress.className = 'toast-progress';
+
+  toast.append(iconWrap, content, closeBtn, progress);
+  stack.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add('toast--visible');
+  });
+
+  let closeTimer = null;
+  let removed = false;
+
+  const closeToast = () => {
+    if (removed) {
+      return;
+    }
+
+    removed = true;
+    clearTimeout(closeTimer);
+    toast.classList.remove('toast--visible');
+    window.setTimeout(() => {
+      toast.remove();
+    }, 180);
+  };
+
+  const startAutoClose = (ms) => {
+    clearTimeout(closeTimer);
+    closeTimer = window.setTimeout(closeToast, ms);
+  };
+
+  startAutoClose(duration);
+
+  toast.addEventListener('mouseenter', () => {
+    clearTimeout(closeTimer);
+  });
+
+  toast.addEventListener('mouseleave', () => {
+    if (!removed) {
+      startAutoClose(900);
+    }
+  });
+
+  closeBtn.addEventListener('click', closeToast);
+
+  return toast;
+}
 
 function applyLanguage(lang, animate = false) {
   const doSwitch = () => {
@@ -104,8 +208,7 @@ form?.addEventListener('submit', async (e) => {
   console.log('Login form submitted');
   
   const pack = I18N[currentLang] || I18N.ar;
-  msg.textContent = pack.loggingIn;
-  msg.style.color = 'var(--text)';
+  showToast(pack.loggingIn, 'info', { duration: 1000 });
 
   const formData = new FormData(form);
   const data = {};
@@ -129,8 +232,7 @@ form?.addEventListener('submit', async (e) => {
     
     if (!res.ok) {
       console.warn('Login failed:', payload.detail);
-      msg.textContent = payload.detail || pack.loginFailed;
-      msg.style.color = 'var(--danger)';
+      showToast(payload.detail || pack.loginFailed, 'error');
       return;
     }
 
@@ -140,8 +242,7 @@ form?.addEventListener('submit', async (e) => {
     window.location.replace('/dashboard');
   } catch (err) {
     console.error('Network or server error during login:', err);
-    msg.textContent = pack.loginFailed + ' (Network Error)';
-    msg.style.color = 'var(--danger)';
+    showToast(pack.loginFailed + ' (Network Error)', 'error');
   }
 });
 

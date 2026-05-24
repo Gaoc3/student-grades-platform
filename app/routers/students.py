@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.dependencies import get_tenant_db
 from app.models import Student
 from app.schemas import StudentCreate, StudentUpdate
+from app.services.email_service import normalize_email_address
 
 router = APIRouter(prefix="/api/students", tags=["students"])
 
@@ -24,7 +25,8 @@ def list_students(search: str | None = None, db: Session = Depends(get_tenant_db
 
 @router.post("")
 def create_student(payload: StudentCreate, db: Session = Depends(get_tenant_db)):
-    student = Student(full_name=payload.full_name.strip(), email=payload.email)
+    email = normalize_email_address(str(payload.email)) if payload.email else None
+    student = Student(full_name=payload.full_name.strip(), email=email)
     db.add(student)
     db.commit()
     db.refresh(student)
@@ -40,7 +42,7 @@ def update_student(student_id: int, payload: StudentUpdate, db: Session = Depend
     if payload.full_name is not None:
         student.full_name = payload.full_name.strip()
     if payload.email is not None:
-        student.email = payload.email
+        student.email = normalize_email_address(str(payload.email))
 
     db.commit()
     return {"message": "Updated"}
@@ -83,17 +85,23 @@ async def import_name_email_map(file: UploadFile = File(...), db: Session = Depe
             continue
 
         name, email = [x.strip() for x in line.split(":", 1)]
-        if not name or "@" not in email:
+        if not name or not email:
+            skipped += 1
+            continue
+
+        try:
+            normalized_email = normalize_email_address(email)
+        except ValueError:
             skipped += 1
             continue
 
         key = name.lower()
         st = existing_by_name.get(key)
         if st:
-            st.email = email
+            st.email = normalized_email
             updated += 1
         else:
-            st = Student(full_name=name, email=email)
+            st = Student(full_name=name, email=normalized_email)
             db.add(st)
             existing_by_name[key] = st
             created += 1

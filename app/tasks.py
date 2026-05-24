@@ -10,7 +10,7 @@ from app.models import Doctor, Notification, PublicationToken
 
 
 def cleanup_expired_tokens_and_notifications() -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     notification_threshold = now - timedelta(days=settings.notification_retention_days)
 
     with MainSessionLocal() as main_db:

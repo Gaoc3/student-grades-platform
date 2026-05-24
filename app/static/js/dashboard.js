@@ -1,4 +1,3 @@
-const msg = document.getElementById('msg');
 const gradeTable = document.getElementById('gradeTable');
 let notificationsList = [];
 let lastSeenNotifId = parseInt(localStorage.getItem('last_seen_notif_id') || '0', 10);
@@ -58,6 +57,8 @@ const I18N = {
     notifClearAll: 'مسح الكل<i class="ri-delete-bin-6-line" style="vertical-align: middle; margin-inline-start: 6px;"></i>',
     noEmailAddress: 'لا يوجد بريد إلكتروني',
     notifStudentOpened: 'طالب فتح الرابط: {msg}',
+    notifPublishMsg: 'تم نشر النتائج لـ {count} طالب في مادة {subject}',
+    notifGradeViewedMsg: 'الطالب {name} قام بفتح صفحة الدرجات',
     notifAllCleared: 'تم مسح جميع الإشعارات',
     notifDelete: 'حذف',
     notifDeleteLabel: 'حذف الإشعار',
@@ -172,6 +173,8 @@ const I18N = {
     notifClearAll: 'Clear All<i class="ri-delete-bin-6-line" style="vertical-align: middle; margin-inline-start: 6px;"></i>',
     noEmailAddress: 'No email address',
     notifStudentOpened: 'Student opened link: {msg}',
+    notifPublishMsg: 'Grades published for {count} student(s) in {subject}',
+    notifGradeViewedMsg: 'Student {name} opened the grade page',
     notifAllCleared: 'All notifications cleared.',
     notifDelete: 'Delete',
     notifDeleteLabel: 'Delete Notification',
@@ -301,9 +304,23 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
+function ensureToastStack() {
+  let stack = document.getElementById('toastStack');
+  if (stack) {
+    return stack;
+  }
+
+  stack = document.createElement('div');
+  stack.id = 'toastStack';
+  stack.className = 'toast-stack';
+  stack.setAttribute('aria-live', 'polite');
+  stack.setAttribute('aria-atomic', 'true');
+  document.body.appendChild(stack);
+  return stack;
+}
+
 function setStatus(text = '', type = 'info') {
-  msg.textContent = text;
-  msg.dataset.type = type;
+  showToast(text, type);
 }
 
 async function api(url, options = {}) {
@@ -443,47 +460,116 @@ function updateGradebookFilters() {
   renderGradeTable();
 }
 
-function showToast(message, type = 'info') {
+function showToast(message, type = 'info', options = {}) {
+  const normalizedMessage = message == null ? '' : String(message).trim();
+  if (!normalizedMessage) {
+    return null;
+  }
+
+  const toastType = type === 'ok' ? 'success' : type;
+  const duration = options.duration ?? (toastType === 'error' ? 1500 : 900);
+  const stack = ensureToastStack();
+  stack.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
+
   const toast = document.createElement('div');
-  toast.style.cssText = `
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px);
-    background: var(--card-strong); border: 1px solid var(--line); color: var(--text);
-    padding: 12px 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    z-index: 9999; font-weight: 700; font-size: 14px; opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex; align-items: center; gap: 8px; backdrop-filter: blur(12px);
-  `;
+  toast.className = `toast toast--${toastType}`;
+  toast.dataset.type = toastType;
+  toast.setAttribute('role', toastType === 'error' ? 'alert' : 'status');
+  toast.setAttribute('aria-live', toastType === 'error' ? 'assertive' : 'polite');
+  toast.style.setProperty('--toast-duration', `${duration}ms`);
 
-  let icon = '<i class="ri-information-line"></i>';
-  if (type === 'success') icon = '<i class="ri-checkbox-circle-fill" style="color: var(--ok);"></i>';
-  else if (type === 'error') icon = '<i class="ri-close-circle-fill" style="color: var(--danger);"></i>';
+  const iconWrap = document.createElement('div');
+  iconWrap.className = 'toast-icon';
+  const icon = document.createElement('i');
+  icon.className = toastType === 'success'
+    ? 'ri-checkbox-circle-fill'
+    : toastType === 'error'
+      ? 'ri-close-circle-fill'
+      : toastType === 'warning'
+        ? 'ri-alert-fill'
+        : 'ri-information-fill';
+  iconWrap.appendChild(icon);
 
-  toast.innerHTML = `${icon} <span style="flex:1">${message}</span>
-    <button onclick="this.parentElement.style.opacity='0';this.parentElement.style.transform='translateX(-50%) translateY(-20px)';setTimeout(()=>this.parentElement.remove(),300)" 
-      style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 0 0 8px;line-height:1;font-weight:700;transition:color 0.2s;"
-      onmouseenter="this.style.color='var(--text)'" onmouseleave="this.style.color='var(--muted)'"
-      aria-label="إغلاق">✕</button>`;
+  const content = document.createElement('div');
+  content.className = 'toast-content';
 
-  document.body.appendChild(toast);
+  const messageEl = document.createElement('div');
+  messageEl.className = 'toast-message';
+  messageEl.textContent = normalizedMessage;
+  content.appendChild(messageEl);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'toast-close';
+  closeBtn.setAttribute('aria-label', state.lang === 'ar' ? 'إغلاق' : 'Close');
+  closeBtn.textContent = '×';
+
+  const progress = document.createElement('div');
+  progress.className = 'toast-progress';
+
+  toast.append(iconWrap, content, closeBtn, progress);
+  stack.appendChild(toast);
 
   requestAnimationFrame(() => {
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateX(-50%) translateY(0)';
+    toast.classList.add('toast--visible');
   });
 
-  const autoClose = setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(-50%) translateY(-20px)';
-    setTimeout(() => toast.remove(), 300);
-  }, 4000);
+  let closeTimer = null;
+  let removed = false;
 
-  toast.addEventListener('mouseenter', () => clearTimeout(autoClose));
+  const closeToast = () => {
+    if (removed) {
+      return;
+    }
+
+    removed = true;
+    clearTimeout(closeTimer);
+    toast.classList.remove('toast--visible');
+    window.setTimeout(() => {
+      toast.remove();
+    }, 120);
+  };
+
+  const startAutoClose = (ms) => {
+    clearTimeout(closeTimer);
+    closeTimer = window.setTimeout(closeToast, ms);
+  };
+
+  startAutoClose(duration);
+
+  toast.addEventListener('mouseenter', () => {
+    clearTimeout(closeTimer);
+  });
+
   toast.addEventListener('mouseleave', () => {
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(-50%) translateY(-20px)';
-      setTimeout(() => toast.remove(), 300);
-    }, 1500);
+    if (!removed) {
+      startAutoClose(300);
+    }
   });
+
+  closeBtn.addEventListener('click', closeToast);
+
+  return toast;
+}
+
+function getLocalizedNotifMessage(n) {
+  let payload = {};
+  try {
+    payload = n.payload_json ? JSON.parse(n.payload_json) : {};
+  } catch(e) {
+    console.error("Failed to parse payload", e);
+  }
+
+  if (n.event_type === 'publish') {
+    const count = payload.student_count || 0;
+    const subject = payload.subject || '';
+    return t('notifPublishMsg', { count: count, subject: subject });
+  } else if (n.event_type === 'grade_viewed') {
+    const name = payload.student_name || '';
+    return t('notifGradeViewedMsg', { name: name });
+  }
+  
+  return n.message;
 }
 
 function renderNotifications() {
@@ -503,12 +589,20 @@ function renderNotifications() {
 
   if (notificationsList.length === 0) {
     listEl.innerHTML = `
-      <div style="padding: 36px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px;">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: color-mix(in oklab, var(--primary) 8%, transparent); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 4px; border: 1px dashed color-mix(in oklab, var(--primary) 20%, transparent);">
-          🔔
+      <div class="notif-empty-state">
+        <div class="notif-empty-mark" aria-hidden="true">
+          <svg class="notif-empty-mark-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="29" fill="white" fill-opacity="0.12" />
+            <circle cx="32" cy="32" r="29" stroke="white" stroke-opacity="0.22" stroke-width="1.5" />
+            <path d="M32 15.5C26.2 15.5 21.5 20.2 21.5 26V30.9C21.5 33.2 20.6 35.4 18.9 37.1L17.8 38.2C17.1 38.9 17.6 40.1 18.6 40.1H45.4C46.4 40.1 46.9 38.9 46.2 38.2L45.1 37.1C43.4 35.4 42.5 33.2 42.5 30.9V26C42.5 20.2 37.8 15.5 32 15.5Z" fill="white" />
+            <path d="M26.2 45.2C27 48.2 29.5 50.5 32 50.5C34.5 50.5 37 48.2 37.8 45.2" stroke="white" stroke-width="2.8" stroke-linecap="round" />
+            <path d="M24.1 20.7L20.8 17.4M39.9 20.7L43.2 17.4" stroke="white" stroke-width="2.6" stroke-linecap="round" />
+            <circle cx="15.8" cy="27" r="2" fill="white" fill-opacity="0.84" />
+            <circle cx="48.2" cy="27" r="2" fill="white" fill-opacity="0.84" />
+          </svg>
         </div>
-        <div style="font-weight: 800; font-size: 14px; color: var(--text);">${t('notifEmptyTitle')}</div>
-        <div style="font-size: 12px; color: var(--muted); max-width: 220px; line-height: 1.5; margin: 0 auto;">${t('notifEmptyDesc')}</div>
+        <div class="notif-empty-title">${t('notifEmptyTitle')}</div>
+        <div class="notif-empty-desc">${t('notifEmptyDesc')}</div>
       </div>
     `;
     return;
@@ -524,15 +618,15 @@ function renderNotifications() {
     else if (n.event_type === 'publish') icon = '<i class="ri-send-plane-fill" style="color: var(--ok);"></i>';
 
     return `
-      <div class="notif-item" data-notif-id="${n.id}" style="padding: 12px 16px; border-bottom: 1px solid var(--line); background: ${isUnread ? 'color-mix(in oklab, var(--primary) 10%, transparent)' : 'transparent'}; display: flex; gap: 12px; align-items: flex-start; transition: transform 0.25s ease, opacity 0.25s ease, background 0.2s; position: relative; cursor: default; overflow: hidden;">
-        <div style="font-size: 16px; margin-top: 2px;">${icon}</div>
+      <div class="notif-item" data-notif-id="${n.id}" style="padding: 8px 12px; border-bottom: 1px solid var(--line); background: ${isUnread ? 'color-mix(in oklab, var(--primary) 10%, transparent)' : 'transparent'}; display: flex; gap: 10px; align-items: flex-start; transition: transform 0.25s ease, opacity 0.25s ease, background 0.2s; position: relative; cursor: default; overflow: hidden;">
+        <div style="font-size: 13px; margin-top: 2px;">${icon}</div>
         <div style="flex: 1; min-width: 0;">
-          <div style="font-size: 13px; font-weight: ${isUnread ? '800' : '600'}; color: var(--text); margin-bottom: 4px;">${n.message}</div>
-          <div style="font-size: 11px; color: var(--muted);">${timeStr}</div>
+          <div class="notif-item-title" style="font-weight: ${isUnread ? '700' : '500'}; color: var(--text); margin-bottom: 2px;">${getLocalizedNotifMessage(n)}</div>
+          <div class="notif-item-time" style="font-size: 9px; color: var(--muted);">${timeStr}</div>
         </div>
-        ${isUnread ? `<div style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary); margin-top: 6px; flex-shrink: 0;"></div>` : ''}
+        ${isUnread ? `<div style="width: 6px; height: 6px; border-radius: 50%; background: var(--primary); margin-top: 6px; flex-shrink: 0;"></div>` : ''}
         <button class="notif-delete-btn" data-delete-notif="${n.id}" title="${t('notifDelete')}"
-          style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 11px; border-radius: 50%; transition: all 0.2s; flex-shrink: 0; margin-top: 2px;"
+          style="width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 9px; border-radius: 50%; transition: all 0.2s; flex-shrink: 0; margin-top: 2px;"
           onmouseenter="this.style.color='var(--danger)';this.style.background='color-mix(in oklab, var(--danger) 12%, transparent)'"
           onmouseleave="this.style.color='var(--muted)';this.style.background='none'"
           aria-label="${t('notifDeleteLabel')}">✕</button>
@@ -608,8 +702,8 @@ async function fetchNotifications() {
     if (bellBtn && notificationsList.length > 0) {
       const newNotifs = data.filter(n => n.id > notificationsList[0].id && n.id > lastSeenNotifId);
       newNotifs.reverse().forEach(n => {
-        if (n.event_type === 'grade_viewed') {
-          showToast(t('notifStudentOpened', { msg: n.message }), 'info');
+        if (n.event_type === 'grade_viewed' || n.event_type === 'publish') {
+          showToast(getLocalizedNotifMessage(n), 'info');
         }
       });
       if (newNotifs.length > 0) {

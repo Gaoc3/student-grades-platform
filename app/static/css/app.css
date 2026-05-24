@@ -414,6 +414,7 @@ body > main {
 }
 
 .notification-wrapper {
+  position: relative;
   order: 3;
 }
 
@@ -1886,26 +1887,218 @@ th {
   margin-top: 12px;
 }
 
-.status-msg {
-  margin: 0;
-  margin-top: auto;
-  padding: 12px 16px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--muted);
-  border: 1px solid var(--line);
+.toast-stack {
+  position: fixed;
+  inset-block-start: 20px;
+  inset-inline: 0;
+  width: min(100vw - 24px, 520px);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  z-index: 10020;
+  pointer-events: none;
+}
+
+.toast {
+  position: relative;
+  overflow: hidden;
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in oklab, var(--toast-accent) 18%, var(--card-border));
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--card-strong) 96%, transparent),
+    color-mix(in oklab, var(--toast-accent) 5%, var(--card-strong))
+  );
+  box-shadow:
+    0 18px 36px -20px color-mix(in oklab, var(--text) 35%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--toast-accent) 10%, transparent);
+  backdrop-filter: blur(22px) saturate(1.12);
+  -webkit-backdrop-filter: blur(22px) saturate(1.12);
+  opacity: 0;
+  transform: translateY(-10px) scale(0.985);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s cubic-bezier(0.2, 0.9, 0.2, 1),
+    box-shadow 0.15s ease;
+  isolation: isolate;
+  will-change: transform, opacity;
+}
+
+.toast::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 15% 15%, color-mix(in oklab, var(--toast-accent) 18%, transparent), transparent 56%);
+  pointer-events: none;
+  opacity: 0.72;
+}
+
+.toast--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+:root[data-theme="dark"] .toast,
+html[data-theme="dark"] .toast,
+.dark-mode .toast,
+.dark .toast {
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.93) 0%,
+    color-mix(in oklab, var(--toast-accent) 4%, rgba(10, 15, 30, 0.95)) 100%
+  ) !important;
+  border-color: color-mix(in oklab, var(--toast-accent) 12%, rgba(255, 255, 255, 0.06)) !important;
+  box-shadow:
+    0 12px 32px -10px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+:root[data-theme="dark"] .toast::before,
+html[data-theme="dark"] .toast::before,
+.dark-mode .toast::before,
+.dark .toast::before {
+  opacity: 0.12 !important;
+}
+
+.toast--success {
+  --toast-accent: var(--ok);
+}
+
+.toast--error {
+  --toast-accent: var(--danger);
+}
+
+.toast--warning {
+  --toast-accent: #f59e0b;
+}
+
+.toast--info {
+  --toast-accent: var(--primary);
+}
+
+.toast-icon {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
   border-radius: 14px;
-  background: color-mix(in oklab, var(--card-strong) 82%, transparent);
-  box-shadow: var(--shadow-soft);
-  width: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in oklab, var(--toast-accent) 12%, transparent);
+  color: var(--toast-accent);
+  border: 1px solid color-mix(in oklab, var(--toast-accent) 22%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--card-strong) 55%, transparent);
+  font-size: 18px;
+  margin-top: 1px;
 }
 
-.status-msg[data-type="ok"] {
-  color: var(--ok);
+:root[data-theme="dark"] .toast-icon,
+html[data-theme="dark"] .toast-icon,
+.dark-mode .toast-icon,
+.dark .toast-icon {
+  background: color-mix(in oklab, var(--toast-accent) 8%, rgba(255, 255, 255, 0.02)) !important;
+  border-color: color-mix(in oklab, var(--toast-accent) 20%, rgba(255, 255, 255, 0.04)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
-.status-msg[data-type="error"] {
-  color: var(--danger);
+.toast-icon i {
+  line-height: 1;
+}
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-message {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-align: start;
+}
+
+.toast-close {
+  width: 32px;
+  height: 32px;
+  margin-inline-start: auto;
+  border: none;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--text) 4%, transparent);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  transition: all 0.2s ease;
+  flex: 0 0 auto;
+}
+
+:root[data-theme="dark"] .toast-close,
+html[data-theme="dark"] .toast-close,
+.dark-mode .toast-close,
+.dark .toast-close {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.toast-close:hover {
+  background: color-mix(in oklab, var(--text) 8%, transparent);
+  color: var(--text);
+}
+
+:root[data-theme="dark"] .toast-close:hover,
+html[data-theme="dark"] .toast-close:hover,
+.dark-mode .toast-close:hover,
+.dark .toast-close:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.toast-progress {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--toast-accent) 85%, white), transparent);
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: toastProgress var(--toast-duration, 2400ms) linear forwards;
+  opacity: 0.72;
+}
+
+[dir="rtl"] .toast-progress {
+  transform-origin: right center !important;
+}
+
+:root[data-theme="dark"] .toast-progress,
+html[data-theme="dark"] .toast-progress,
+.dark-mode .toast-progress,
+.dark .toast-progress {
+  height: 2px !important;
+  background: var(--toast-accent) !important;
+  opacity: 0.45 !important;
+}
+
+@keyframes toastProgress {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .small-text {
@@ -3050,8 +3243,8 @@ tbody tr, .notif-item {
 
   position: absolute !important;
   top: 100% !important;
-  width: 340px !important;
-  max-height: 450px !important;
+  width: 290px !important;
+  max-height: 380px !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
   margin-top: 12px !important;
@@ -3060,7 +3253,7 @@ tbody tr, .notif-item {
   border: 1px solid var(--notif-border) !important;
   padding: 0 !important;
   inset-inline-end: 0 !important;
-  border-radius: 20px !important;
+  border-radius: 16px !important;
   background: var(--notif-bg) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
@@ -3071,6 +3264,16 @@ tbody tr, .notif-item {
   transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
               visibility 0.25s cubic-bezier(0.16, 1, 0.3, 1),
               transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+#notifDropdown > div:first-child {
+  padding: 10px 14px !important;
+  font-size: 13.5px !important;
+}
+
+#clearNotifsBtn {
+  font-size: 10px !important;
+  padding: 4px 10px !important;
 }
 
 #notifDropdown.show {
@@ -3112,6 +3315,70 @@ html[data-theme="dark"] #notifDropdown,
   transition: transform 0.2s, color 0.2s;
 }
 
+.notif-empty-state {
+  padding: 36px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.notif-empty-mark {
+  width: 72px;
+  height: 72px;
+  border-radius: 24px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0) 38%),
+    linear-gradient(145deg, color-mix(in oklab, var(--primary) 92%, white), color-mix(in oklab, var(--accent) 84%, var(--primary)));
+  border: 1px solid color-mix(in oklab, white 18%, transparent);
+  box-shadow:
+    0 20px 40px -22px color-mix(in oklab, var(--primary) 55%, transparent),
+    0 0 0 1px color-mix(in oklab, white 14%, transparent) inset;
+}
+
+.notif-empty-mark::before,
+.notif-empty-mark::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: inherit;
+  border: 1px solid color-mix(in oklab, white 18%, transparent);
+  pointer-events: none;
+}
+
+.notif-empty-mark::after {
+  inset: 16px;
+  border-color: color-mix(in oklab, white 28%, transparent);
+  opacity: 0.45;
+}
+
+.notif-empty-mark-svg {
+  width: 40px;
+  height: 40px;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.18));
+}
+
+.notif-empty-title {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.notif-empty-desc {
+  font-size: 12px;
+  color: var(--muted);
+  max-width: 220px;
+  line-height: 1.5;
+  margin: 0 auto;
+}
+
 /* ========== GRADEBOOK SEARCH RESULT ROW STAGGER ANIMATION ========== */
 @keyframes rowFadeIn {
   from {
@@ -3147,13 +3414,14 @@ html[data-theme="dark"] #notifDropdown,
 }
 
 .notif-item {
-  padding: 14px 20px !important;
+  padding: 8px 12px !important;
   border-bottom: 1px solid var(--line) !important;
   display: flex !important;
-  flex-direction: column !important;
-  gap: 4px !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
   transition: all 0.2s ease !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
   cursor: pointer !important;
 }
 
@@ -3219,6 +3487,37 @@ html[data-theme="dark"] #notifDropdown > div:first-child,
 }
 
 @media (max-width: 768px) {
+  .toast-stack {
+    inset-block-start: 16px !important;
+    inset-inline: 16px !important;
+    width: auto !important;
+    margin-inline: 0 !important;
+  }
+
+  .toast {
+    padding: 10px 12px !important;
+    border-radius: 12px !important;
+    gap: 10px !important;
+  }
+
+  .toast-icon {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+    border-radius: 10px !important;
+  }
+
+  .toast-message {
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+
+  .toast-close {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 14px !important;
+  }
+
   .notification-wrapper {
     position: static !important;
   }
@@ -3227,12 +3526,17 @@ html[data-theme="dark"] #notifDropdown > div:first-child,
     top: 100% !important;
     left: 12px !important;
     right: 12px !important;
+    inset-inline-start: 12px !important;
+    inset-inline-end: 12px !important;
     width: auto !important;
     max-width: none !important;
-    inset-inline-end: auto !important;
-    inset-inline-start: auto !important;
     box-shadow: 0 12px 32px rgba(2, 6, 23, 0.25) !important;
-    border-radius: 18px !important;
+    border-radius: 14px !important;
+    max-height: 320px !important;
+  }
+
+  #notifDropdown > div:first-child {
+    padding: 8px 12px !important;
   }
 }
 
@@ -3249,20 +3553,6 @@ html.auth-loading .auth-card {
   background: var(--notif-head-bg) !important;
 }
 
-@media (max-width: 768px) {
-  .notification-wrapper {
-    position: static !important;
-  }
-
-  #notifDropdown {
-    position: absolute !important;
-    top: 100% !important;
-    left: 12px !important;
-    right: 12px !important;
-    width: auto !important;
-    max-width: none !important;
-  }
-}
 
 /* ========== GRADEBOOK SEARCH HUB ========== */
 .gradebook-search-hub {
