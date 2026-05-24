@@ -3805,3 +3805,109 @@ html.auth-loading .auth-card {
   transform: scale(1.05);
   box-shadow: 0 4px 14px color-mix(in oklab, var(--primary) 15%, transparent);
 }
+
+/* ==========================================================================
+   MAIN SIDEBAR REDESIGN & SCREEN EDGE ALIGNMENT OVERRIDES
+   ========================================================================== */
+
+/* --- Language-based screen edge alignment overrides --- */
+html[dir="rtl"] .page-wrap,
+html[dir="rtl"] .topbar {
+  padding-inline-end: 16px !important;
+}
+
+html[dir="ltr"] .page-wrap,
+html[dir="ltr"] .topbar {
+  padding-inline-start: 16px !important;
+}
+
+/* --- Premium Sidebar Footer & User Profile Capsule --- */
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--line);
+  margin-top: auto;
+  flex-shrink: 0;
+  background: color-mix(in oklab, var(--sidebar-bg) 65%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.sidebar-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: color-mix(in oklab, var(--card) 45%, transparent);
+  border: 1px solid var(--topbar-island-border);
+  padding: 8px 12px;
+  border-radius: 18px;
+  box-shadow: 0 4px 20px -6px rgba(0, 0, 0, 0.08);
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-profile-card:hover {
+  background: color-mix(in oklab, var(--card) 75%, transparent);
+  border-color: color-mix(in oklab, var(--primary) 20%, var(--topbar-island-border));
+  box-shadow: 0 8px 24px -6px color-mix(in oklab, var(--primary) 8%, transparent);
+  transform: translateY(-1px);
+}
+
+.profile-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 4px 12px color-mix(in oklab, var(--primary) 25%, transparent);
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sidebar-logout-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--topbar-island-bg);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-logout-btn:hover {
+  background: color-mix(in oklab, var(--danger) 10%, transparent);
+  color: var(--danger);
+  border-color: color-mix(in oklab, var(--danger) 30%, transparent);
+  transform: scale(1.06) rotate(3deg);
+  box-shadow: 0 4px 12px color-mix(in oklab, var(--danger) 12%, transparent);
+}
