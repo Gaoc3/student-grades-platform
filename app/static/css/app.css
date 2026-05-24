@@ -732,16 +732,23 @@ body > main {
 
 .dashboard-shell {
   align-items: stretch;
+  transition: grid-template-columns 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 
 
 body.sidebar-collapsed .dashboard-shell {
-  grid-template-columns: 1fr;
+  grid-template-columns: 0 minmax(0, 1fr);
 }
 
 body.sidebar-collapsed .sidebar-card {
-  display: none;
+  padding: 0 !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  opacity: 0;
+  transform: scale(0.985);
+  filter: blur(2px);
+  pointer-events: none;
 }
 
 .dashboard-main {
@@ -780,6 +787,15 @@ body.sidebar-collapsed .sidebar-card {
   border-color: var(--card-border);
   display: flex;
   flex-direction: column;
+  transform-origin: center center;
+  will-change: transform, opacity, filter, padding, border-width;
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.22s ease,
+              filter 0.32s ease,
+              box-shadow 0.32s ease,
+              border-color 0.32s ease,
+              padding 0.32s ease,
+              border-width 0.32s ease;
 }
 
 .stats-grid {
@@ -820,9 +836,26 @@ body.sidebar-collapsed .sidebar-card {
   flex-direction: column;
   gap: 0;
   padding-top: 14px;
+  scrollbar-gutter: stable;
   /* Custom slim scrollbar for sidebar body */
   scrollbar-width: thin;
   scrollbar-color: color-mix(in oklab, var(--primary) 25%, transparent) transparent;
+}
+
+html[dir="rtl"] .sidebar-body {
+  direction: ltr;
+}
+
+html[dir="rtl"] .sidebar-body > * {
+  direction: rtl;
+}
+
+html[dir="ltr"] .sidebar-body {
+  direction: rtl;
+}
+
+html[dir="ltr"] .sidebar-body > * {
+  direction: ltr;
 }
 
 .sidebar-body::-webkit-scrollbar {
@@ -1961,8 +1994,12 @@ hr {
     border-bottom: 0;
     z-index: 40;
     box-shadow: -10px 0 35px rgba(2, 6, 23, 0.25);
-    transform: translateX(100%);
-    transition: transform 0.25s ease;
+    transform: translateX(104%) scale(0.985);
+    opacity: 0;
+    transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.24s ease,
+                box-shadow 0.34s ease;
+    will-change: transform, opacity;
   }
 
   body.sidebar-open {
@@ -1970,7 +2007,8 @@ hr {
   }
 
   body.sidebar-open .sidebar-card {
-    transform: translateX(0);
+    transform: translateX(0) scale(1);
+    opacity: 1;
   }
 
   .sidebar-close {
@@ -2011,7 +2049,7 @@ hr {
     background: transparent;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.28s ease;
   }
 
   body.sidebar-open .sidebar-backdrop {
