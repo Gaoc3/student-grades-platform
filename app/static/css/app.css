@@ -23,6 +23,9 @@
   
   /* Light Mode Specific Component Backgrounds */
   --topbar-bg: color-mix(in oklab, var(--primary) 2%, var(--card));
+  --topbar-island-bg: rgba(255, 255, 255, 0.45);
+  --topbar-island-border: rgba(37, 99, 235, 0.12);
+  --topbar-island-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.08);
   --panel-bg: linear-gradient(to bottom, #ffffff, color-mix(in oklab, var(--bg) 25%, white));
   --hero-bg: linear-gradient(135deg, color-mix(in oklab, var(--primary) 18%, #ffffff), color-mix(in oklab, var(--accent) 12%, #ffffff));
   --sidebar-bg: linear-gradient(180deg, color-mix(in oklab, var(--primary) 5%, white), color-mix(in oklab, var(--primary) 2%, white));
