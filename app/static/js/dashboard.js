@@ -1208,8 +1208,38 @@ document.addEventListener('input', (e) => {
 });
 
 const publishForm = document.getElementById('publishForm');
+function syncPublishOptionLocks() {
+  if (!publishForm) return;
+
+  const sendEmail = publishForm.querySelector('input[name="send_email"]');
+  const forceNewToken = publishForm.querySelector('input[name="force_new_token"]');
+
+  if (!sendEmail || !forceNewToken) return;
+
+  if (sendEmail.checked) {
+    forceNewToken.checked = false;
+    forceNewToken.disabled = true;
+    sendEmail.disabled = false;
+  } else if (forceNewToken.checked) {
+    sendEmail.checked = false;
+    sendEmail.disabled = true;
+    forceNewToken.disabled = false;
+  } else {
+    sendEmail.disabled = false;
+    forceNewToken.disabled = false;
+  }
+}
+
+if (publishForm) {
+  publishForm.querySelectorAll('input[name="send_email"], input[name="force_new_token"]').forEach((input) => {
+    input.addEventListener('change', syncPublishOptionLocks);
+  });
+  syncPublishOptionLocks();
+}
+
 publishForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
+  syncPublishOptionLocks();
   const fd = new FormData(publishForm);
   const mode = fd.get('publish_mode');
 
@@ -1239,12 +1269,12 @@ publishForm?.addEventListener('submit', async (e) => {
             <li style="padding: 12px 16px; background: color-mix(in oklab, var(--card-strong) 40%, transparent); border: 1px solid var(--line); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; direction: rtl;">
               <div style="display: flex; align-items: center; gap: 12px;">
                 <div style="font-size: 26px; line-height: 1; display: flex; align-items: center; justify-content: center;">
-                  ${l.status === 'sent' ? '<i class="ri-mail-send-fill" style="color: var(--primary);"></i>' : '<i class="ri-error-warning-fill" style="color: var(--danger);"></i>'}
+                  ${l.status === 'sent' ? '<i class="ri-mail-send-fill" style="color: var(--primary);"></i>' : l.status === 'generated' ? '<i class="ri-qr-code-line" style="color: var(--ok);"></i>' : '<i class="ri-error-warning-fill" style="color: var(--danger);"></i>'}
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: right;">
                   <strong style="font-size: 14px; color: var(--text); font-weight: 800; margin: 0; line-height: 1;">${l.student}</strong>
                   <span style="font-size: 12px; font-weight: 700; color: ${l.status === 'sent' ? 'var(--ok)' : 'var(--danger)'}; margin: 0; line-height: 1;">
-                    ${l.status === 'sent' ? '<i class="ri-check-line"></i> تم إرسال الإيميل بنجاح' : `<i class="ri-close-line"></i> فشل الإرسال (${l.detail})`}
+                    ${l.status === 'sent' ? '<i class="ri-check-line"></i> تم إرسال الإيميل بنجاح' : l.status === 'generated' ? '<i class="ri-check-line"></i> تم إصدار QR جديد بنجاح' : `<i class="ri-close-line"></i> فشل الإرسال (${l.detail})`}
                   </span>
                 </div>
               </div>

@@ -2649,6 +2649,21 @@ hr {
   transition-duration: 0.08s;
 }
 
+.check-card:has(input:disabled) {
+  opacity: 0.52;
+  cursor: not-allowed;
+  background: color-mix(in oklab, var(--card-strong) 70%, transparent);
+  box-shadow: none;
+  transform: none;
+}
+
+.check-card:has(input:disabled):hover {
+  outline-color: var(--line);
+  background: color-mix(in oklab, var(--card-strong) 70%, transparent);
+  box-shadow: none;
+  transform: none;
+}
+
 .check-card input[type="radio"],
 .check-card input[type="checkbox"] {
   width: 18px;
@@ -2657,6 +2672,10 @@ hr {
   accent-color: var(--primary);
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.check-card input:disabled {
+  cursor: not-allowed;
 }
 
 /* ========== PUBLISH SECTION STEPS LAYOUT ========== */
