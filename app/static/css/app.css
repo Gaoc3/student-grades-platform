@@ -3060,10 +3060,10 @@ html.preload-lang body {
    إصلاح نهائي للإشعارات (تداخل النصوص + تجاوب الموبايل للثيم الداكن والفاتح)
    ========================================================================== */
 #notifDropdown {
-  background: var(--card-strong) !important;
+  background: var(--notif-bg) !important;
 }
 #notifDropdown > div:first-child {
-  background: color-mix(in oklab, var(--card-strong) 94%, var(--primary)) !important;
+  background: var(--notif-head-bg) !important;
 }
 
 /* سحق الشفافية وإجبار الثيم الداكن على خلفية مصمتة فخمة لحجب النصوص الخلفية */
@@ -3071,13 +3071,13 @@ html[data-theme="dark"] #notifDropdown,
 [data-theme="dark"] #notifDropdown,
 .dark-mode #notifDropdown,
 .dark #notifDropdown {
-  background: #111422 !important;
+  background: var(--notif-bg) !important;
 }
 html[data-theme="dark"] #notifDropdown > div:first-child,
 [data-theme="dark"] #notifDropdown > div:first-child,
 .dark-mode #notifDropdown > div:first-child,
 .dark #notifDropdown > div:first-child {
-  background: #171b2f !important;
+  background: var(--notif-head-bg) !important;
   border-bottom: 1px solid color-mix(in oklab, var(--line) 40%, transparent) !important;
 }
 
@@ -3105,11 +3105,11 @@ html.auth-loading .auth-card {
 }
 
 [data-theme="dark"] #notifDropdown {
-  background: #111422 !important;
+  background: var(--notif-bg) !important;
 }
 
 [data-theme="dark"] #notifDropdown > div:first-child {
-  background: #171b2f !important;
+  background: var(--notif-head-bg) !important;
 }
 
 @media (max-width: 768px) {
