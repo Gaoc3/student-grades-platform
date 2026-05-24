@@ -3283,3 +3283,26 @@ html.auth-loading .auth-card {
   color: var(--muted);
   font-size: 15px;
 }
+
+/* ========== STUDENT AVATAR STYLES ========== */
+.student-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  flex-shrink: 0;
+  background: var(--avatar-bg);
+  color: var(--avatar-color);
+  border: var(--avatar-border);
+  box-shadow: var(--avatar-shadow);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.student-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 14px color-mix(in oklab, var(--primary) 15%, transparent);
+}

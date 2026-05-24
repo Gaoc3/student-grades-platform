@@ -938,7 +938,7 @@ function renderGradeTable() {
       <tr data-student-id="${row.student.id}" style="animation-delay: ${delay}ms;">
         <td class="student-info-cell" style="padding: 12px 16px;">
           <div style="display: flex; align-items: center; gap: 12px;">
-            <div class="student-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-strong)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; box-shadow: 0 4px 10px color-mix(in oklab, var(--primary) 30%, transparent);">${initials}</div>
+            <div class="student-avatar">${initials}</div>
             <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: right; width: 100%;">
   <div style="font-weight: 800; color: var(--text); font-size: 15px; white-space: nowrap;">${row.student.full_name}</div>
   <div class="editable-email" title="${row.student.email || ''} (انقر للتعديل)" onclick="startEditEmail(this, ${row.student.id}, '${row.student.full_name.replace(/'/g, "\\'")}')">${row.student.email || 'لا يوجد بريد'}</div>
