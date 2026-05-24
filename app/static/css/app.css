@@ -302,12 +302,12 @@ body > main {
 
 html[dir="rtl"] .topbar {
   direction: rtl !important;
-  flex-direction: row !important;
+  flex-direction: row-reverse !important;
 }
 
 html[dir="ltr"] .topbar {
   direction: ltr !important;
-  flex-direction: row !important;
+  flex-direction: row-reverse !important;
 }
 
 html[dir="rtl"] .brand-wrap {
