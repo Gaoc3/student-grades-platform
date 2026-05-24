@@ -559,14 +559,20 @@ async function fetchNotifications() {
     const res = await fetch('/api/notifications');
     if (!res.ok) return;
     const data = await res.json();
-
-    if (notificationsList.length > 0) {
+ 
+    const bellBtn = document.getElementById('notifToggle');
+    if (bellBtn && notificationsList.length > 0) {
       const newNotifs = data.filter(n => n.id > notificationsList[0].id && n.id > lastSeenNotifId);
       newNotifs.reverse().forEach(n => {
         if (n.event_type === 'grade_viewed') {
           showToast(t('notifStudentOpened', { msg: n.message }), 'info');
         }
       });
+      if (newNotifs.length > 0) {
+        bellBtn.classList.remove('ring-bell');
+        void bellBtn.offsetWidth; // force reflow
+        bellBtn.classList.add('ring-bell');
+      }
     }
 
     notificationsList = data;
@@ -694,9 +700,19 @@ const notifDropdown = document.getElementById('notifDropdown');
 if (notifToggle && notifDropdown) {
   notifToggle.addEventListener('click', (e) => {
     e.stopPropagation();
-    const isVisible = notifDropdown.style.display === 'block';
-    notifDropdown.style.display = isVisible ? 'none' : 'block';
-    if (!isVisible) {
+    const isVisible = notifDropdown.classList.contains('show');
+    if (isVisible) {
+      notifDropdown.classList.remove('show');
+      notifToggle.classList.remove('active');
+    } else {
+      notifDropdown.classList.add('show');
+      notifToggle.classList.add('active');
+
+      // Trigger a subtle bell shake animation when opening!
+      notifToggle.classList.remove('ring-bell');
+      void notifToggle.offsetWidth; // force reflow
+      notifToggle.classList.add('ring-bell');
+
       if (notificationsList.length > 0) {
         lastSeenNotifId = notificationsList[0].id;
         localStorage.setItem('last_seen_notif_id', lastSeenNotifId);
@@ -707,7 +723,8 @@ if (notifToggle && notifDropdown) {
 
   document.addEventListener('click', (e) => {
     if (!notifToggle.contains(e.target) && !notifDropdown.contains(e.target)) {
-      notifDropdown.style.display = 'none';
+      notifDropdown.classList.remove('show');
+      notifToggle.classList.remove('active');
     }
   });
 }
@@ -854,7 +871,12 @@ function renderGradeTable() {
     </th>
   `).join('');
 
-  const bodyRows = state.rows.map((row) => {
+  const searchInputVal = document.getElementById('gradebookSearchInput')?.value.trim();
+  const noDataMsg = searchInputVal 
+    ? (state.lang === 'ar' ? 'لا توجد نتائج مطابقة لبحثك 🔍' : 'No matching results found 🔍')
+    : (state.lang === 'ar' ? 'لا توجد بيانات، قم بإضافة طلبة.' : 'No data available, please add students.');
+
+  const bodyRows = state.rows.map((row, index) => {
     const scoreInputs = [...coursework, ...finals].map((c) => {
       const existing = row.scores[c.component_key];
       const val = existing ? existing.score : '';
@@ -877,9 +899,10 @@ function renderGradeTable() {
     const totalSum = row.sums[`${semKey}_total`];
 
     const initials = row.student.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+    const delay = Math.min(index * 40, 400);
 
     return `
-      <tr data-student-id="${row.student.id}" style="transition: all 0.2s ease;">
+      <tr data-student-id="${row.student.id}" style="animation-delay: ${delay}ms;">
         <td class="student-info-cell" style="padding: 12px 16px;">
           <div style="display: flex; align-items: center; gap: 12px;">
             <div class="student-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-strong)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; box-shadow: 0 4px 10px color-mix(in oklab, var(--primary) 30%, transparent);">${initials}</div>
@@ -939,7 +962,7 @@ function renderGradeTable() {
       </tr>
     </thead>
     <tbody>
-      ${bodyRows.length ? bodyRows : `<tr><td colspan="10" style="text-align: center; padding: 40px; color: var(--muted); font-weight: 600;">لا توجد بيانات، قم بإضافة طلبة.</td></tr>`}
+      ${bodyRows.length ? bodyRows : `<tr class="no-results-row"><td colspan="10" style="text-align: center; padding: 40px; color: var(--muted); font-weight: 600;">${noDataMsg}</td></tr>`}
     </tbody>
   `;
 }
