@@ -1273,7 +1273,7 @@ publishForm?.addEventListener('submit', async (e) => {
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: right;">
                   <strong style="font-size: 14px; color: var(--text); font-weight: 800; margin: 0; line-height: 1;">${l.student}</strong>
-                  <span style="font-size: 12px; font-weight: 700; color: ${l.status === 'sent' ? 'var(--ok)' : 'var(--danger)'}; margin: 0; line-height: 1;">
+                  <span style="font-size: 12px; font-weight: 700; color: ${(l.status === 'sent' || l.status === 'generated') ? 'var(--ok)' : 'var(--danger)'}; margin: 0; line-height: 1;">
                     ${l.status === 'sent' ? '<i class="ri-check-line"></i> تم إرسال الإيميل بنجاح' : l.status === 'generated' ? '<i class="ri-check-line"></i> تم إصدار QR جديد بنجاح' : `<i class="ri-close-line"></i> فشل الإرسال (${l.detail})`}
                   </span>
                 </div>
