@@ -845,7 +845,7 @@ body.sidebar-collapsed .sidebar-card {
 .sidebar-card {
   position: sticky;
   top: 16px;
-  height: calc(100vh - 32px);
+  height: fit-content;
   max-height: calc(100vh - 32px);
   overflow: hidden; /* card itself never scrolls */
   background: var(--sidebar-bg);
@@ -1013,6 +1013,7 @@ html[dir="rtl"] .sidebar-close:focus-visible {
 }
 
 .nav-btn {
+  --btn-theme: var(--primary);
   border: 1px solid transparent;
   border-radius: 14px;
   padding: 12px 18px;
@@ -1024,17 +1025,37 @@ html[dir="rtl"] .sidebar-close:focus-visible {
   font-size: 14px;
   font-weight: 700;
   background: transparent;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   position: relative;
   overflow: hidden;
+}
+
+/* Explicit signature colors for each section button */
+.nav-btn[data-section="overview"] {
+  --btn-theme: #8b5cf6;
+}
+.nav-btn[data-section="students"] {
+  --btn-theme: #10b981;
+}
+.nav-btn[data-section="grading"] {
+  --btn-theme: #f59e0b;
+}
+.nav-btn[data-section="publish"] {
+  --btn-theme: #ec4899;
+}
+.nav-btn[data-section="gradebook"] {
+  --btn-theme: #3b82f6;
+}
+#switchSemesterBtn {
+  --btn-theme: #ef4444;
 }
 
 .nav-btn::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--primary);
+  background: var(--btn-theme);
   opacity: 0;
   transition: opacity 0.25s ease;
   z-index: 0;
@@ -1044,34 +1065,36 @@ html[dir="rtl"] .sidebar-close:focus-visible {
 .nav-btn > * {
   position: relative;
   z-index: 1;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Sleek direction-aware horizontal hover slide of text/icon elements only (container box remains stable to prevent border clipping) */
+.nav-btn:hover > * {
+  transform: translateX(6px) !important;
+}
+
+html[dir="rtl"] .nav-btn:hover > * {
+  transform: translateX(-6px) !important;
 }
 
 .nav-btn:hover {
-  transform: translateY(-3px);
-  color: var(--primary-strong);
-  border-color: color-mix(in oklab, var(--primary) 28%, transparent);
-  background: linear-gradient(135deg, color-mix(in oklab, var(--primary) 12%, var(--card)), color-mix(in oklab, var(--primary) 4%, var(--card)));
-  box-shadow: 0 14px 28px -12px color-mix(in oklab, var(--primary) 28%, transparent);
-}
-
-html[lang="ar"] .nav-btn:hover {
-  transform: translateY(-3px);
+  color: var(--btn-theme) !important;
+  border-color: color-mix(in oklab, var(--btn-theme) 28%, transparent) !important;
+  background: linear-gradient(135deg, color-mix(in oklab, var(--btn-theme) 12%, var(--card)), color-mix(in oklab, var(--btn-theme) 4%, var(--card))) !important;
+  box-shadow: 0 10px 25px -10px color-mix(in oklab, var(--btn-theme) 30%, transparent) !important;
 }
 
 .nav-btn:hover::before {
-  opacity: 0.12;
+  opacity: 0.08;
 }
 
+/* Premium active state */
 .nav-btn.is-active {
-  color: var(--primary-strong);
-  border-color: color-mix(in oklab, var(--primary) 18%, transparent);
-  box-shadow: 0 6px 20px -4px color-mix(in oklab, var(--primary) 22%, transparent);
-  background: color-mix(in oklab, var(--primary) 16%, var(--card));
-  font-weight: 800;
-}
-
-html[lang="ar"] .nav-btn.is-active {
-  box-shadow: 0 6px 20px -4px color-mix(in oklab, var(--primary) 22%, transparent);
+  color: var(--btn-theme) !important;
+  border-color: color-mix(in oklab, var(--btn-theme) 22%, transparent) !important;
+  box-shadow: 0 6px 20px -4px color-mix(in oklab, var(--btn-theme) 22%, transparent) !important;
+  background: color-mix(in oklab, var(--btn-theme) 16%, var(--card)) !important;
+  font-weight: 700;
 }
 
 .nav-btn.is-active::before {
@@ -1086,112 +1109,21 @@ html[lang="ar"] .nav-btn.is-active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in oklab, var(--primary) 12%, transparent);
-  color: var(--primary);
+  background: color-mix(in oklab, var(--btn-theme) 12%, transparent);
+  color: var(--btn-theme);
   transition: all 0.25s ease;
 }
 
 .nav-btn:hover .nav-icon {
-  transform: scale(1.16);
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 14%, transparent);
+  transform: scale(1.15);
+  background: var(--btn-theme) !important;
+  color: #fff !important;
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--btn-theme) 20%, transparent) !important;
 }
 
 .nav-btn.is-active .nav-icon {
-  background: var(--primary);
-  color: #fff;
-}
-
-/* Unique colored icons for each section */
-.nav-btn[data-section="overview"] .nav-icon {
-  color: #8b5cf6;
-  background: color-mix(in oklab, #8b5cf6 12%, transparent);
-}
-.nav-btn[data-section="overview"].is-active .nav-icon {
-  background: #8b5cf6 !important;
+  background: var(--btn-theme) !important;
   color: #fff !important;
-}
-.nav-btn[data-section="overview"].is-active {
-  color: #8b5cf6 !important;
-  border-color: color-mix(in oklab, #8b5cf6 18%, transparent) !important;
-  box-shadow: 0 6px 20px -4px color-mix(in oklab, #8b5cf6 22%, transparent) !important;
-  background: color-mix(in oklab, #8b5cf6 12%, var(--card)) !important;
-}
-
-.nav-btn[data-section="students"] .nav-icon {
-  color: #10b981;
-  background: color-mix(in oklab, #10b981 12%, transparent);
-}
-.nav-btn[data-section="students"].is-active .nav-icon {
-  background: #10b981 !important;
-  color: #fff !important;
-}
-.nav-btn[data-section="students"].is-active {
-  color: #10b981 !important;
-  border-color: color-mix(in oklab, #10b981 18%, transparent) !important;
-  box-shadow: 0 6px 20px -4px color-mix(in oklab, #10b981 22%, transparent) !important;
-  background: color-mix(in oklab, #10b981 12%, var(--card)) !important;
-}
-
-.nav-btn[data-section="grading"] .nav-icon {
-  color: #f59e0b;
-  background: color-mix(in oklab, #f59e0b 12%, transparent);
-}
-.nav-btn[data-section="grading"].is-active .nav-icon {
-  background: #f59e0b !important;
-  color: #fff !important;
-}
-.nav-btn[data-section="grading"].is-active {
-  color: #f59e0b !important;
-  border-color: color-mix(in oklab, #f59e0b 18%, transparent) !important;
-  box-shadow: 0 6px 20px -4px color-mix(in oklab, #f59e0b 22%, transparent) !important;
-  background: color-mix(in oklab, #f59e0b 12%, var(--card)) !important;
-}
-
-.nav-btn[data-section="publish"] .nav-icon {
-  color: #ec4899;
-  background: color-mix(in oklab, #ec4899 12%, transparent);
-}
-.nav-btn[data-section="publish"].is-active .nav-icon {
-  background: #ec4899 !important;
-  color: #fff !important;
-}
-.nav-btn[data-section="publish"].is-active {
-  color: #ec4899 !important;
-  border-color: color-mix(in oklab, #ec4899 18%, transparent) !important;
-  box-shadow: 0 6px 20px -4px color-mix(in oklab, #ec4899 22%, transparent) !important;
-  background: color-mix(in oklab, #ec4899 12%, var(--card)) !important;
-}
-
-.nav-btn[data-section="gradebook"] .nav-icon {
-  color: #3b82f6;
-  background: color-mix(in oklab, #3b82f6 12%, transparent);
-}
-.nav-btn[data-section="gradebook"].is-active .nav-icon {
-  background: #3b82f6 !important;
-  color: #fff !important;
-}
-.nav-btn[data-section="gradebook"].is-active {
-  color: #3b82f6 !important;
-  border-color: color-mix(in oklab, #3b82f6 18%, transparent) !important;
-  box-shadow: 0 6px 20px -4px color-mix(in oklab, #3b82f6 22%, transparent) !important;
-  background: color-mix(in oklab, #3b82f6 12%, var(--card)) !important;
-}
-
-#switchSemesterBtn .nav-icon {
-  color: #ef4444;
-  background: color-mix(in oklab, #ef4444 12%, transparent);
-}
-#switchSemesterBtn.is-active .nav-icon {
-  background: #ef4444 !important;
-  color: #fff !important;
-}
-#switchSemesterBtn.is-active {
-  color: #ef4444 !important;
-  border-color: color-mix(in oklab, #ef4444 18%, transparent) !important;
-  box-shadow: 0 6px 20px -4px color-mix(in oklab, #ef4444 22%, transparent) !important;
-  background: color-mix(in oklab, #ef4444 12%, var(--card)) !important;
 }
 
 .nav-icon svg {
@@ -2351,6 +2283,7 @@ hr {
 
 @media (max-width: 768px) {
   .topbar {
+    flex-direction: row !important;
     flex-wrap: wrap;
     padding: 16px 12px 8px;
     gap: 12px;
@@ -2370,23 +2303,7 @@ hr {
     padding: 6px 12px;
   }
 
-  .notification-wrapper {
-    margin-inline-start: 0 !important;
-    position: static !important; /* تحرير الأيقونة على الموبايل */
-  }
-
-  #notifDropdown {
-    position: absolute !important;
-    top: 100% !important;
-    left: auto !important;
-    right: auto !important;
-    width: 290px !important;
-    max-width: calc(100vw - 32px) !important;
-    inset-inline-end: -40px !important; /* Adjust for mobile/zoomed screens */
-    inset-inline-start: auto !important;
-    box-shadow: 0 12px 32px rgba(2, 6, 23, 0.18) !important;
-    border-radius: 18px !important;
-  }
+  /* Handled adaptively by the 1024px responsive notifications query at the bottom of the file */
 
   .brand-sub {
     display: none;
@@ -3603,26 +3520,7 @@ html[data-theme="dark"] #notifDropdown > div:first-child,
     font-size: 14px !important;
   }
 
-  .notification-wrapper {
-    position: static !important;
-  }
-  #notifDropdown {
-    position: absolute !important;
-    top: 100% !important;
-    left: auto !important;
-    right: auto !important;
-    inset-inline-end: -40px !important; /* Adjust for mobile */
-    inset-inline-start: auto !important;
-    width: 290px !important;
-    max-width: calc(100vw - 32px) !important;
-    box-shadow: 0 12px 32px rgba(2, 6, 23, 0.25) !important;
-    border-radius: 14px !important;
-    max-height: 320px !important;
-  }
-
-  #notifDropdown > div:first-child {
-    padding: 8px 12px !important;
-  }
+  /* Handled adaptively by the 1024px responsive notifications query at the bottom of the file */
 }
 
 html.auth-loading .auth-card {
@@ -3805,4 +3703,185 @@ html.auth-loading .auth-card {
 .student-avatar:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 14px color-mix(in oklab, var(--primary) 15%, transparent);
+}
+
+/* ==========================================================================
+   MAIN SIDEBAR REDESIGN & SCREEN EDGE ALIGNMENT OVERRIDES
+   ========================================================================== */
+
+/* --- Language-based screen edge alignment overrides --- */
+html[dir="rtl"] .page-wrap,
+html[dir="rtl"] .topbar {
+  padding-inline-end: 16px !important;
+}
+
+html[dir="ltr"] .page-wrap,
+html[dir="ltr"] .topbar {
+  padding-inline-start: 16px !important;
+}
+
+/* --- Sidebar Spacing & Scrollable Body Flex Alignment --- */
+.sidebar-footer {
+  padding: 16px 14px 14px 14px !important; /* Perfect 16px gap below footer line */
+  border-top: 1px solid var(--line) !important;
+  margin-top: 16px !important; /* Symmetrical fallback gap above footer line */
+  flex-shrink: 0 !important;
+}
+
+/* Flex layout to push the footer to the bottom on desktop while scrolling naturally on mobile */
+.sidebar-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-body .sidebar-footer {
+  margin-top: auto !important;
+}
+
+/* Balance mid-divider line in grid: 10px (grid gap) + 6px (margin) = 16px gap on both sides */
+.sidebar-nav .line {
+  margin: 6px 0 !important;
+}
+
+/* --- High-Precision, Premium Redesigned Crimson Logout Button --- */
+.nav-btn-logout-premium {
+  width: 100% !important;
+  border-radius: 16px !important;
+  padding: 14px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.3px !important;
+  cursor: pointer !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border: 1px solid color-mix(in oklab, var(--danger) 18%, transparent) !important;
+  background: color-mix(in oklab, var(--danger) 5%, transparent) !important;
+  color: var(--danger) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Diagonal glossy shine visual element */
+.nav-btn-logout-premium::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -150% !important;
+  width: 120% !important;
+  height: 100% !important;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.16),
+    transparent
+  ) !important;
+  transform: skewX(-20deg) !important;
+  transition: none !important;
+  pointer-events: none !important;
+}
+
+.nav-btn-logout-premium:hover {
+  transform: translateY(-2px) !important;
+  border-color: var(--danger) !important;
+  background: linear-gradient(135deg, color-mix(in oklab, var(--danger) 15%, var(--card)), color-mix(in oklab, var(--danger) 6%, var(--card))) !important;
+  box-shadow: 
+    0 10px 25px -10px color-mix(in oklab, var(--danger) 40%, transparent), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Trigger diagonal shine sweep on hover */
+.nav-btn-logout-premium:hover::after {
+  left: 150% !important;
+  transition: all 0.75s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.logout-premium-icon {
+  font-size: 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* --- Notifications Dropdown Edge-Alignment & Centering Overrides --- */
+/* Grow towards inside the screen on desktop to completely prevent going off-screen */
+html[dir="ltr"] #notifDropdown {
+  inset-inline-start: 0 !important;
+  inset-inline-end: auto !important;
+  transform-origin: top left !important;
+}
+
+html[dir="rtl"] #notifDropdown {
+  inset-inline-end: 0 !important;
+  inset-inline-start: auto !important;
+  transform-origin: top right !important;
+}
+
+/* Force perfect centering and prevent clipping of notification empty states */
+.notif-empty-state {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 36px 20px !important;
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+}
+
+.notif-empty-mark {
+  margin: 0 auto !important;
+}
+
+.notif-empty-title {
+  margin-top: 8px !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  text-align: center !important;
+  width: 100% !important;
+}
+
+.notif-empty-desc {
+  font-size: 12px !important;
+  text-align: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+/* --- Fully Adaptive Viewport Edge-Alignment for Narrow Screen Resolutions (Tablets & Mobile <= 1024px) --- */
+@media (max-width: 1024px) {
+  .notification-wrapper {
+    position: static !important;
+  }
+  
+  .topbar-actions {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transform: none !important;
+  }
+  
+  html[dir="ltr"] #notifDropdown,
+  html[dir="rtl"] #notifDropdown,
+  #notifDropdown {
+    position: absolute !important;
+    top: 100% !important;
+    left: 16px !important;
+    right: 16px !important;
+    inset-inline-start: 16px !important;
+    inset-inline-end: 16px !important;
+    width: auto !important;
+    max-width: none !important;
+    box-shadow: var(--notif-shadow) !important;
+    border-radius: 18px !important;
+    max-height: 320px !important;
+    transform-origin: top center !important;
+  }
+  
+  #notifDropdown > div:first-child {
+    padding: 8px 12px !important;
+  }
 }

@@ -1194,7 +1194,7 @@ document.addEventListener('click', async (e) => {
   const btn = e.target.closest('button');
   if (!btn) return;
 
-  if (btn.id === 'logoutBtn') {
+  if (btn.id === 'logoutBtn' || btn.id === 'sidebarLogoutBtn' || btn.closest('#sidebarLogoutBtn')) {
     e.preventDefault();
     const confirmed = await showConfirm(t('confirmLogout') || 'تأكيد الخروج', t('confirmLogoutMsg') || 'هل أنت متأكد من رغبتك في تسجيل الخروج؟');
     if (!confirmed) return;

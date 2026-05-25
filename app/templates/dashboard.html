@@ -73,11 +73,11 @@
         </button>
       </nav>
 
-      <div class="line"></div>
-
-      <div class="sidebar-students-wrap">
-        <h3 class="panel-subtitle" data-i18n="quickStudentsList">قائمة الطلبة السريعة</h3>
-        <ul id="studentsQuickList" class="sidebar-students-list"></ul>
+      <div class="sidebar-footer">
+        <button id="sidebarLogoutBtn" class="nav-btn-logout-premium" type="button" data-i18n-title="logout" aria-label="Logout">
+          <span class="logout-premium-icon"><i class="ri-shut-down-line"></i></span>
+          <span data-i18n="logout">تسجيل الخروج</span>
+        </button>
       </div>
     </div>
   </aside>
@@ -342,13 +342,6 @@
   </svg></button>
 <button id="langToggleBtn" class="ghost-btn icon-btn lang-btn" type="button" title="Language"
   aria-label="Language">EN</button>
-<button id="logoutBtn" class="ghost-btn icon-btn" type="button" data-i18n-title="logout" aria-label="Logout"><svg
-    width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-    stroke-linejoin="round">
-    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-    <polyline points="16 17 21 12 16 7" />
-    <line x1="21" y1="12" x2="9" y2="12" />
-  </svg></button>
 {% endblock %}
 
 {% block scripts %}
