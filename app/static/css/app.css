@@ -830,29 +830,12 @@ body.sidebar-collapsed .sidebar-card {
   min-width: 0;
 }
 
-@keyframes paneEntrance {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.99);
-    filter: blur(3px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
-}
-
 .dashboard-pane.is-active {
   display: block;
-  animation: paneEntrance 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform, opacity, filter;
 }
 
 .dashboard-pane.section-stack.is-active {
   display: grid;
-  animation: paneEntrance 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform, opacity, filter;
 }
 
 .section-stack {
@@ -2161,7 +2144,7 @@ hr {
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .page-wrap {
     width: min(1200px, 98vw);
     margin: 18px auto;
@@ -2193,7 +2176,7 @@ hr {
     height: fit-content !important;
     max-height: calc(100dvh - 32px) !important;
     border-radius: 24px !important;
-    padding: 24px 20px !important;
+    padding: 20px 16px !important;
     border: 1px solid var(--card-border) !important;
     z-index: 40;
     opacity: 0;
@@ -2201,20 +2184,6 @@ hr {
                 opacity 0.24s ease,
                 box-shadow 0.34s ease;
     will-change: transform, opacity;
-  }
-
-  .sidebar-nav {
-    gap: 16px !important;
-    margin-top: 16px !important;
-  }
-
-  .nav-btn {
-    padding: 16px 20px !important;
-    font-size: 14.5px !important;
-  }
-
-  .nav-btn-logout-premium {
-    padding: 16px 20px !important;
   }
 
   html[dir="rtl"] .sidebar-card {
@@ -2311,7 +2280,7 @@ hr {
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .topbar {
     flex-direction: row !important;
     flex-wrap: wrap;
@@ -2348,7 +2317,7 @@ hr {
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .page-wrap {
     width: 100%;
     margin: 12px auto;
@@ -3110,19 +3079,17 @@ html[dir="ltr"] .student-choice-email {
 /* Custom Modal */
 .modal-overlay {
   position: fixed;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 99999 !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
   animation: fadeIn 0.3s ease;
 }
 
@@ -3516,7 +3483,7 @@ html[data-theme="dark"] #notifDropdown > div:first-child,
   border-bottom: 1px solid color-mix(in oklab, var(--line) 40%, transparent) !important;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .toast-stack {
     inset-block-start: 16px !important;
     inset-inline: 16px !important;
