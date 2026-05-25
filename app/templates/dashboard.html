@@ -73,23 +73,19 @@
         </button>
       </nav>
 
-    </div>
-
-    <div class="sidebar-footer">
-      <div class="sidebar-profile-card">
-        <div class="profile-avatar">
-          <i class="ri-user-3-fill"></i>
+      <div class="sidebar-footer">
+        <div class="sidebar-profile-card">
+          <div class="profile-avatar">
+            <i class="ri-user-3-fill"></i>
+          </div>
+          <div class="profile-details">
+            <span class="profile-name" title="{{ doctor.full_name }}">{{ doctor.full_name }}</span>
+            <span class="profile-subtitle" data-i18n="professor">أستاذ المادة</span>
+          </div>
         </div>
-        <div class="profile-details">
-          <span class="profile-name" title="{{ doctor.full_name }}">{{ doctor.full_name }}</span>
-          <span class="profile-subtitle" data-i18n="professor">أستاذ المادة</span>
-        </div>
-        <button id="sidebarLogoutBtn" class="sidebar-logout-btn" type="button" data-i18n-title="logout" aria-label="Logout">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
+        <button id="sidebarLogoutBtn" class="nav-btn nav-btn-logout" type="button" data-i18n-title="logout" aria-label="Logout">
+          <span class="nav-icon"><i class="ri-logout-box-r-line" style="font-size: 18px;"></i></span>
+          <span data-i18n="logout">تسجيل الخروج</span>
         </button>
       </div>
     </div>
