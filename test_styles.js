@@ -50,34 +50,41 @@ async function run() {
   await page.click('#notifToggle');
   await page.waitForSelector('#notifDropdown.show', { state: 'visible' });
 
-  const ancestorTracer = await page.evaluate(() => {
-    let el = document.getElementById('notifDropdown');
-    const path = [];
-    while (el && el !== document.body) {
-      const computed = window.getComputedStyle(el);
-      const rect = el.getBoundingClientRect();
-      path.push({
-        tagName: el.tagName,
-        id: el.id,
-        className: el.className,
-        position: computed.position,
-        left: computed.left,
-        right: computed.right,
-        width: computed.width,
-        rect: {
-          x: rect.x,
-          y: rect.y,
-          width: rect.width,
-          height: rect.height
-        }
-      });
-      el = el.parentElement;
-    }
-    return path;
+  const traceDetails = await page.evaluate(() => {
+    const wrapper = document.querySelector('.notification-wrapper');
+    const actions = document.querySelector('.topbar-actions');
+    const dropdown = document.getElementById('notifDropdown');
+    return {
+      wrapper: {
+        tagName: wrapper.tagName,
+        position: window.getComputedStyle(wrapper).position,
+        transform: window.getComputedStyle(wrapper).transform,
+        filter: window.getComputedStyle(wrapper).filter,
+        backdropFilter: window.getComputedStyle(wrapper).backdropFilter,
+        webkitBackdropFilter: window.getComputedStyle(wrapper).webkitBackdropFilter,
+        willChange: window.getComputedStyle(wrapper).willChange
+      },
+      actions: {
+        tagName: actions.tagName,
+        position: window.getComputedStyle(actions).position,
+        transform: window.getComputedStyle(actions).transform,
+        filter: window.getComputedStyle(actions).filter,
+        backdropFilter: window.getComputedStyle(actions).backdropFilter,
+        webkitBackdropFilter: window.getComputedStyle(actions).webkitBackdropFilter,
+        willChange: window.getComputedStyle(actions).willChange
+      },
+      dropdown: {
+        tagName: dropdown.tagName,
+        position: window.getComputedStyle(dropdown).position,
+        left: window.getComputedStyle(dropdown).left,
+        right: window.getComputedStyle(dropdown).right,
+        width: window.getComputedStyle(dropdown).width
+      }
+    };
   });
 
-  console.log('ANCESTOR TRACE:');
-  console.log(JSON.stringify(ancestorTracer, null, 2));
+  console.log('TRACE DETAILS:');
+  console.log(JSON.stringify(traceDetails, null, 2));
 
   await browser.close();
 }
