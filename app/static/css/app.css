@@ -3712,14 +3712,15 @@ html.auth-loading .auth-card {
 /* --- Language-based screen edge alignment overrides --- */
 html[dir="rtl"] .page-wrap,
 html[dir="rtl"] .topbar {
-  padding-inline-start: 16px !important; /* تم تعديلها هنا */
+  padding-inline-start: 16px !important;
+  padding-inline-end: max(24px, calc((100% - 1440px) / 2)) !important;
 }
 
 html[dir="ltr"] .page-wrap,
 html[dir="ltr"] .topbar {
   padding-inline-start: 16px !important;
+  padding-inline-end: max(24px, calc((100% - 1440px) / 2)) !important;
 }
-
 /* --- Sidebar Spacing & Scrollable Body Flex Alignment --- */
 .sidebar-footer {
   padding: 16px 14px 14px 14px !important; /* Perfect 16px gap below footer line */
