@@ -69,6 +69,47 @@
         clip-path: circle(var(--ripple-r) at var(--ripple-x) var(--ripple-y));
       }
     }
+
+    /* ========== SPARKLE TOGGLE BUTTON ========== */
+    .sparkle-toggle-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--card, rgba(255, 255, 255, 0.85));
+      border: 1px solid var(--card-border, rgba(0, 0, 0, 0.1));
+      color: var(--text-main, #334155);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 9999;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    html[data-theme="dark"] .sparkle-toggle-btn {
+      background: var(--card, rgba(30, 41, 59, 0.85));
+      color: #94a3b8;
+    }
+
+    .sparkle-toggle-btn:hover {
+      transform: scale(1.1) rotate(15deg);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+      color: #3b82f6;
+    }
+    
+    .sparkle-toggle-btn.sparkles-disabled {
+      color: #94a3b8;
+      opacity: 0.6;
+    }
+    
+    .sparkle-toggle-btn.sparkles-disabled:hover {
+      color: #ef4444;
+      opacity: 1;
+    }
   </style>
   <link rel="stylesheet" href="/static/css/app.css?v=106" />
   <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
@@ -217,6 +258,9 @@
       }
 
       window.addEventListener('pointermove', (event) => {
+        if (localStorage.getItem('sparkles_enabled') === 'false') {
+          return;
+        }
         if (event.pointerType === 'touch') {
           return;
         }
@@ -231,6 +275,9 @@
       }, { passive: true });
 
       window.addEventListener('pointerdown', (event) => {
+        if (localStorage.getItem('sparkles_enabled') === 'false') {
+          return;
+        }
         if (event.pointerType === 'touch') {
           return;
         }
@@ -239,6 +286,9 @@
       }, { passive: true });
 
       window.addEventListener('scroll', () => {
+        if (localStorage.getItem('sparkles_enabled') === 'false') {
+          return;
+        }
         const x = Math.random() * window.innerWidth;
         const y = Math.min(window.innerHeight - 20, 120 + Math.random() * window.innerHeight * 0.65);
         burst(x, y, 1);
@@ -257,6 +307,86 @@
       </div>
     </div>
   </div>
+
+  <button id="sparkleToggleBtn" class="sparkle-toggle-btn" type="button" title="تأثير اللمعان" aria-label="Toggle Sparkle Effect">
+    <i class="ri-magic-line"></i>
+  </button>
+
+  <script>
+    (function() {
+      const btn = document.getElementById('sparkleToggleBtn');
+      if (!btn) return;
+
+      const lang = document.documentElement.lang || 'ar';
+
+      function updateBtnState() {
+        const enabled = localStorage.getItem('sparkles_enabled') !== 'false';
+        const icon = btn.querySelector('i');
+        if (enabled) {
+          btn.classList.remove('sparkles-disabled');
+          icon.className = 'ri-magic-line';
+          btn.title = lang === 'ar' ? 'إيقاف تأثير اللمعان للمؤشر' : 'Disable Sparkle Effect';
+        } else {
+          btn.classList.add('sparkles-disabled');
+          icon.className = 'ri-magic-close-line';
+          btn.title = lang === 'ar' ? 'تفعيل تأثير اللمعان للمؤشر' : 'Enable Sparkle Effect';
+        }
+      }
+
+      function showSparkleToast(message) {
+        let toast = document.createElement('div');
+        toast.style.cssText = `
+          position: fixed;
+          bottom: 80px;
+          left: 20px;
+          background: var(--card, #ffffff);
+          border: 1px solid var(--card-border, rgba(0,0,0,0.1));
+          color: var(--text-main, #333);
+          padding: 10px 16px;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+          z-index: 10000;
+          font-family: system-ui, sans-serif;
+          font-size: 0.9rem;
+          pointer-events: none;
+          opacity: 0;
+          transform: translateY(10px);
+          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        `;
+        toast.dir = document.documentElement.lang === 'ar' ? 'rtl' : 'ltr';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        requestAnimationFrame(() => {
+          toast.style.opacity = '1';
+          toast.style.transform = 'translateY(0)';
+        });
+        
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(10px)';
+          setTimeout(() => toast.remove(), 300);
+        }, 2200);
+      }
+
+      btn.addEventListener('click', () => {
+        const enabled = localStorage.getItem('sparkles_enabled') !== 'false';
+        const nextState = !enabled;
+        localStorage.setItem('sparkles_enabled', String(nextState));
+        updateBtnState();
+
+        const activeLang = document.documentElement.lang || 'ar';
+        if (nextState) {
+          showSparkleToast(activeLang === 'ar' ? '✨ تم تفعيل تأثير اللمعان للمؤشر' : '✨ Cursor sparkle effect enabled');
+        } else {
+          showSparkleToast(activeLang === 'ar' ? '❌ تم إيقاف تأثير اللمعان للمؤشر' : '❌ Cursor sparkle effect disabled');
+        }
+      });
+
+      // Initialize
+      updateBtnState();
+    })();
+  </script>
 
   {% block scripts %}{% endblock %}
 </body>
