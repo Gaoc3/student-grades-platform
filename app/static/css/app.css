@@ -845,7 +845,7 @@ body.sidebar-collapsed .sidebar-card {
 .sidebar-card {
   position: sticky;
   top: 16px;
-  height: calc(100vh - 32px);
+  height: fit-content;
   max-height: calc(100vh - 32px);
   overflow: hidden; /* card itself never scrolls */
   background: var(--sidebar-bg);
@@ -3823,13 +3823,23 @@ html[dir="ltr"] .topbar {
 
 /* --- Premium Sidebar Footer & User Profile Capsule --- */
 .sidebar-footer {
-  padding: 16px;
+  padding: 16px 14px 8px 14px;
   border-top: 1px solid var(--line);
-  margin-top: auto;
+  margin-top: 24px;
   flex-shrink: 0;
-  background: color-mix(in oklab, var(--sidebar-bg) 65%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Ensure the footer pushes to the bottom in desktop when there is height, but flows naturally on scroll */
+.sidebar-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-body .sidebar-footer {
+  margin-top: auto;
 }
 
 .sidebar-profile-card {
@@ -3889,25 +3899,25 @@ html[dir="ltr"] .topbar {
   font-weight: 600;
 }
 
-.sidebar-logout-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--topbar-island-bg);
-  color: var(--muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+/* --- Premium Harmonized Red Logout Menu Button --- */
+.nav-btn-logout {
+  color: var(--danger) !important;
+  border: 1px solid color-mix(in oklab, var(--danger) 10%, transparent) !important;
+  background: color-mix(in oklab, var(--danger) 4%, transparent) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-.sidebar-logout-btn:hover {
-  background: color-mix(in oklab, var(--danger) 10%, transparent);
-  color: var(--danger);
-  border-color: color-mix(in oklab, var(--danger) 30%, transparent);
-  transform: scale(1.06) rotate(3deg);
-  box-shadow: 0 4px 12px color-mix(in oklab, var(--danger) 12%, transparent);
+.nav-btn-logout:hover {
+  transform: translateY(-3px) !important;
+  border-color: color-mix(in oklab, var(--danger) 28%, transparent) !important;
+  background: linear-gradient(135deg, color-mix(in oklab, var(--danger) 12%, var(--card)), color-mix(in oklab, var(--danger) 4%, var(--card))) !important;
+  box-shadow: 0 14px 28px -12px color-mix(in oklab, var(--danger) 28%, transparent) !important;
+  color: var(--danger) !important;
+}
+
+.nav-btn-logout .nav-icon {
+  color: var(--danger) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
