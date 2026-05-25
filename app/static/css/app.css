@@ -3886,3 +3886,32 @@ html[dir="rtl"] #notifDropdown {
   }
 }
 
+/* ==========================================================================
+   إصلاح شامل وتلقائي لتوحيد الفراغات وقائمة الإشعارات (عربي + إنجليزي)
+   ========================================================================== */
+
+/* 1. توحيد مقاس الفراغات والحواف من أطراف الشاشة بالتساوي */
+html[dir="rtl"] .page-wrap,
+html[dir="rtl"] .topbar {
+  padding-inline-start: 16px !important;
+  padding-inline-end: max(24px, calc((100% - 1440px) / 2)) !important;
+}
+
+html[dir="ltr"] .page-wrap,
+html[dir="ltr"] .topbar {
+  padding-inline-start: 16px !important;
+  padding-inline-end: max(24px, calc((100% - 1440px) / 2)) !important;
+}
+
+/* 2. توحيد اتجاه فتح الإشعارات للداخل في الجهتين حتى تظهر كاملة ولا تُقص */
+html[dir="ltr"] #notifDropdown {
+  inset-inline-start: 0 !important;
+  inset-inline-end: auto !important;
+  transform-origin: top left !important;
+}
+
+html[dir="rtl"] #notifDropdown {
+  inset-inline-start: 0 !important;
+  inset-inline-end: auto !important;
+  transform-origin: top right !important;
+}
