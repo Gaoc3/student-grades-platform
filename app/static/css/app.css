@@ -3816,11 +3816,10 @@ html[dir="ltr"] #notifDropdown {
 }
 
 html[dir="rtl"] #notifDropdown {
-  inset-inline-start: 0 !important;   /* تم التعديل هنا لتبدأ المحاذاة من الداخل */
-  inset-inline-end: auto !important;  /* تم التعديل هنا */
+  inset-inline-start: 0 !important;
+  inset-inline-end: auto !important;
   transform-origin: top right !important;
 }
-
 /* Force perfect centering and prevent clipping of notification empty states */
 .notif-empty-state {
   width: 100% !important;
