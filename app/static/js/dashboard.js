@@ -1161,11 +1161,11 @@ async function loadGradebook() {
 }
 
 function closeSidebar() {
-  if (window.innerWidth > 768) document.body.classList.add('sidebar-collapsed');
+  if (window.innerWidth > 1024) document.body.classList.add('sidebar-collapsed');
   else document.body.classList.remove('sidebar-open');
 }
 function toggleSidebar() {
-  if (window.innerWidth > 768) document.body.classList.toggle('sidebar-collapsed');
+  if (window.innerWidth > 1024) document.body.classList.toggle('sidebar-collapsed');
   else document.body.classList.toggle('sidebar-open');
 }
 
@@ -1173,7 +1173,7 @@ sidebarToggleBtn?.addEventListener('click', toggleSidebar);
 sidebarCloseBtn?.addEventListener('click', closeSidebar);
 sidebarBackdrop?.addEventListener('click', closeSidebar);
 window.addEventListener('resize', () => {
-  if (window.innerWidth > 768) {
+  if (window.innerWidth > 1024) {
     document.body.classList.remove('sidebar-open');
   }
 });
@@ -1191,7 +1191,7 @@ function setActiveSection(section) {
 
 sectionNavButtons.forEach(btn => btn.addEventListener('click', () => {
   setActiveSection(btn.dataset.section || 'overview');
-  if (window.innerWidth <= 768) closeSidebar();
+  if (window.innerWidth <= 1024) closeSidebar();
 }));
 
 langToggleBtn?.addEventListener('click', () => applyLanguage(state.lang === 'ar' ? 'en' : 'ar', true));
