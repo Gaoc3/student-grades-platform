@@ -2190,8 +2190,7 @@ hr {
     position: fixed;
     top: 16px !important;
     width: min(300px, 78vw) !important;
-    height: fit-content !important;
-    max-height: calc(100dvh - 32px) !important;
+    height: calc(100dvh - 32px) !important;
     border-radius: 24px !important;
     padding: 20px 16px !important;
     border: 1px solid var(--card-border) !important;
