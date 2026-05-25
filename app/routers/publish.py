@@ -124,61 +124,78 @@ def publish_grades(
     skipped: list[dict[str, str]] = []
     now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-    for st in students:
-        rows = db.scalars(
-            select(StudentScore).where(
-                StudentScore.student_id == st.id,
-                StudentScore.component_key.in_(selected_component_keys),
+    with get_smtp_connection() as smtp_conn:
+        for st in students:
+            rows = db.scalars(
+                select(StudentScore).where(
+                    StudentScore.student_id == st.id,
+                    StudentScore.component_key.in_(selected_component_keys),
+                )
+            ).all()
+
+            if not rows:
+                continue
+
+            for row in rows:
+                row.published = True
+
+            if not payload.send_email and not payload.force_new_token:
+                continue
+
+            if not st.email:
+                skipped.append({"student": st.full_name, "reason": "No email"})
+                continue
+
+            active = db.scalar(
+                select(PublicationToken).where(
+                    PublicationToken.student_id == st.id,
+                    PublicationToken.expires_at > now,
+                    PublicationToken.opened_at.is_(None),
+                )
             )
-        ).all()
+            if active and not payload.force_new_token:
+                skipped.append({"student": st.full_name, "reason": "Active unseen token already exists"})
+                continue
 
-        if not rows:
-            continue
+            if payload.force_new_token:
+                db.execute(
+                    delete(PublicationToken).where(PublicationToken.student_id == st.id)
+                )
 
-        for row in rows:
-            row.published = True
+            token = create_token()
+            expires_at = now + timedelta(days=settings.qr_expiry_days)
+            token_row = PublicationToken(student_id=st.id, token=token, expires_at=expires_at)
+            db.add(token_row)
+            db.commit()
 
-        if not payload.send_email and not payload.force_new_token:
-            continue
-
-        if not st.email:
-            skipped.append({"student": st.full_name, "reason": "No email"})
-            continue
-
-        active = db.scalar(
-            select(PublicationToken).where(
-                PublicationToken.student_id == st.id,
-                PublicationToken.expires_at > now,
-                PublicationToken.opened_at.is_(None),
-            )
-        )
-        if active and not payload.force_new_token:
-            skipped.append({"student": st.full_name, "reason": "Active unseen token already exists"})
-            continue
-
-        if payload.force_new_token:
-            db.execute(
-                delete(PublicationToken).where(PublicationToken.student_id == st.id)
+            base_url = _resolve_public_base_url(request)
+            grade_url = f"{base_url}/grade/{token}"
+            qr_base64 = make_qr_base64(grade_url)
+            ok, detail = send_grade_qr_email(
+                to_email=st.email,
+                student_name=st.full_name,
+                subject_name=doctor.subject_name,
+                grade_url=grade_url,
+                qr_base64=qr_base64,
+                smtp_connection=smtp_conn,
             )
 
-        token = create_token()
-        expires_at = now + timedelta(days=settings.qr_expiry_days)
-        token_row = PublicationToken(student_id=st.id, token=token, expires_at=expires_at)
-        db.add(token_row)
-        db.commit()
+            if not ok:
+                db.add(
+                    Notification(
+                        event_type="email_failed",
+                        message=f"Failed to send email to student {st.full_name} ({st.email}): {detail}",
+                        payload_json=json.dumps({
+                            "student_id": st.id,
+                            "student_name": st.full_name,
+                            "email": st.email,
+                            "error": detail
+                        }),
+                    )
+                )
+                db.commit()
 
-        base_url = _resolve_public_base_url(request)
-        grade_url = f"{base_url}/grade/{token}"
-        qr_base64 = make_qr_base64(grade_url)
-        ok, detail = send_grade_qr_email(
-            to_email=st.email,
-            student_name=st.full_name,
-            subject_name=doctor.subject_name,
-            grade_url=grade_url,
-            qr_base64=qr_base64,
-        )
-
-        sent.append({"student": st.full_name, "email": st.email, "status": "sent" if ok else "failed", "detail": detail, "grade_url": grade_url})
+            sent.append({"student": st.full_name, "email": st.email, "status": "sent" if ok else "failed", "detail": detail, "grade_url": grade_url})
 
     db.commit()
 
