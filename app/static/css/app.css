@@ -3712,7 +3712,7 @@ html.auth-loading .auth-card {
 /* --- Language-based screen edge alignment overrides --- */
 html[dir="rtl"] .page-wrap,
 html[dir="rtl"] .topbar {
-  padding-inline-end: 16px !important;
+  padding-inline-start: 16px !important; /* تم تعديلها هنا */
 }
 
 html[dir="ltr"] .page-wrap,
