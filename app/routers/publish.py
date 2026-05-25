@@ -253,22 +253,23 @@ def grade_page(request: Request, token: str):
     found = None
     doctor_info = None
 
-    from app.core.database import MainSessionLocal
+    from app.core.database import MainSessionLocal, is_postgresql
 
-    with MainSessionLocal() as main_db:
-        doctors = main_db.scalars(select(Doctor)).all()
-        for doctor in doctors:
-            with tenant_session(doctor.id) as tenant_db:
-                row = tenant_db.scalar(select(PublicationToken).where(PublicationToken.token == token))
-                if row:
-                    found = row
-                    doctor_info = doctor
-                    break
-
-                # session closes, continue loop
-
+    if is_postgresql():
+        with MainSessionLocal() as db:
+            found = db.scalar(select(PublicationToken).where(PublicationToken.token == token))
             if found:
-                break
+                doctor_info = db.get(Doctor, found.doctor_id)
+    else:
+        with MainSessionLocal() as main_db:
+            doctors = main_db.scalars(select(Doctor)).all()
+            for doctor in doctors:
+                with tenant_session(doctor.id) as tenant_db:
+                    row = tenant_db.scalar(select(PublicationToken).where(PublicationToken.token == token))
+                    if row:
+                        found = row
+                        doctor_info = doctor
+                        break
 
     if not found or not doctor_info:
         return templates.TemplateResponse(
