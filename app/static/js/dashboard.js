@@ -1444,7 +1444,7 @@ async function bootstrap() {
       state.activeSemester = parseInt(savedSem, 10);
       semesterSelection.style.display = 'none';
       dashboardApp.style.display = '';
-      if (window.innerWidth > 768) document.body.classList.remove('sidebar-collapsed');
+      if (window.innerWidth > 1024) document.body.classList.remove('sidebar-collapsed');
       await loadGradebook();
     }
 
@@ -1464,7 +1464,7 @@ document.querySelectorAll('.gateway-card').forEach(card => {
     semesterSelection.style.display = 'none';
     dashboardApp.style.display = '';
     setActiveSection('overview');
-    if (window.innerWidth > 768) document.body.classList.remove('sidebar-collapsed');
+    if (window.innerWidth > 1024) document.body.classList.remove('sidebar-collapsed');
     await loadGradebook();
   });
 });
