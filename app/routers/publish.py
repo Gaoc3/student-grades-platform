@@ -124,6 +124,8 @@ def publish_grades(
     skipped: list[dict[str, str]] = []
     now = datetime.now(timezone.utc).replace(tzinfo=None)
 
+    # 1. First Pass: Update database and generate tokens
+    emails_to_send = []
     for st in students:
         rows = db.scalars(
             select(StudentScore).where(
@@ -166,21 +168,17 @@ def publish_grades(
         token_row = PublicationToken(student_id=st.id, token=token, expires_at=expires_at)
         db.add(token_row)
 
-        base_url = _resolve_public_base_url(request)
-        grade_url = f"{base_url}/grade/{token}"
-        qr_base64 = make_qr_base64(grade_url)
-        ok, detail = send_grade_qr_email(
-            to_email=st.email,
-            student_name=st.full_name,
-            subject_name=doctor.subject_name,
-            grade_url=grade_url,
-            qr_base64=qr_base64,
-        )
+        emails_to_send.append({
+            "student_id": st.id,
+            "student_name": st.full_name,
+            "student_email": st.email,
+            "token": token
+        })
 
-        sent.append({"student": st.full_name, "email": st.email, "status": "sent" if ok else "failed", "detail": detail, "grade_url": grade_url})
-
+    # Commit all database changes (tokens & published scores) immediately!
     db.commit()
 
+    # Add notification and commit
     db.add(
         Notification(
             event_type="publish",
@@ -194,7 +192,28 @@ def publish_grades(
     )
     db.commit()
 
-    return {"message": "Publish completed", "emailed": sent, "skipped": skipped}
+    # 2. Second Pass: Send emails using the committed tokens
+    base_url = _resolve_public_base_url(request)
+    for item in emails_to_send:
+        token = item["token"]
+        grade_url = f"{base_url}/grade/{token}"
+        qr_base64 = make_qr_base64(grade_url)
+        
+        ok, detail = send_grade_qr_email(
+            to_email=item["student_email"],
+            student_name=item["student_name"],
+            subject_name=doctor.subject_name,
+            grade_url=grade_url,
+            qr_base64=qr_base64,
+        )
+
+        sent.append({
+            "student": item["student_name"],
+            "email": item["student_email"],
+            "status": "sent" if ok else "failed",
+            "detail": detail,
+            "grade_url": grade_url
+        })
 
 
 @router.get("/api/notifications")
