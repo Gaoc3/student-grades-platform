@@ -3821,18 +3821,15 @@ html[dir="ltr"] .topbar {
   padding-inline-start: 16px !important;
 }
 
-/* --- Premium Sidebar Footer & User Profile Capsule --- */
+/* --- Sidebar Footer & Scrollable Body Flex Alignment --- */
 .sidebar-footer {
-  padding: 16px 14px 8px 14px;
+  padding: 12px 14px 14px 14px;
   border-top: 1px solid var(--line);
   margin-top: 24px;
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 
-/* Ensure the footer pushes to the bottom in desktop when there is height, but flows naturally on scroll */
+/* Flex layout to push the footer to the bottom on desktop while scrolling naturally on mobile */
 .sidebar-body {
   display: flex;
   flex-direction: column;
@@ -3842,82 +3839,99 @@ html[dir="ltr"] .topbar {
   margin-top: auto;
 }
 
-.sidebar-profile-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: color-mix(in oklab, var(--card) 45%, transparent);
-  border: 1px solid var(--topbar-island-border);
-  padding: 8px 12px;
-  border-radius: 18px;
-  box-shadow: 0 4px 20px -6px rgba(0, 0, 0, 0.08);
-  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.sidebar-profile-card:hover {
-  background: color-mix(in oklab, var(--card) 75%, transparent);
-  border-color: color-mix(in oklab, var(--primary) 20%, var(--topbar-island-border));
-  box-shadow: 0 8px 24px -6px color-mix(in oklab, var(--primary) 8%, transparent);
-  transform: translateY(-1px);
-}
-
-.profile-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  box-shadow: 0 4px 12px color-mix(in oklab, var(--primary) 25%, transparent);
-  flex-shrink: 0;
-  border: 2px solid rgba(255, 255, 255, 0.15);
-}
-
-.profile-details {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.profile-name {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.profile-subtitle {
-  font-size: 11px;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-/* --- Premium Harmonized Red Logout Menu Button --- */
-.nav-btn-logout {
+/* --- High-Precision, Premium Redesigned Crimson Logout Button --- */
+.nav-btn-logout-premium {
+  width: 100% !important;
+  border-radius: 16px !important;
+  padding: 14px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.3px !important;
+  cursor: pointer !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border: 1px solid color-mix(in oklab, var(--danger) 18%, transparent) !important;
+  background: color-mix(in oklab, var(--danger) 5%, transparent) !important;
   color: var(--danger) !important;
-  border: 1px solid color-mix(in oklab, var(--danger) 10%, transparent) !important;
-  background: color-mix(in oklab, var(--danger) 4%, transparent) !important;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-.nav-btn-logout:hover {
-  transform: translateY(-3px) !important;
-  border-color: color-mix(in oklab, var(--danger) 28%, transparent) !important;
-  background: linear-gradient(135deg, color-mix(in oklab, var(--danger) 12%, var(--card)), color-mix(in oklab, var(--danger) 4%, var(--card))) !important;
-  box-shadow: 0 14px 28px -12px color-mix(in oklab, var(--danger) 28%, transparent) !important;
-  color: var(--danger) !important;
+.nav-btn-logout-premium:hover {
+  transform: translateY(-2px) !important;
+  border-color: var(--danger) !important;
+  background: linear-gradient(135deg, color-mix(in oklab, var(--danger) 15%, var(--card)), color-mix(in oklab, var(--danger) 6%, var(--card))) !important;
+  box-shadow: 
+    0 10px 25px -10px color-mix(in oklab, var(--danger) 40%, transparent), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
-.nav-btn-logout .nav-icon {
-  color: var(--danger) !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.logout-premium-icon {
+  font-size: 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* --- Notifications Dropdown Edge-Alignment & Centering Overrides --- */
+/* Grow towards inside the screen on desktop to completely prevent going off-screen */
+html[dir="ltr"] #notifDropdown {
+  inset-inline-start: 0 !important;
+  inset-inline-end: auto !important;
+  transform-origin: top left !important;
+}
+
+html[dir="rtl"] #notifDropdown {
+  inset-inline-end: 0 !important;
+  inset-inline-start: auto !important;
+  transform-origin: top right !important;
+}
+
+/* Force perfect centering and prevent clipping of notification empty states */
+.notif-empty-state {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 36px 20px !important;
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+}
+
+.notif-empty-mark {
+  margin: 0 auto !important;
+}
+
+.notif-empty-title {
+  margin-top: 8px !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  text-align: center !important;
+  width: 100% !important;
+}
+
+.notif-empty-desc {
+  font-size: 12px !important;
+  text-align: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+/* Mobile Center-Alignment for Notifications Dropdown */
+@media (max-width: 768px) {
+  #notifDropdown {
+    left: 12px !important;
+    right: 12px !important;
+    inset-inline-start: 12px !important;
+    inset-inline-end: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    transform-origin: top center !important;
+  }
 }
