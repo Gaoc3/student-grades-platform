@@ -1,0 +1,72 @@
+--- app/static/css/app.css
++++ app/static/css/app.css
+@@ -304,11 +304,11 @@
+
+ html[dir="rtl"] .topbar {
+   direction: rtl !important;
+-  flex-direction: row !important;
++  flex-direction: row-reverse !important;
+ }
+
+ html[dir="ltr"] .topbar {
+   direction: ltr !important;
+-  flex-direction: row !important;
++  flex-direction: row-reverse !important;
+ }
+
+@@ -2378,11 +2378,13 @@
+   #notifDropdown {
+     position: absolute !important;
+     top: 100% !important;
+-    left: 12px !important;
+-    right: 12px !important;
+-    width: auto !important;
+-    max-width: none !important;
+-    inset-inline-end: auto !important;
+-    inset-inline-start: auto !important;
++    width: 290px !important;
++    max-width: 90vw !important;
++    left: auto !important;
++    right: auto !important;
++    inset-inline-end: 0 !important;
++    inset-inline-start: auto !important;
+     box-shadow: 0 12px 32px rgba(2, 6, 23, 0.18) !important;
+     border-radius: 18px !important;
+   }
+@@ -3326,11 +3326,13 @@
+   position: absolute !important;
+   top: 100% !important;
+   width: 290px !important;
++  max-width: 90vw !important;
+   max-height: 380px !important;
+   overflow-y: auto !important;
+   -webkit-overflow-scrolling: touch !important;
+   margin-top: 12px !important;
+   z-index: 1000 !important;
+   box-shadow: var(--notif-shadow) !important;
+   border: 1px solid var(--notif-border) !important;
+   padding: 0 !important;
+-  inset-inline-end: 0 !important;
++  inset-inline-end: 0 !important;
++  inset-inline-start: auto !important;
+   border-radius: 16px !important;
+   background: var(--notif-bg) !important;
+@@ -3606,12 +3606,13 @@
+   #notifDropdown {
+     position: absolute !important;
+     top: 100% !important;
+-    left: 12px !important;
+-    right: 12px !important;
+-    inset-inline-start: 12px !important;
+-    inset-inline-end: 12px !important;
+-    width: auto !important;
+-    max-width: none !important;
++    width: 290px !important;
++    max-width: 90vw !important;
++    left: auto !important;
++    right: auto !important;
++    inset-inline-end: 0 !important;
++    inset-inline-start: auto !important;
+     box-shadow: 0 12px 32px rgba(2, 6, 23, 0.25) !important;
+     border-radius: 14px !important;
+     max-height: 320px !important;
