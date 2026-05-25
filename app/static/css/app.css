@@ -2161,7 +2161,7 @@ hr {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .page-wrap {
     width: min(1200px, 98vw);
     margin: 18px auto;
@@ -2311,7 +2311,7 @@ hr {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .topbar {
     flex-direction: row !important;
     flex-wrap: wrap;
@@ -2348,7 +2348,7 @@ hr {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .page-wrap {
     width: 100%;
     margin: 12px auto;
@@ -3514,7 +3514,7 @@ html[data-theme="dark"] #notifDropdown > div:first-child,
   border-bottom: 1px solid color-mix(in oklab, var(--line) 40%, transparent) !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .toast-stack {
     inset-block-start: 16px !important;
     inset-inline: 16px !important;
