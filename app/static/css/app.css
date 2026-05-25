@@ -3749,12 +3749,12 @@ html[dir="ltr"] .topbar {
   padding-inline-start: 16px !important;
 }
 
-/* --- Sidebar Footer & Scrollable Body Flex Alignment --- */
+/* --- Sidebar Spacing & Scrollable Body Flex Alignment --- */
 .sidebar-footer {
-  padding: 12px 14px 14px 14px;
-  border-top: 1px solid var(--line);
-  margin-top: 24px;
-  flex-shrink: 0;
+  padding: 16px 14px 14px 14px !important; /* Perfect 16px gap below footer line */
+  border-top: 1px solid var(--line) !important;
+  margin-top: 16px !important; /* Symmetrical fallback gap above footer line */
+  flex-shrink: 0 !important;
 }
 
 /* Flex layout to push the footer to the bottom on desktop while scrolling naturally on mobile */
@@ -3764,7 +3764,12 @@ html[dir="ltr"] .topbar {
 }
 
 .sidebar-body .sidebar-footer {
-  margin-top: auto;
+  margin-top: auto !important;
+}
+
+/* Balance mid-divider line in grid: 10px (grid gap) + 6px (margin) = 16px gap on both sides */
+.sidebar-nav .line {
+  margin: 6px 0 !important;
 }
 
 /* --- High-Precision, Premium Redesigned Crimson Logout Button --- */
@@ -3789,6 +3794,25 @@ html[dir="ltr"] .topbar {
   transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+/* Diagonal glossy shine visual element */
+.nav-btn-logout-premium::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -150% !important;
+  width: 120% !important;
+  height: 100% !important;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.16),
+    transparent
+  ) !important;
+  transform: skewX(-20deg) !important;
+  transition: none !important;
+  pointer-events: none !important;
+}
+
 .nav-btn-logout-premium:hover {
   transform: translateY(-2px) !important;
   border-color: var(--danger) !important;
@@ -3796,6 +3820,12 @@ html[dir="ltr"] .topbar {
   box-shadow: 
     0 10px 25px -10px color-mix(in oklab, var(--danger) 40%, transparent), 
     inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Trigger diagonal shine sweep on hover */
+.nav-btn-logout-premium:hover::after {
+  left: 150% !important;
+  transition: all 0.75s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .logout-premium-icon {
