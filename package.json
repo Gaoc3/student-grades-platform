@@ -1,5 +1,24 @@
 {
   "dependencies": {
     "playwright": "^1.60.0"
-  }
+  },
+  "name": "student-grades-platform",
+  "version": "1.0.0",
+  "description": "مشروع ويب حديث لإدارة درجات الطلاب بلغة Python.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gaoc3/student-grades-platform.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Gaoc3/student-grades-platform/issues"
+  },
+  "homepage": "https://github.com/Gaoc3/student-grades-platform#readme"
 }
