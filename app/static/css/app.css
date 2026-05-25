@@ -3856,6 +3856,8 @@ html[dir="rtl"] #notifDropdown {
     position: static !important;
   }
   
+  html[dir="ltr"] #notifDropdown,
+  html[dir="rtl"] #notifDropdown,
   #notifDropdown {
     position: absolute !important;
     top: 100% !important;
