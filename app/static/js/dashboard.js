@@ -59,6 +59,7 @@ const I18N = {
     notifStudentOpened: 'طالب فتح الرابط: {msg}',
     notifPublishMsg: 'تم نشر النتائج لـ {count} طالب في مادة {subject}',
     notifGradeViewedMsg: 'الطالب {name} قام بفتح صفحة الدرجات',
+    notifEmailFailedMsg: 'فشل إرسال الإيميل للطالب {name}: {error}',
     notifAllCleared: 'تم مسح جميع الإشعارات',
     notifDelete: 'حذف',
     notifDeleteLabel: 'حذف الإشعار',
@@ -183,6 +184,7 @@ const I18N = {
     notifStudentOpened: 'Student opened link: {msg}',
     notifPublishMsg: 'Grades published for {count} student(s) in {subject}',
     notifGradeViewedMsg: 'Student {name} opened the grade page',
+    notifEmailFailedMsg: 'Failed to send email to student {name}: {error}',
     notifAllCleared: 'All notifications cleared.',
     notifDelete: 'Delete',
     notifDeleteLabel: 'Delete Notification',
@@ -593,6 +595,10 @@ function getLocalizedNotifMessage(n) {
   } else if (n.event_type === 'grade_viewed') {
     const name = payload.student_name || '';
     return t('notifGradeViewedMsg', { name: name });
+  } else if (n.event_type === 'email_failed') {
+    const name = payload.student_name || '';
+    const error = payload.error || '';
+    return t('notifEmailFailedMsg', { name: name, error: error });
   }
   
   return n.message;
