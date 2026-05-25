@@ -7,10 +7,12 @@ import smtplib
 import ssl
 import textwrap
 import time
+from contextlib import contextmanager
 from email.message import EmailMessage
 from email.utils import formataddr
 from html import escape
 from pathlib import Path
+from typing import Generator
 
 from email_validator import EmailNotValidError, validate_email
 
@@ -136,6 +138,36 @@ def _build_grade_email_html(
     ).strip()
 
 
+@contextmanager
+def get_smtp_connection() -> Generator[smtplib.SMTP | None, None, None]:
+    if not settings.smtp_host:
+        yield None
+        return
+
+    smtp_timeout = getattr(settings, "smtp_timeout", 20)
+    use_ssl = bool(getattr(settings, "smtp_use_ssl", False)) or settings.smtp_port == 465
+    use_starttls = bool(getattr(settings, "smtp_use_starttls", True)) and not use_ssl
+    context = ssl.create_default_context()
+
+    try:
+        if use_ssl:
+            with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, timeout=smtp_timeout, context=context) as smtp:
+                if settings.smtp_user:
+                    smtp.login(settings.smtp_user, settings.smtp_password or "")
+                yield smtp
+        else:
+            with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=smtp_timeout) as smtp:
+                smtp.ehlo()
+                if use_starttls and smtp.has_extn("starttls"):
+                    smtp.starttls(context=context)
+                    smtp.ehlo()
+                if settings.smtp_user:
+                    smtp.login(settings.smtp_user, settings.smtp_password or "")
+                yield smtp
+    except Exception as exc:
+        raise exc
+
+
 def send_grade_qr_email(
     *,
     to_email: str,
@@ -145,6 +177,7 @@ def send_grade_qr_email(
     qr_base64: str,
     brand_name: str | None = None,
     support_email: str | None = None,
+    smtp_connection: smtplib.SMTP | None = None,
 ) -> tuple[bool, str]:
     normalized_email = None
     try:
@@ -191,12 +224,16 @@ def send_grade_qr_email(
         file_path.write_text(local_html, encoding="utf-8")
         return True, f"Saved offline ({file_path})"
 
-    smtp_timeout = getattr(settings, "smtp_timeout", 20)
-    use_ssl = bool(getattr(settings, "smtp_use_ssl", False)) or settings.smtp_port == 465
-    use_starttls = bool(getattr(settings, "smtp_use_starttls", True)) and not use_ssl
-    context = ssl.create_default_context()
-
     try:
+        if smtp_connection:
+            smtp_connection.send_message(msg)
+            return True, "sent"
+
+        smtp_timeout = getattr(settings, "smtp_timeout", 20)
+        use_ssl = bool(getattr(settings, "smtp_use_ssl", False)) or settings.smtp_port == 465
+        use_starttls = bool(getattr(settings, "smtp_use_starttls", True)) and not use_ssl
+        context = ssl.create_default_context()
+
         if use_ssl:
             with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, timeout=smtp_timeout, context=context) as smtp:
                 if settings.smtp_user:

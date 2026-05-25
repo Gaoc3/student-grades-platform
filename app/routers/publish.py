@@ -17,7 +17,7 @@ from app.core.dependencies import get_current_doctor, get_tenant_db
 from app.core.database import tenant_session
 from app.models import Doctor, GradeComponent, Notification, PublicationToken, Student, StudentScore
 from app.schemas import PublishRequest
-from app.services.email_service import send_grade_qr_email
+from app.services.email_service import send_grade_qr_email, get_smtp_connection
 from app.services.qr_service import create_token, make_qr_base64
 
 router = APIRouter(tags=["publishing"])
