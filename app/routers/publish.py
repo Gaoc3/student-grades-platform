@@ -165,6 +165,7 @@ def publish_grades(
         expires_at = now + timedelta(days=settings.qr_expiry_days)
         token_row = PublicationToken(student_id=st.id, token=token, expires_at=expires_at)
         db.add(token_row)
+        db.commit()
 
         base_url = _resolve_public_base_url(request)
         grade_url = f"{base_url}/grade/{token}"
