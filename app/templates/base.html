@@ -71,6 +71,21 @@
   </style>
   <link rel="stylesheet" href="/static/css/app.css?v=101" />
   <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  
+  <style>
+    /* ========== حل مشكلة القائمة الجانبية (Sidebar) في النسخة العربية ========== */
+    html[dir="rtl"] .sidebar {
+      left: auto !important;
+      right: 0 !important;
+      transform: translateX(100%) !important;
+      border-right: none !important;
+      border-left: 1px solid var(--border-color, #e5e7eb) !important;
+    }
+
+    html[dir="rtl"] .sidebar.open {
+      transform: translateX(0) !important;
+    }
+  </style>
 </head>
 
 <body>
