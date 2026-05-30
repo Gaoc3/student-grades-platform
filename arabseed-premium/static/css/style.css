@@ -1905,7 +1905,7 @@ body {
     }
     .hero-slide-content {
         bottom: 40px;
-        right: 40px;
+        right: 85px; /* Shifted to prevent overlapping on tablet screens */
         max-width: 450px;
     }
     .hero-slide-title {
