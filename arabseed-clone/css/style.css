@@ -1,0 +1,355 @@
+/* ========================================
+   ArabSeed Home7 — Main Styles
+   ======================================== */
+
+/* === RESET & BASE === */
+* { box-sizing: border-box }
+
+html {
+  margin: 0;
+  padding: 0;
+  overflow-y: scroll;
+  background: #0b0d13;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  direction: rtl;
+  background: #0b0d13;
+  color: #fff;
+  font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+a { color: inherit }
+
+/* === PAGE WRAPPER === */
+.home7-page {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 32px 16px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 85% 8%, rgba(200,1,1,0.28), transparent 34%),
+    radial-gradient(circle at 12% 90%, rgba(255,255,255,0.08), transparent 34%),
+    linear-gradient(180deg, #0b0d13 0%, #111722 100%);
+}
+
+.home7-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 42px 42px;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* === CONTENT WRAPPER === */
+.home7-wrap {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* === HERO SECTION === */
+.home7-hero {
+  text-align: center;
+  padding: 36px 24px 30px;
+  border-radius: 30px;
+  background: rgba(18,23,32,0.88);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 20px 70px rgba(0,0,0,0.40);
+  margin-bottom: 22px;
+  min-height: 390px;
+  contain: layout paint;
+}
+
+/* === LOGO === */
+.home7-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 132px;
+  height: 108px;
+  margin: 0 auto 14px;
+  overflow: hidden;
+}
+
+.home7-logo img {
+  display: block;
+  width: 132px;
+  height: 108px;
+  object-fit: contain;
+}
+
+/* === TITLE === */
+.home7-title {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 54px);
+  line-height: 1.25;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+}
+
+.home7-title span { color: #ff3838 }
+
+/* === SUBTITLE === */
+.home7-subtitle {
+  max-width: 780px;
+  margin: 14px auto 0;
+  color: rgba(255,255,255,0.78);
+  font-size: 17px;
+  line-height: 1.9;
+}
+
+/* === BADGES === */
+.home7-badges {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 18px auto 0;
+}
+
+.home7-badges span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.82);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* === ACTION BUTTONS === */
+.home7-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.home7-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 230px;
+  min-height: 52px;
+  padding: 12px 24px;
+  border-radius: 16px;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 900;
+  border: 1px solid rgba(255,255,255,0.15);
+  transition: opacity 0.25s ease, background-color 0.25s ease;
+}
+
+.home7-actions a:hover { opacity: 0.9 }
+.home7-enter { background: #c80101 }
+.home7-official { background: rgba(255,255,255,0.10) }
+
+/* === SECTIONS === */
+.home7-section {
+  padding: 26px;
+  border-radius: 26px;
+  background: rgba(18,23,32,0.78);
+  border: 1px solid rgba(255,255,255,0.09);
+  margin-bottom: 22px;
+  contain: layout paint;
+}
+
+.home7-section h2 {
+  margin: 0 0 16px;
+  color: #ff3a3a;
+  text-align: center;
+  font-size: 24px;
+  line-height: 1.4;
+  font-weight: 900;
+}
+
+/* === SEARCH === */
+.home7-search {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.home7-search form {
+  display: grid;
+  grid-template-columns: 1fr 110px;
+  gap: 10px;
+}
+
+.home7-search input[type="text"] {
+  min-height: 50px;
+  border-radius: 15px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  padding: 0 16px;
+  font-family: inherit;
+  outline: none;
+}
+
+.home7-search input[type="text"]::placeholder {
+  color: rgba(255,255,255,0.55);
+}
+
+.home7-search input[type="submit"] {
+  min-height: 50px;
+  border: 0;
+  border-radius: 15px;
+  background: #c80101;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+/* === CATEGORIES GRID === */
+.home7-cats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.home7-cats a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 10px 12px;
+  border-radius: 15px;
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+  text-decoration: none;
+  text-align: center;
+  font-weight: 800;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: background-color 0.25s ease;
+}
+
+.home7-cats a:hover { background: #c80101 }
+
+/* === INFO GRID & CARDS === */
+.home7-info {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.home7-card {
+  padding: 22px;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.09);
+  min-height: 155px;
+}
+
+.home7-card strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 900;
+}
+
+.home7-card p {
+  margin: 0;
+  color: rgba(255,255,255,0.76);
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+/* === SOCIAL LINKS === */
+.home7-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.home7-social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: 30px;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+/* === FOOTER LINKS === */
+.home7-footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 18px auto 0;
+}
+
+.home7-footer-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.78);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* === COPYRIGHT === */
+.home7-copy {
+  text-align: center;
+  color: rgba(255,255,255,0.62);
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 900px) {
+  .home7-cats { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .home7-info { grid-template-columns: 1fr }
+}
+
+@media (max-width: 600px) {
+  .home7-page { padding: 16px 12px }
+  .home7-hero, .home7-section { border-radius: 21px; padding: 22px 14px }
+  .home7-hero { min-height: 430px }
+  .home7-logo { width: 118px; height: 96px }
+  .home7-logo img { width: 118px; height: 96px }
+  .home7-subtitle { font-size: 15px; line-height: 1.85 }
+  .home7-actions { flex-direction: column }
+  .home7-actions a { width: 100%; max-width: 340px }
+  .home7-search form { grid-template-columns: 1fr }
+  .home7-search input[type="submit"] { width: 100% }
+  .home7-cats { grid-template-columns: 1fr }
+}
