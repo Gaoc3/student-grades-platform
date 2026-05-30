@@ -328,6 +328,92 @@ class ArabSeedAPI:
                     
         return links
 
+    def get_watch_links(self, detail_url: str) -> List[Dict[str, str]]:
+        """
+        Navigates to the watch sub-page, extracts the primary stream player
+        and other embedded stream servers, decodes them, and returns direct stream links.
+        """
+        # Formulate watch page URL
+        if not detail_url.rstrip('/').endswith('/watch'):
+            watch_url = detail_url.rstrip('/') + "/watch/"
+        else:
+            watch_url = detail_url
+            
+        try:
+            r = self.session.get(watch_url, timeout=10)
+            r.raise_for_status()
+        except Exception as e:
+            # Fallback to scraping the detail page directly if watch page doesn't exist
+            watch_url = detail_url
+            try:
+                r = self.session.get(watch_url, timeout=10)
+                r.raise_for_status()
+            except Exception:
+                raise Exception(f"Failed to fetch watch sub-page: {e}")
+            
+        soup = BeautifulSoup(r.text, "html.parser")
+        links = []
+        
+        # 1. Scrape standard play iframes with play.php?url=
+        iframes = soup.find_all("iframe")
+        for i, iframe in enumerate(iframes):
+            src = iframe.get("src") or ""
+            if "play.php?url=" in src:
+                try:
+                    b64_part = src.split("play.php?url=")[1].rstrip('/')
+                    b64_part = urllib.parse.unquote(b64_part)
+                    decoded_url = self.decode_link(f"/l/{b64_part}") # reuse decode_link b64 parsing
+                    links.append({
+                        "server": "سيرفر البث المباشر المفضل (عرب سيد)",
+                        "direct_link": decoded_url
+                    })
+                except Exception:
+                    # absolute or relative fallback
+                    if src.startswith('/'):
+                        links.append({
+                            "server": "سيرفر البث المباشر الرئيسي",
+                            "direct_link": self.base_url + src
+                        })
+                    else:
+                        links.append({
+                            "server": "سيرفر البث المباشر الرئيسي",
+                            "direct_link": src
+                        })
+            elif src.startswith("http") and not any(x in src for x in ["facebook", "twitter", "telegram", "google"]):
+                links.append({
+                    "server": f"سيرفر بث بديل {len(links)+1}",
+                    "direct_link": src
+                })
+                
+        # 2. Check for other elements in servers__list or qualities if any
+        servers_list = soup.find(class_="servers__list")
+        if servers_list:
+            for li in servers_list.find_all("li"):
+                a_tag = li.find("a")
+                if a_tag and a_tag.get("href"):
+                    href = a_tag.get("href")
+                    text = a_tag.get_text(strip=True)
+                    decoded_href = self.decode_link(href)
+                    links.append({
+                        "server": text or f"سيرفر مشاهدة {len(links)+1}",
+                        "direct_link": decoded_href
+                    })
+                    
+        # If no iframes or servers are found, check if there's any button/link that points to watch
+        if not links:
+            anchors = soup.find_all("a")
+            for a in anchors:
+                href = a.get("href") or ""
+                text = a.get_text(strip=True)
+                if "watch" in href.lower() or "play" in href.lower() or "مشاهدة" in text:
+                    if href.startswith("http") and not href.rstrip('/').endswith('/watch'):
+                        links.append({
+                            "server": text or "سيرفر مشاهدة بديل",
+                            "direct_link": self.decode_link(href)
+                        })
+                        
+        return links
+
 
 # -------------------------------------------------------------
 # INTERACTIVE TERMINAL INTERFACE (CLI)
