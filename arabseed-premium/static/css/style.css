@@ -1384,33 +1384,31 @@ body {
     padding: 0 4px !important;
 }
 
-/* Premium Center Play Button (Frosted Glass) */
+/* Premium Center Play Button (Dark Frosted Glass + Violet Glow) */
 .plyr__control--overlaid {
-    background: rgba(0, 0, 0, 0.45) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
-    width: 68px !important;
-    height: 68px !important;
-    border: 2px solid rgba(255, 255, 255, 0.25) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(16px) saturate(1.2) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(1.2) !important;
+    box-shadow: 0 0 40px rgba(124, 58, 237, 0.35), 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+    width: 76px !important;
+    height: 76px !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
     border-radius: 50% !important;
     transform: translate(-50%, -50%) !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: opacity 0.3s ease !important;
     animation: none !important;
-    opacity: 0.95;
 }
 .plyr__control--overlaid:hover {
     transform: translate(-50%, -50%) !important;
-    background: rgba(0, 0, 0, 0.45) !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
-    border-color: rgba(255, 255, 255, 0.45) !important;
-    opacity: 1;
+    background: rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 0 0 40px rgba(124, 58, 237, 0.35), 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
 }
 .plyr__control--overlaid svg {
-    width: 22px !important;
-    height: 22px !important;
+    width: 24px !important;
+    height: 24px !important;
     fill: #fff !important;
-    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
 
 /* Immersive Custom Loader Overlay */
