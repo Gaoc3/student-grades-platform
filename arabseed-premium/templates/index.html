@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Cinema - سينما أورا | منصة المشاهدة الاحترافية الخالية من الإعلانات</title>
+    <!-- SEO Optimization -->
+    <meta name="description" content="منصة سينما أورا - تصفح وشاهد أحدث الأفلام والمسلسلات العربية والأجنبية مجاناً وبجودة عالية مباشرة داخل متصفحك مع مشغل ذكي خالٍ تماماً من الإعلانات والنوافذ المنبثقة.">
+    <meta name="keywords" content="سينما, افلام, مسلسلات, مشاهدة بدون اعلانات, بث مباشر, تحميل مباشر, عرب سيد, سينما فور يو, ايجي بست">
+    
+    <!-- Google Fonts: Cairo (Arabic) & Inter (English/UI) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Plyr.js Video Player CSS -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- Blurred Background Accents -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <!-- Header / Navbar -->
+    <header class="navbar" id="app-header">
+        <div class="nav-container">
+            <div class="nav-logo" id="logo-trigger">
+                <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
+                <span class="logo-text">AURA <span class="logo-highlight">CINEMA</span></span>
+            </div>
+            
+            <nav class="nav-links">
+                <a href="#" class="nav-link active" id="nav-home-btn"><i class="fa-solid fa-house"></i> الرئيسية</a>
+                <a href="#" class="nav-link" id="nav-movies-btn"><i class="fa-solid fa-film"></i> الأفلام</a>
+                <a href="#" class="nav-link" id="nav-series-btn"><i class="fa-solid fa-tv"></i> المسلسلات</a>
+            </nav>
+            
+            <div class="network-badge" id="net-badge">
+                <i class="fa-solid fa-wifi badge-icon"></i>
+                <span id="network-name">الشبكة: متصل مباشر</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-content" id="app-main">
+        
+        <!-- Welcome Hero Section -->
+        <section class="hero-section" id="welcome-hero">
+            <div class="hero-content">
+                <span class="hero-tagline"><i class="fa-solid fa-shield-halved"></i> الجيل الجديد من المنصات الترفيهية</span>
+                <h1 class="hero-title">شاهد محتواك المفضل <br><span class="gradient-text">بدون إعلانات مزعجة</span></h1>
+                <p class="hero-desc">قمنا بتطوير سينما أورا لتوفر لك تجربة مشاهدة سينمائية متكاملة. نقوم بكشط مصادر البث وفك تشفيرها تلقائياً لنمنحك تشغيل مباشر فوري خالٍ 100% من النوافذ المنبثقة والإعلانات المزعجة.</p>
+                
+                <!-- Search Form Grid -->
+                <div class="search-wrapper">
+                    <form class="search-form" id="main-search-form">
+                        <div class="search-input-group">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="search-input" placeholder="ابحث عن فيلم، مسلسل، أو أنمي..." required autocomplete="off">
+                            <button type="submit" class="search-btn" id="search-submit-btn">ابحث الآن</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search Results Catalog -->
+        <section class="catalog-section" id="catalog-area">
+            <div class="section-header" id="results-header-container" style="display: none;">
+                <h2 class="section-title" id="results-title-text"><i class="fa-solid fa-square-poll-horizontal"></i> نتائج البحث</h2>
+                <span class="results-count" id="results-count-badge">0 نتيجة</span>
+            </div>
+            
+            <!-- Loading Indicator -->
+            <div class="loader-container" id="spinner-loader" style="display: none;">
+                <div class="cyber-spinner"></div>
+                <p class="loading-text">جاري تصفح قواعد البيانات وتوليد الروابط...</p>
+            </div>
+            
+            <!-- Grid Layout -->
+            <div class="movie-grid" id="cards-grid">
+                <!-- Cards injected via JavaScript -->
+            </div>
+            
+            <!-- Empty State -->
+            <div class="empty-state" id="empty-results-state">
+                <i class="fa-solid fa-clapperboard empty-icon"></i>
+                <h3>لم تبحث عن أي شيء بعد!</h3>
+                <p>اكتب اسم الفيلم أو المسلسل في شريط البحث بالأعلى واستمتع بمشاهدة فورية مذهلة.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Details Overlay Modal -->
+    <div class="modal-overlay" id="details-modal" style="display: none;">
+        <div class="modal-card" id="details-modal-card">
+            <button class="modal-close-btn" id="close-details-btn"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div class="modal-body-layout">
+                <!-- Left: Poster Column -->
+                <div class="modal-poster-col">
+                    <img src="" alt="Poster" class="modal-poster-img" id="modal-poster">
+                    <div class="modal-meta-badges">
+                        <span class="meta-badge rating-badge" id="modal-rating"><i class="fa-solid fa-star"></i> N/A</span>
+                        <span class="meta-badge quality-badge" id="modal-quality">HD</span>
+                        <span class="meta-badge type-badge" id="modal-type">فيلم</span>
+                    </div>
+                </div>
+                
+                <!-- Right: Detailed Info Column -->
+                <div class="modal-info-col">
+                    <h2 class="modal-title" id="modal-title-text">اسم الفيلم بالكامل</h2>
+                    <div class="modal-divider"></div>
+                    
+                    <h4 class="info-label"><i class="fa-solid fa-quote-right"></i> القصة والتفاصيل:</h4>
+                    <p class="modal-story" id="modal-story-text">جاري تحميل قصة العرض...</p>
+                    
+                    <!-- Episodes Section (Hidden by default, shown for series) -->
+                    <div class="episodes-wrapper" id="modal-episodes-section" style="display: none;">
+                        <h4 class="info-label"><i class="fa-solid fa-list-ol"></i> حلقات الموسم المتوفرة:</h4>
+                        <div class="episodes-search-box">
+                            <i class="fa-solid fa-filter filter-icon"></i>
+                            <input type="text" id="episode-filter-input" placeholder="تصفية الحلقات (مثال: حلقة 5)...">
+                        </div>
+                        <div class="episodes-grid" id="modal-episodes-grid">
+                            <!-- Episodes injected dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- Servers Loading Indicator -->
+                    <div class="servers-loader" id="servers-loading-spinner" style="display: none;">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i> جاري استخراج سيرفرات التشغيل الآمنة وفك التشفير...
+                    </div>
+                    
+                    <!-- Servers Section -->
+                    <div class="servers-wrapper" id="modal-servers-section">
+                        <h4 class="info-label"><i class="fa-solid fa-circle-play"></i> اختر سيرفر تشغيل آمن:</h4>
+                        <div class="servers-list" id="modal-servers-list">
+                            <!-- Server buttons injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theater Mode Player Modal -->
+    <div class="modal-overlay player-overlay" id="player-modal" style="display: none;">
+        <div class="player-container-card">
+            <div class="player-header-bar">
+                <div class="player-current-title" id="player-title-display">شاشة العرض السينمائي</div>
+                <button class="player-close-btn" id="close-player-btn"><i class="fa-solid fa-rectangle-xmark"></i> إغلاق العرض</button>
+            </div>
+            
+            <!-- Dynamic Player Area -->
+            <div class="player-viewport" id="player-render-area">
+                <!-- Injected via JavaScript (HTML5 Video or Sandboxed Iframe) -->
+            </div>
+            
+            <div class="player-footer-bar">
+                <span class="footer-tip"><i class="fa-solid fa-circle-info"></i> نصيحة: يمكنك النقر المزدوج على الشاشة للدخول في وضع ملء الشاشة الكامل.</span>
+                <span class="active-server-badge" id="player-server-badge">سيرفر مباشر</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <p>© 2026 سينما أورا (Aura Cinema). كل الحقوق محفوظة. تطوير فريق Antigravity.</p>
+        <p class="footer-subtext">هذا المشروع مبني لأغراض تعليمية وتجريبية لإظهار حماية الخصوصية ومنع الإعلانات الخبيثة.</p>
+    </footer>
+
+    <!-- Plyr.js Video Player Javascript -->
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+    
+    <!-- Custom Web Frontend JS -->
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
