@@ -18,7 +18,7 @@ const state = {
 };
 
 // SVG Poster Fallback Data URL
-const SVG_POSTER_PLACEHOLDER = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="450" viewBox="0 0 300 450"><rect width="100%" height="100%" fill="%2314171c"/><g transform="translate(100, 160)"><circle cx="50" cy="50" r="40" fill="%23e50914" opacity="0.15"/><path d="M10 20 L90 20 L80 90 L20 90 Z" fill="%23e50914" opacity="0.6"/><rect x="15" y="30" width="70" height="50" rx="4" fill="%23ef4444" opacity="0.8"/><polygon points="45,45 65,55 45,65" fill="%23ffffff"/><circle cx="50" cy="110" r="8" fill="%2310b981"/><circle cx="20" cy="110" r="6" fill="%23f59e0b"/><circle cx="80" cy="110" r="6" fill="%23f43f5e"/></g><text x="50%" y="360" font-family="'Cairo', sans-serif" font-weight="700" font-size="16" fill="%239ca3af" text-anchor="middle">لا يتوفر بوستر</text></svg>`;
+const SVG_POSTER_PLACEHOLDER = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='450' viewBox='0 0 300 450'><rect width='100%' height='100%' fill='%2314171c'/><g transform='translate(100, 160)'><circle cx='50' cy='50' r='40' fill='%23e50914' opacity='0.15'/><path d='M10 20 L90 20 L80 90 L20 90 Z' fill='%23e50914' opacity='0.6'/><rect x='15' y='30' width='70' height='50' rx='4' fill='%23ef4444' opacity='0.8'/><polygon points='45,45 65,55 45,65' fill='%23ffffff'/><circle cx='50' cy='110' r='8' fill='%2310b981'/><circle cx='20' cy='110' r='6' fill='%23f59e0b'/><circle cx='80' cy='110' r='6' fill='%23f43f5e'/></g><text x='50%' y='360' font-family='Cairo, sans-serif' font-weight='700' font-size='16' fill='%239ca3af' text-anchor='middle'>لا يتوفر بوستر</text></svg>`;
 
 // DOM Elements Cache
 const elements = {
@@ -211,7 +211,7 @@ async function performLiveSearch(query) {
             const posterSrc = item.poster || SVG_POSTER_PLACEHOLDER;
             html += `
                 <div class="live-search-item" data-url="${item.url}" data-title="${item.title.replace(/"/g, '&quot;')}" data-poster="${posterSrc}" data-type="${item.type || 'فيلم'}" data-rating="${item.rating || '7.8'}" data-quality="${item.quality || '1080p'}">
-                    <img class="live-search-item-poster" src="${posterSrc}" alt="${item.title}" onerror="this.src='${SVG_POSTER_PLACEHOLDER}'">
+                    <img class="live-search-item-poster" src="${posterSrc}" alt="${item.title}" onerror="this.src='${SVG_POSTER_PLACEHOLDER}'" referrerpolicy="no-referrer">
                     <div class="live-search-item-info">
                         <div class="live-search-item-title">${item.title}</div>
                         <div class="live-search-item-meta">
@@ -284,7 +284,18 @@ async function performSearch(query, customTitle = null) {
     elements.resultsHeader.style.display = 'none';
     
     try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        let apiUrl = `/api/search?q=${encodeURIComponent(query)}`;
+        if (query === '__home__') {
+            apiUrl = '/api/home';
+        } else if (query === '__movies__') {
+            apiUrl = '/api/movies';
+        } else if (query === '__series__') {
+            apiUrl = '/api/series';
+        } else if (query === '__anime__') {
+            apiUrl = '/api/anime';
+        }
+        
+        const response = await fetch(apiUrl);
         const data = await response.json();
         
         elements.spinnerLoader.style.display = 'none';
@@ -446,7 +457,7 @@ function renderCarousels(categories) {
             cardsHTML += `
                 <div class="movie-card" onclick="window.openDetailsModalByData(${idx}, ${cardIdx})">
                     <div class="card-poster">
-                        <img src="${posterUrl}" alt="${item.title}" class="card-poster-img" onerror="this.src='${SVG_POSTER_PLACEHOLDER}'">
+                        <img src="${posterUrl}" alt="${item.title}" class="card-poster-img" onerror="this.src='${SVG_POSTER_PLACEHOLDER}'" referrerpolicy="no-referrer">
                         <div class="poster-overlay">
                             <div class="play-hover-btn"><i class="fa-solid fa-play"></i></div>
                         </div>
@@ -497,7 +508,7 @@ function renderCards(results) {
         
         card.innerHTML = `
             <div class="card-poster">
-                <img src="${posterUrl}" alt="${item.title}" class="card-poster-img" onerror="this.src='${SVG_POSTER_PLACEHOLDER}'">
+                <img src="${posterUrl}" alt="${item.title}" class="card-poster-img" onerror="this.src='${SVG_POSTER_PLACEHOLDER}'" referrerpolicy="no-referrer">
                 <div class="poster-overlay">
                     <div class="play-hover-btn"><i class="fa-solid fa-play"></i></div>
                 </div>

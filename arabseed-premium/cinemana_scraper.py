@@ -46,6 +46,9 @@ class CinemanaAPI:
             return {}
             
         href = a_tag.get('href')
+        # Ensure it is a valid watch page (watch followed by digits, not watch=category or pagination)
+        if not re.search(r'watch=\d+', href):
+            return {}
         if href.startswith('/'):
             href = self.base_url + href
             
