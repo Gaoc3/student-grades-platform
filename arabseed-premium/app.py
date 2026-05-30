@@ -131,36 +131,33 @@ def scrape_listing_page(url: str) -> list:
 
 def clean_series_title(title: str) -> str:
     """
-    Cleans series titles by stripping episode numbers, spelled-out feminine numbers,
-    translation suffixes, and quality badges while fully preserving season words and masculine numbers.
+    Cleans series titles by stripping episode numbers, spelled-out numbers,
+    translation suffixes, and quality badges while fully preserving season words and numbers.
+    Uses truncation to drop everything after the season or episode descriptor.
     """
     t = title
     
-    # 1. Remove "الحلقة XX" or "حلقة XX"
-    t = re.sub(r'(?:الحلقة|حلقة)\s+\d+', '', t)
-    
-    # 2. Remove ONLY feminine spelled-out Arabic numbers and words like "الأولى", "الاخيرة", etc.
-    # These feminine forms refer to "الحلقة" (episode), whereas masculine forms refer to "الموسم" (season).
-    feminine_arabic_numbers = [
-        "الاولى", "الأولى", "الاولي", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة", 
-        "السابعة", "الثامنة", "التاسعة", "العاشرة", "الاخيرة", "الأخيرة", "والاخيرة", "والأخيرة",
-        "الاخير", "الأخير"
-    ]
-    # Build regex to match these words as full words
-    words_pattern = r'\b(?:' + '|'.join(feminine_arabic_numbers) + r')\b'
-    t = re.sub(words_pattern, '', t)
-    
-    # 3. Remove "الحلقة" or "حلقة" if it remains
-    t = re.sub(r'\b(?:الحلقة|حلقة)\b', '', t)
-    
-    # 4. Remove common quality and translation badges (including feminine versions)
+    # 1. If it contains "الموسم", keep everything up to the season value and drop the rest
+    # We match "الموسم" followed by space and one or more digits or Arabic characters
+    season_match = re.search(r'(الموسم\s+(?:\d+|[\u0600-\u06FF]+))', t)
+    if season_match:
+        end_pos = season_match.end()
+        t = t[:end_pos]
+    else:
+        # 2. If it doesn't contain "الموسم" but has "الحلقة" or "حلقة", drop from "الحلقة" onwards
+        ep_match = re.search(r'\s+(?:الحلقة|حلقة)\b', t)
+        if ep_match:
+            start_pos = ep_match.start()
+            t = t[:start_pos]
+            
+    # Remove common quality and translation badges
     badges = [
         "مترجم", "مترجمة", "مدبلج", "مدبلجة", "بلوراي", "كامل", "كاملة", "HD", "FHD", "WEB-DL", "وب-دل", "وب ديل"
     ]
     badges_pattern = r'\b(?:' + '|'.join(badges) + r')\b'
     t = re.sub(badges_pattern, '', t, flags=re.IGNORECASE)
     
-    # Clean up any leftover punctuation like trailing dashes, slashes, or extra spaces
+    # Clean up any leftover punctuation or extra spaces
     t = re.sub(r'[-\s/|]+', ' ', t).strip()
     return t
 
