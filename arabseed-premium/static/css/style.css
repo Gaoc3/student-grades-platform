@@ -1061,6 +1061,8 @@ body {
     }
     .modal-card {
         max-height: 95vh;
+        width: 96%;
+        margin: 2% auto;
     }
     .hero-title {
         font-size: 1.9rem;
@@ -1070,6 +1072,26 @@ body {
         padding-left: 0;
         text-align: center;
         margin-top: 10px;
+    }
+    
+    /* Cinema Player Responsiveness for tablets */
+    .player-container-card {
+        max-width: 100%;
+        max-height: 100%;
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: 0;
+    }
+    .player-header-bar {
+        padding: 8px 15px;
+    }
+    .player-close-btn {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+    .player-current-title {
+        font-size: 0.85rem;
     }
 }
 
@@ -1116,6 +1138,74 @@ body {
     }
     .episodes-grid {
         grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    }
+    
+    /* Mobile responsive sliders cards size */
+    .category-slider-track .movie-card {
+        min-width: 135px;
+    }
+    .category-header h3 {
+        font-size: 1rem;
+    }
+    
+    /* Cinema Player Responsiveness for mobile phones */
+    .player-container-card {
+        max-width: 100%;
+        max-height: 100%;
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: 0;
+    }
+    .player-header-bar {
+        padding: 6px 12px;
+    }
+    .player-close-btn {
+        padding: 3px 8px;
+        font-size: 0.7rem;
+    }
+    .player-current-title {
+        font-size: 0.8rem;
+        max-width: 60%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .player-next-episode-card {
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        bottom: 70px !important;
+        width: 90% !important;
+        max-width: 290px !important;
+        padding: 12px !important;
+        border-radius: 12px !important;
+        animation: slideUpMobile 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15) forwards !important;
+    }
+    @keyframes slideUpMobile {
+        from { transform: translate(-50%, 30px); opacity: 0; }
+        to { transform: translate(-50%, 0); opacity: 1; }
+    }
+    .player-next-episode-card .next-title {
+        font-size: 0.9rem !important;
+    }
+    .next-countdown-wrapper {
+        width: 45px !important;
+        height: 45px !important;
+    }
+    .next-play-btn {
+        padding: 8px !important;
+        font-size: 0.75rem !important;
+    }
+    .player-center-indicator {
+        width: 60px !important;
+        height: 60px !important;
+        font-size: 1.4rem !important;
+    }
+    .plyr__controls {
+        padding: 10px 12px 12px 12px !important;
+    }
+    .player-footer-bar {
+        display: none !important; /* Hide footer bar on mobile to save vertical space */
     }
 }
 

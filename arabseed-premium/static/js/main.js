@@ -757,6 +757,7 @@ function handleKeyboardShortcuts(e) {
     
     if (handledKeys.includes(key) || isDigit) {
         e.preventDefault();
+        e.stopPropagation();
     } else {
         return;
     }
@@ -1011,34 +1012,36 @@ function launchPlayer(server, title) {
         }
     }, 2000);
     
-    // Bind Advanced Keyboard control listener
-    window.addEventListener('keydown', handleKeyboardShortcuts);
+    // Bind Advanced Keyboard control listener in CAPTURING phase
+    window.addEventListener('keydown', handleKeyboardShortcuts, true);
     
-    // Double click gesture actions (Seek Back, Seek Forward, Fullscreen)
-    const viewport = elements.playerRenderArea.parentElement;
-    if (viewport) {
-        viewport.ondblclick = (e) => {
-            // If double click was on controls overlay, do nothing
-            if (e.target.closest('.plyr__controls')) return;
-            
-            const rect = viewport.getBoundingClientRect();
-            const tapX = e.clientX - rect.left;
-            const widthPercent = (tapX / rect.width) * 100;
-            
-            if (widthPercent > 65) {
-                // Double click on right: Fast Forward 10s
-                state.activePlayer.currentTime = Math.min(state.activePlayer.duration || 0, state.activePlayer.currentTime + 10);
-                showCenterIndicator('fa-solid fa-forward-step');
-            } else if (widthPercent < 35) {
-                // Double click on left: Seek back 10s
-                state.activePlayer.currentTime = Math.max(0, state.activePlayer.currentTime - 10);
-                showCenterIndicator('fa-solid fa-backward-step');
-            } else {
-                // Double click in middle: Toggle Fullscreen
-                state.activePlayer.fullscreen.toggle();
-            }
-        };
-    }
+    // Double click gesture actions (Seek Back, Seek Forward, Fullscreen) in CAPTURING phase
+    state.playerDblClickListener = (e) => {
+        // If double click was on controls overlay, do nothing
+        if (e.target.closest('.plyr__controls')) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const rect = elements.playerRenderArea.getBoundingClientRect();
+        const tapX = e.clientX - rect.left;
+        const widthPercent = (tapX / rect.width) * 100;
+        
+        if (widthPercent > 65) {
+            // Double click on right: Fast Forward 10s
+            state.activePlayer.currentTime = Math.min(state.activePlayer.duration || 0, state.activePlayer.currentTime + 10);
+            showCenterIndicator('fa-solid fa-forward-step');
+        } else if (widthPercent < 35) {
+            // Double click on left: Seek back 10s
+            state.activePlayer.currentTime = Math.max(0, state.activePlayer.currentTime - 10);
+            showCenterIndicator('fa-solid fa-backward-step');
+        } else {
+            // Double click in middle: Toggle Fullscreen
+            state.activePlayer.fullscreen.toggle();
+        }
+    };
+    
+    elements.playerRenderArea.addEventListener('dblclick', state.playerDblClickListener, true);
     
     // Setup next episode autoplay
     setupAutoplayNext(server.url);
@@ -1059,8 +1062,13 @@ function closePlayerModal() {
         state.loaderIntervals.forEach(t => clearTimeout(t));
     }
     
-    // Unbind Keyboard shortcuts
-    window.removeEventListener('keydown', handleKeyboardShortcuts);
+    // Unbind Keyboard shortcuts in CAPTURING phase
+    window.removeEventListener('keydown', handleKeyboardShortcuts, true);
+    
+    if (state.playerDblClickListener) {
+        elements.playerRenderArea.removeEventListener('dblclick', state.playerDblClickListener, true);
+        state.playerDblClickListener = null;
+    }
     
     if (state.activePlayer) {
         state.activePlayer.destroy();
@@ -1070,11 +1078,6 @@ function closePlayerModal() {
     if (state.hlsInstance) {
         state.hlsInstance.destroy();
         state.hlsInstance = null;
-    }
-    
-    const viewport = elements.playerRenderArea.parentElement;
-    if (viewport) {
-        viewport.ondblclick = null;
     }
     
     state.currentPlayingServer = null;
