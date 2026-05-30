@@ -497,7 +497,7 @@ def api_search():
             
         elif query == '__anime__':
             # Parallel scrape pages 1, 2, 3, 4 to expand library 4x!
-            urls = [f"https://cinemana.cc/watch=category/%D8%A3%D9%86%D9%85%D9%8I/page/{p}/" for p in [1, 2, 3, 4]]
+            urls = [f"https://cinemana.cc/watch=category/أنمي/page/{p}/" for p in [1, 2, 3, 4]]
             results = []
             with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
                 futures = {executor.submit(cinemana_api.scrape_listing_page, url): url for url in urls}
