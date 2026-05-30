@@ -173,7 +173,15 @@
         <div class="player-container-card">
             <div class="player-header-bar">
                 <div class="player-current-title" id="player-title-display">شاشة العرض السينمائي</div>
-                <button class="player-close-btn" id="close-player-btn"><i class="fa-solid fa-rectangle-xmark"></i> إغلاق العرض</button>
+                <div class="player-controls-extra" style="display: flex; align-items: center; gap: 15px;">
+                    <div class="quality-select-wrapper" id="player-quality-wrapper" style="display: none; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.08); padding: 5px 12px; border-radius: 8px;">
+                        <i class="fa-solid fa-sliders" style="color: var(--accent-violet); font-size: 0.8rem;"></i>
+                        <select id="player-quality-select" style="background: none; border: none; color: #fff; font-family: var(--font-ar); font-size: 0.75rem; font-weight: 700; outline: none; cursor: pointer;">
+                            <!-- Quality options injected dynamically -->
+                        </select>
+                    </div>
+                    <button class="player-close-btn" id="close-player-btn"><i class="fa-solid fa-rectangle-xmark"></i> إغلاق العرض</button>
+                </div>
             </div>
             
             <!-- Dynamic Player Area -->

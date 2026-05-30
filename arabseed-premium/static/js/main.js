@@ -302,7 +302,7 @@ async function openDetailsModal(item) {
     elements.modalType.innerText = item.type || 'عرض سينمائي';
     
     // Loading State
-    elements.modalStoryText.innerText = "جاري تحميل تفاصيل القصة وجدول الحلقات من سينمانا شبكتي...";
+    elements.modalStoryText.innerText = "جاري تحميل تفاصيل القصة وجدول الحلقات من مكتبة AleX CINEMA...";
     elements.modalSeasonsSection.style.display = 'none';
     elements.modalSeasonsGrid.innerHTML = '';
     elements.modalEpisodesSection.style.display = 'none';
