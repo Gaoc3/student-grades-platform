@@ -984,10 +984,13 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
         // HLS Stream (.m3u8) using Hls.js
         if (Hls.isSupported()) {
             const hls = new Hls({
-                maxBufferLength: 30,
-                maxMaxBufferLength: 60,
+                maxBufferLength: 300,        // Pre-buffer up to 5 minutes (300 seconds) of video ahead!
+                maxMaxBufferLength: 600,     // Absolute limit of 10 minutes of buffer ahead!
+                maxBufferSize: 314572800,    // Pre-buffer up to 300 MB of video in memory (300 * 1024 * 1024)!
+                backBufferLength: 300,       // Keep up to 5 minutes of played video in back-buffer (no reload on seek-back)!
                 enableWorker: true,
-                lowLatencyMode: true,
+                lowLatencyMode: false,       // Prioritize large throughput segment preloading
+                progressive: true,           // Enable progressive segment loading
                 xhrSetup: function(xhr, url) {
                     xhr.withCredentials = false;
                 }
