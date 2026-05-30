@@ -270,6 +270,7 @@ def resolve_cinemana_stream(cinemana_url: str) -> list:
             if m:
                 post_id = m.group(1)
                 
+        watch_url = f"https://cinemana.cc/watch={post_id}/"
         ajax_url = "https://cinemana.cc/wp-content/themes/EEE/Inc/Ajax/Single/Server.php"
         data = {
             'post_id': post_id,
@@ -277,11 +278,20 @@ def resolve_cinemana_stream(cinemana_url: str) -> list:
         }
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Referer': f"https://cinemana.cc/watch={post_id}/"
+            'Referer': watch_url
         }
         
         print(f"Direct Cinemana stream resolution for post {post_id}...")
-        r = requests.post(ajax_url, data=data, headers=headers, timeout=15)
+        
+        # Use persistent Session to hit watch page first (establishes Cinemana session/cookies)
+        session = requests.Session()
+        session.headers.update(headers)
+        
+        # Hit watch page
+        session.get(watch_url, timeout=10)
+        
+        # POST to Server.php
+        r = session.post(ajax_url, data=data, timeout=15)
         if r.status_code == 200:
             match = re.search(r'const\s+originalUrls\s*=\s*({[^}]+})', r.text)
             if match:
