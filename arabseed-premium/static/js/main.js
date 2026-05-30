@@ -1,14 +1,15 @@
 /**
- * Aura Cinema - Premium Web Portal JS Controller
- * ---------------------------------------------
+ * Cinemana Premium - Premium Web Portal JS Controller
+ * --------------------------------------------------
  * Manages SPA routing, API communications, dynamic DOM rendering,
- * and handles custom Plyr.js stream initialization or sandboxed iframe fallback.
+ * horizontal category carousel rows, search results grids, and Plyr.js streaming.
  */
 
 // Global App State
 const state = {
     activePlayer: null,
     searchResults: [],
+    categories: [],
     selectedItem: null,
     currentEpisodes: [],
     activeServerList: [],
@@ -17,7 +18,7 @@ const state = {
 };
 
 // SVG Poster Fallback Data URL
-const SVG_POSTER_PLACEHOLDER = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="450" viewBox="0 0 300 450"><rect width="100%" height="100%" fill="%23130f2b"/><g transform="translate(100, 160)"><path d="M10 20 L90 20 L80 90 L20 90 Z" fill="%237c3aed" opacity="0.8"/><rect x="15" y="30" width="70" height="50" rx="4" fill="%232563eb" opacity="0.9"/><polygon points="45,45 65,55 45,65" fill="%23ffffff"/><circle cx="50" cy="110" r="8" fill="%2310b981"/><circle cx="20" cy="110" r="6" fill="%23f59e0b"/><circle cx="80" cy="110" r="6" fill="%23f43f5e"/></g><text x="50%" y="360" font-family="'Cairo', sans-serif" font-weight="700" font-size="16" fill="%239ca3af" text-anchor="middle">لا يتوفر بوستر</text></svg>`;
+const SVG_POSTER_PLACEHOLDER = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="450" viewBox="0 0 300 450"><rect width="100%" height="100%" fill="%2314171c"/><g transform="translate(100, 160)"><circle cx="50" cy="50" r="40" fill="%23e50914" opacity="0.15"/><path d="M10 20 L90 20 L80 90 L20 90 Z" fill="%23e50914" opacity="0.6"/><rect x="15" y="30" width="70" height="50" rx="4" fill="%23ef4444" opacity="0.8"/><polygon points="45,45 65,55 45,65" fill="%23ffffff"/><circle cx="50" cy="110" r="8" fill="%2310b981"/><circle cx="20" cy="110" r="6" fill="%23f59e0b"/><circle cx="80" cy="110" r="6" fill="%23f43f5e"/></g><text x="50%" y="360" font-family="'Cairo', sans-serif" font-weight="700" font-size="16" fill="%239ca3af" text-anchor="middle">لا يتوفر بوستر</text></svg>`;
 
 // DOM Elements Cache
 const elements = {
@@ -68,6 +69,7 @@ const elements = {
     navHomeBtn: document.getElementById('nav-home-btn'),
     navMoviesBtn: document.getElementById('nav-movies-btn'),
     navSeriesBtn: document.getElementById('nav-series-btn'),
+    navAnimeBtn: document.getElementById('nav-anime-btn'),
     logoTrigger: document.getElementById('logo-trigger')
 };
 
@@ -76,16 +78,16 @@ const elements = {
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
     elements.searchForm.addEventListener('submit', handleSearchSubmit);
-    elements.closeDetailsBtn.addEventListener('closeDetails', closeDetailsModal);
     elements.closeDetailsBtn.onclick = closeDetailsModal;
     elements.closePlayerBtn.onclick = closePlayerModal;
     elements.episodeFilterInput.addEventListener('input', handleEpisodeFilter);
     
     // Navigation Action Handlers
-    elements.navHomeBtn.onclick = (e) => { e.preventDefault(); resetHomeUI(); };
-    elements.logoTrigger.onclick = () => resetHomeUI();
-    elements.navMoviesBtn.onclick = (e) => { e.preventDefault(); performSearch('__movies__', 'أحدث الأفلام المضافة'); };
-    elements.navSeriesBtn.onclick = (e) => { e.preventDefault(); performSearch('__series__', 'أحدث المسلسلات المضافة'); };
+    elements.navHomeBtn.onclick = (e) => { e.preventDefault(); updateNavActive(elements.navHomeBtn); resetHomeUI(); };
+    elements.logoTrigger.onclick = () => { updateNavActive(elements.navHomeBtn); resetHomeUI(); };
+    elements.navMoviesBtn.onclick = (e) => { e.preventDefault(); updateNavActive(elements.navMoviesBtn); performSearch('__movies__', 'أحدث الأفلام المضافة'); };
+    elements.navSeriesBtn.onclick = (e) => { e.preventDefault(); updateNavActive(elements.navSeriesBtn); performSearch('__series__', 'أحدث المسلسلات المضافة'); };
+    elements.navAnimeBtn.onclick = (e) => { e.preventDefault(); updateNavActive(elements.navAnimeBtn); performSearch('__anime__', 'عالم الأنمي والكرتون'); };
     
     // Close modals on clicking overlay background
     elements.detailsModal.onclick = (e) => { if (e.target === elements.detailsModal) closeDetailsModal(); };
@@ -94,9 +96,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Detect ISP connection
     detectNetwork();
     
-    // Auto-load trending movies on startup to look extremely premium!
-    performSearch('__home__', 'الرئيسية (أحدث الإضافات)');
+    // Auto-load trending categories on startup
+    resetHomeUI();
 });
+
+// Horizontal Carousel slider scroll control
+window.scrollSlider = function(trackId, distance) {
+    const track = document.getElementById(trackId);
+    if (track) {
+        // Adjust for RTL layout (scrolling left is negative, right is positive)
+        track.scrollBy({ left: -distance, behavior: 'smooth' });
+    }
+};
+
+// Open details for a card loaded inside a homepage carousel row
+window.openDetailsModalByData = function(catIdx, cardIdx) {
+    if (state.categories[catIdx] && state.categories[catIdx].cards[cardIdx]) {
+        const item = state.categories[catIdx].cards[cardIdx];
+        openDetailsModal(item);
+    }
+};
 
 // ============================================================================
 // Logic Handlers
@@ -107,22 +126,25 @@ function detectNetwork() {
     if (navigator.connection) {
         const type = navigator.connection.effectiveType || 'wifi';
         const rtt = navigator.connection.rtt || 'N/A';
-        elements.netBadgeText.innerText = `السرعة: ${type.toUpperCase()} (زمن الاستجابة: ${rtt}ms)`;
+        elements.netBadgeText.innerText = `السرعة: ${type.toUpperCase()} (الاستجابة: ${rtt}ms)`;
     } else {
         elements.netBadgeText.innerText = `الشبكة: متصل مباشر`;
     }
+}
+
+function updateNavActive(activeBtn) {
+    [elements.navHomeBtn, elements.navMoviesBtn, elements.navSeriesBtn, elements.navAnimeBtn].forEach(btn => {
+        if (btn) btn.classList.remove('active');
+    });
+    if (activeBtn) activeBtn.classList.add('active');
 }
 
 function handleSearchSubmit(e) {
     e.preventDefault();
     const query = elements.searchInput.value.trim();
     if (!query) return;
+    updateNavActive(null); // Clear active navigation states
     performSearch(query);
-}
-
-function handleCategorySearch(keyword, categoryTitle) {
-    elements.searchInput.value = '';
-    performSearch(keyword, categoryTitle);
 }
 
 async function performSearch(query, customTitle = null) {
@@ -138,11 +160,18 @@ async function performSearch(query, customTitle = null) {
         
         elements.spinnerLoader.style.display = 'none';
         
-        if (data.results && data.results.length > 0) {
+        if (query === '__home__' && data.categories && data.categories.length > 0) {
+            state.categories = data.categories;
+            
+            elements.resultsTitleText.innerHTML = `<i class="fa-solid fa-star text-red-500 animate-pulse"></i> مكتبة سينمانا المضافة حديثاً`;
+            elements.resultsCount.innerText = `${data.categories.length} تصنيف`;
+            elements.resultsHeader.style.display = 'flex';
+            
+            renderCarousels(data.categories);
+        } else if (data.results && data.results.length > 0) {
             state.searchResults = data.results;
             
-            // Update Header Information
-            elements.resultsTitleText.innerHTML = `<i class="fa-solid fa-fire"></i> ${customTitle || `نتائج البحث عن: "${query}"`}`;
+            elements.resultsTitleText.innerHTML = `<i class="fa-solid fa-fire text-red-500"></i> ${customTitle || `نتائج البحث عن: "${query}"`}`;
             elements.resultsCount.innerText = `${data.results.length} عرض`;
             elements.resultsHeader.style.display = 'flex';
             
@@ -156,19 +185,72 @@ async function performSearch(query, customTitle = null) {
     }
 }
 
+function renderCarousels(categories) {
+    elements.cardsGrid.innerHTML = '';
+    elements.cardsGrid.style.display = 'block'; // Convert grid to block layout for categorized rows
+    
+    categories.forEach((cat, idx) => {
+        const row = document.createElement('div');
+        row.className = 'category-row';
+        
+        const categoryId = `slider-track-${idx}`;
+        let cardsHTML = '';
+        
+        cat.cards.forEach((item, cardIdx) => {
+            const posterUrl = item.poster || SVG_POSTER_PLACEHOLDER;
+            const rating = item.rating || '7.8';
+            
+            cardsHTML += `
+                <div class="movie-card" onclick="window.openDetailsModalByData(${idx}, ${cardIdx})">
+                    <div class="card-poster">
+                        <img src="${posterUrl}" alt="${item.title}" class="card-poster-img" onerror="this.src='${SVG_POSTER_PLACEHOLDER}'">
+                        <div class="poster-overlay">
+                            <div class="play-hover-btn"><i class="fa-solid fa-play"></i></div>
+                        </div>
+                        <span class="card-rating-badge"><i class="fa-solid fa-star"></i> ${rating}</span>
+                        <span class="card-quality-badge">${item.quality || '1080p'}</span>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">${item.title}</h3>
+                        <div class="card-footer">
+                            <span class="card-type"><i class="fa-solid fa-circle-chevron-right"></i> ${item.type || 'فيلم'}</span>
+                            <span class="card-action-hint">بث آمن</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        row.innerHTML = `
+            <div class="category-header">
+                <h3><i class="fa-solid fa-compact-disc text-red-500 animate-spin-slow"></i> ${cat.category}</h3>
+            </div>
+            <div class="category-slider-container">
+                <button class="slider-arrow arrow-left" onclick="window.scrollSlider('${categoryId}', -350)"><i class="fa-solid fa-chevron-left"></i></button>
+                <div class="category-slider-track" id="${categoryId}">
+                    ${cardsHTML}
+                </div>
+                <button class="slider-arrow arrow-right" onclick="window.scrollSlider('${categoryId}', 350)"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        `;
+        
+        elements.cardsGrid.appendChild(row);
+    });
+}
+
 function renderCards(results) {
     elements.cardsGrid.innerHTML = '';
+    elements.cardsGrid.style.display = 'grid'; // Reset to standard flexbox/grid layout
     
     results.forEach((item, idx) => {
         const card = document.createElement('div');
         card.className = 'movie-card';
         card.setAttribute('data-id', idx);
         
-        // Direct click bindings
         card.onclick = () => openDetailsModal(item);
         
         const posterUrl = item.poster || SVG_POSTER_PLACEHOLDER;
-        const rating = item.rating && item.rating !== 'N/A' ? item.rating : '7.5';
+        const rating = item.rating || '7.8';
         
         card.innerHTML = `
             <div class="card-poster">
@@ -177,13 +259,13 @@ function renderCards(results) {
                     <div class="play-hover-btn"><i class="fa-solid fa-play"></i></div>
                 </div>
                 <span class="card-rating-badge"><i class="fa-solid fa-star"></i> ${rating}</span>
-                <span class="card-quality-badge">${item.quality || 'FHD'}</span>
+                <span class="card-quality-badge">${item.quality || '1080p'}</span>
             </div>
             <div class="card-body">
                 <h3 class="card-title">${item.title}</h3>
                 <div class="card-footer">
-                    <span class="card-type"><i class="fa-solid fa-circle-chevron-right"></i> ${item.type || 'فيلم'}</span>
-                    <span class="card-action-hint">كشف وتشفير آمن</span>
+                    <span class="card-type"><i class="fa-solid fa-circle-chevron-right"></i> ${item.type || 'عرض'}</span>
+                    <span class="card-action-hint">بث آمن</span>
                 </div>
             </div>
         `;
@@ -202,7 +284,7 @@ function renderEmptyState(message) {
 
 function resetHomeUI() {
     elements.searchInput.value = '';
-    performSearch('__home__', 'الرئيسية (أحدث الإضافات)');
+    performSearch('__home__', 'الرئيسية');
 }
 
 // ============================================================================
@@ -215,12 +297,12 @@ async function openDetailsModal(item) {
     // Set static UI values
     elements.modalTitleText.innerText = item.title;
     elements.modalPoster.src = item.poster || SVG_POSTER_PLACEHOLDER;
-    elements.modalRating.innerHTML = `<i class="fa-solid fa-star"></i> ${item.rating || '7.5'}`;
-    elements.modalQuality.innerText = item.quality || 'FHD';
+    elements.modalRating.innerHTML = `<i class="fa-solid fa-star"></i> ${item.rating || '7.8'}`;
+    elements.modalQuality.innerText = item.quality || '1080p FHD';
     elements.modalType.innerText = item.type || 'عرض سينمائي';
     
     // Loading State
-    elements.modalStoryText.innerText = "جاري تصفح قصة العرض واستخراج التفاصيل الكلية...";
+    elements.modalStoryText.innerText = "جاري تحميل تفاصيل القصة وجدول الحلقات من سينمانا شبكتي...";
     elements.modalSeasonsSection.style.display = 'none';
     elements.modalSeasonsGrid.innerHTML = '';
     elements.modalEpisodesSection.style.display = 'none';
@@ -233,17 +315,7 @@ async function openDetailsModal(item) {
     elements.detailsModal.style.display = 'flex';
     document.body.style.overflow = 'hidden'; // Lock background scroll
     
-    // If the item is a series and has multiple seasons, render the seasons row
-    if (item.type === 'مسلسل' && item.seasons && item.seasons.length > 1) {
-        renderSeasons(item.seasons);
-        elements.modalSeasonsSection.style.display = 'block';
-        // Auto load the latest season (which is first in the sorted array)
-        loadSeasonData(item.seasons[0].url, item.seasons[0].title);
-    } else {
-        // Fallback or single season: load the main URL directly
-        const initialSeasonTitle = (item.seasons && item.seasons.length > 0) ? item.seasons[0].title : "";
-        loadSeasonData(item.url, initialSeasonTitle);
-    }
+    loadSeasonData(item.url, "");
 }
 
 async function loadSeasonData(url, seasonTitle) {
@@ -277,25 +349,6 @@ async function loadSeasonData(url, seasonTitle) {
     }
 }
 
-function renderSeasons(seasons) {
-    elements.modalSeasonsGrid.innerHTML = '';
-    
-    seasons.forEach((season, idx) => {
-        const btn = document.createElement('button');
-        btn.className = `season-btn ${idx === 0 ? 'active' : ''}`;
-        btn.innerText = season.title;
-        btn.title = season.title;
-        
-        btn.onclick = () => {
-            elements.modalSeasonsGrid.querySelectorAll('.season-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            loadSeasonData(season.url, season.title);
-        };
-        
-        elements.modalSeasonsGrid.appendChild(btn);
-    });
-}
-
 function renderEpisodes(episodes, seasonTitle = "") {
     elements.modalEpisodesGrid.innerHTML = '';
     
@@ -306,11 +359,9 @@ function renderEpisodes(episodes, seasonTitle = "") {
         btn.title = ep.title;
         
         btn.onclick = () => {
-            // Reset active button state
             elements.modalEpisodesGrid.querySelectorAll('.episode-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
-            // Fetch streaming servers for this episode
             const displayTitle = seasonTitle ? `${state.selectedItem.title} - ${seasonTitle} - ${ep.title}` : `${state.selectedItem.title} - ${ep.title}`;
             fetchStreamingServers(ep.url, displayTitle);
         };
@@ -333,10 +384,7 @@ function handleEpisodeFilter() {
             elements.modalEpisodesGrid.querySelectorAll('.episode-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
-            // Find active season title if any
-            const activeSeasonBtn = elements.modalSeasonsGrid.querySelector('.season-btn.active');
-            const seasonTitle = activeSeasonBtn ? activeSeasonBtn.innerText : "";
-            const displayTitle = seasonTitle ? `${state.selectedItem.title} - ${seasonTitle} - ${ep.title}` : `${state.selectedItem.title} - ${ep.title}`;
+            const displayTitle = `${state.selectedItem.title} - ${ep.title}`;
             fetchStreamingServers(ep.url, displayTitle);
         };
         
@@ -347,6 +395,7 @@ function handleEpisodeFilter() {
 async function fetchStreamingServers(url, displayTitle) {
     elements.modalServersList.innerHTML = '';
     elements.serversLoader.style.display = 'block';
+    elements.modalQuickPlayBtn.style.display = 'none';
     
     try {
         const response = await fetch(`/api/watch?url=${encodeURIComponent(url)}`);
@@ -362,13 +411,15 @@ async function fetchStreamingServers(url, displayTitle) {
             const bestServer = data.servers.find(s => s.type === 'direct') || data.servers[0];
             state.bestServer = bestServer;
             
-            // Show and configure the Quick Play button
-            elements.modalQuickPlayBtn.style.display = 'flex';
-            elements.modalQuickPlayBtn.onclick = () => {
-                if (state.bestServer) {
-                    launchPlayer(state.bestServer, displayTitle);
-                }
-            };
+            // Configure the prominent Quick Play button
+            if (state.bestServer && state.bestServer.url !== 'about:blank') {
+                elements.modalQuickPlayBtn.style.display = 'flex';
+                elements.modalQuickPlayBtn.onclick = () => {
+                    if (state.bestServer) {
+                        launchPlayer(state.bestServer, displayTitle);
+                    }
+                };
+            }
         } else {
             elements.modalServersList.innerHTML = `<p class="error-text"><i class="fa-solid fa-triangle-exclamation"></i> عذراً، لا توجد سيرفرات بث آمنة متوفرة حالياً لهذا العرض.</p>`;
         }
@@ -384,7 +435,6 @@ function renderServers(servers, displayTitle) {
     servers.forEach((server) => {
         const btn = document.createElement('button');
         
-        // Distinguish direct (ad-free) server button styles
         if (server.type === 'direct') {
             btn.className = 'server-item-btn direct-server';
             btn.innerHTML = `
@@ -399,7 +449,11 @@ function renderServers(servers, displayTitle) {
             `;
         }
         
-        btn.onclick = () => launchPlayer(server, displayTitle);
+        btn.onclick = () => {
+            if (server.url !== 'about:blank') {
+                launchPlayer(server, displayTitle);
+            }
+        };
         elements.modalServersList.appendChild(btn);
     });
 }
@@ -437,7 +491,7 @@ function launchPlayer(server, title) {
         video.appendChild(source);
         elements.playerRenderArea.appendChild(video);
         
-        // Initialize Plyr with gorgeous styling and seek controls
+        // Initialize Plyr with premium red styling
         state.activePlayer = new Plyr('#video-player', {
             controls: [
                 'play-large', 'play', 'progress', 'current-time', 'duration',
@@ -448,13 +502,11 @@ function launchPlayer(server, title) {
             tooltips: { controls: true, seek: true }
         });
         
-        // Autoplay direct stream
         state.activePlayer.play();
     } else {
-        // Fallback -> Sandboxed Iframe (STRICT BLOCKING FOR EXTERNAL ADS!)
+        // Fallback -> Sandboxed Iframe (STRICT POPUP BLOCKING!)
         const iframe = document.createElement('iframe');
         iframe.src = server.url;
-        // Strictly allow execution of scripts and identical cookies but NO popup triggers!
         iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
         iframe.setAttribute('allowfullscreen', 'true');
         iframe.setAttribute('scrolling', 'no');
@@ -465,7 +517,6 @@ function launchPlayer(server, title) {
 }
 
 function closePlayerModal() {
-    // Destroy player instance if active to stop buffer downloading
     if (state.activePlayer) {
         state.activePlayer.destroy();
         state.activePlayer = null;
