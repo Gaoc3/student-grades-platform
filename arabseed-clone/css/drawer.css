@@ -1,0 +1,269 @@
+/* ========================================
+   ArabSeed Home7 — Hamburger Button
+   ======================================== */
+
+#AS_Home7_Menu_Button {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  border-radius: 13px !important;
+  background: #c80101 !important;
+  cursor: pointer !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  z-index: 2147483647 !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.45) !important;
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+}
+
+#AS_Home7_Menu_Button span {
+  display: block !important;
+  width: 24px !important;
+  height: 3px !important;
+  min-height: 3px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+#AS_Home7_Menu_Button.is-open {
+  background: #9f0000 !important;
+}
+
+@media (max-width: 768px) {
+  #AS_Home7_Menu_Button {
+    top: 14px !important;
+    right: 14px !important;
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+  }
+  #AS_Home7_Menu_Button span {
+    width: 23px !important;
+    height: 3px !important;
+  }
+}
+
+/* ========================================
+   ArabSeed Home7 — Mobile Drawer
+   ======================================== */
+
+#AS_Mirror_Drawer_Overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.78);
+  z-index: 999998;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+#AS_Mirror_Drawer_Overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+#AS_Mirror_Drawer {
+  position: fixed;
+  top: 0;
+  right: -350px;
+  width: 335px;
+  max-width: 88vw;
+  height: 100vh;
+  height: 100dvh;
+  background: #101722;
+  color: #fff;
+  z-index: 1000000;
+  transition: right 0.3s ease;
+  box-shadow: -12px 0 35px rgba(0,0,0,0.65);
+  direction: rtl;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 28px;
+  border-left: 1px solid rgba(255,255,255,0.08);
+}
+
+#AS_Mirror_Drawer.active {
+  right: 0;
+}
+
+#AS_Mirror_Drawer,
+#AS_Mirror_Drawer * {
+  box-sizing: border-box;
+}
+
+/* Drawer header */
+.as-mirror-drawer-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  height: 76px;
+  padding: 16px 18px;
+  background: #101722;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.as-mirror-drawer-head strong {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.as-mirror-drawer-head button {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 13px;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  font-size: 34px;
+  line-height: 38px;
+  cursor: pointer;
+}
+
+.as-mirror-drawer-head button:hover {
+  background: #c80101;
+}
+
+/* Drawer navigation */
+.as-mirror-drawer-nav {
+  padding: 14px;
+}
+
+.as-mirror-drawer-nav ul,
+.as-mirror-drawer-nav li {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.full-mirror-menu > li {
+  margin-bottom: 12px !important;
+}
+
+.full-mirror-menu > li > a {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  min-height: 52px !important;
+  padding: 12px 14px !important;
+  border-radius: 14px !important;
+  background: #242b35 !important;
+  color: #fff !important;
+  text-decoration: none !important;
+  font-size: 16px !important;
+  line-height: 1.5 !important;
+  font-weight: 900 !important;
+  border: 1px solid rgba(255,255,255,0.13) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04) !important;
+}
+
+.full-mirror-menu > li > a:hover {
+  background: #c80101 !important;
+}
+
+.full-mirror-menu > li.menu-item-has-children > a::after {
+  content: "⌄";
+  margin-right: auto;
+  font-size: 18px;
+  color: rgba(255,255,255,0.75);
+}
+
+.full-mirror-menu .sub-menu {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+  margin: 9px 0 0 !important;
+  padding: 10px !important;
+  border-radius: 14px !important;
+  background: rgba(255,255,255,0.035) !important;
+  border: 1px solid rgba(255,255,255,0.07) !important;
+}
+
+.full-mirror-menu .sub-menu li {
+  margin: 0 !important;
+}
+
+.full-mirror-menu .sub-menu li a {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  min-height: 42px !important;
+  padding: 9px 12px !important;
+  border-radius: 11px !important;
+  background: #171e28 !important;
+  color: rgba(255,255,255,0.94) !important;
+  text-decoration: none !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  font-weight: 800 !important;
+  border: 1px solid rgba(255,255,255,0.075) !important;
+  opacity: 1 !important;
+}
+
+.full-mirror-menu .sub-menu li a:hover {
+  background: rgba(200,1,1,0.92) !important;
+  color: #fff !important;
+}
+
+.full-mirror-menu a i,
+.full-mirror-menu a svg {
+  margin-left: 9px !important;
+  flex: 0 0 auto !important;
+}
+
+.full-mirror-menu a svg {
+  width: 23px !important;
+  height: 23px !important;
+}
+
+html.as-mirror-open,
+body.as-mirror-open {
+  overflow: hidden !important;
+}
+
+@media (max-width: 600px) {
+  #AS_Mirror_Drawer {
+    width: 318px;
+    max-width: 88vw;
+  }
+  .as-mirror-drawer-nav {
+    padding: 13px;
+  }
+  .full-mirror-menu > li > a {
+    min-height: 49px !important;
+    font-size: 15px !important;
+  }
+  .full-mirror-menu .sub-menu li a {
+    min-height: 39px !important;
+    font-size: 13.5px !important;
+  }
+}
