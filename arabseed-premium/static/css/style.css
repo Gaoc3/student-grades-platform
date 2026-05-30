@@ -1016,6 +1016,9 @@ body {
 .plyr--video {
     background: #000 !important;
 }
+.plyr__animation {
+    display: none !important;
+}
 .plyr__control--overlaid {
     background: var(--accent-violet) !important;
 }
