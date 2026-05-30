@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Cinemana Premium - Premium Ad-Free Web Portal Backend
------------------------------------------------------
+AleX CINEMA - Premium Ad-Free Web Portal Backend
+------------------------------------------------
 A Flask server that integrates the Shabakaty Cinemana scraping engine and resolves
 high-quality, ad-free video streams transparently via ArabSeed search matching.
 Acts as a transparent Range-compliant video stream proxy to bypass 403 blocks and popups.
@@ -52,7 +52,7 @@ ARABIC_NUMBERS = {
 
 def parse_season_num(title: str) -> int:
     """Parses season number from Arabic/English title string."""
-    m = re.search(r'الموسم\s+([\u0600-\u06FF\w\d]+)', title)
+    m = re.search(r'(?:موسم|الموسم)\s+([\u0600-\u06FF\w\d]+)', title)
     if m:
         val = m.group(1).strip()
         if val.isdigit():
@@ -222,15 +222,19 @@ def resolve_hybrid_stream(cinemana_url: str) -> list:
         print(f"Hybrid Resolving: '{cinemana_title}' (Series: {is_series})")
         
         # 2. Clean title for searching ArabSeed
-        season_num = parse_season_num(cinemana_title)
-        ep_num = parse_episode_num(cinemana_title)
+        season_num = 1
+        ep_num = 1
         
-        # If it is a series and we have other episodes, find the active episode index
-        if is_series and details.get('episodes'):
-            for ep in details['episodes']:
-                if ep.get('active'):
-                    ep_num = parse_episode_num(ep.get('title', ''))
-                    break
+        if is_series and details.get('seasons'):
+            for s in details['seasons']:
+                for ep in s.get('episodes', []):
+                    if ep.get('active'):
+                        season_num = parse_season_num(s.get('title', ''))
+                        ep_num = parse_episode_num(ep.get('title', ''))
+                        break
+        else:
+            season_num = parse_season_num(cinemana_title)
+            ep_num = parse_episode_num(cinemana_title)
         
         # Clean title to base name
         base_title = clean_for_search(cinemana_title)
@@ -423,7 +427,7 @@ def api_search():
 
 @app.route('/api/details')
 def api_details():
-    """Fetches stories and episodes from Cinemana's details page."""
+    """Fetches stories, seasons, and episodes from Cinemana's details page."""
     url = request.args.get('url', '').strip()
     if not url:
         return jsonify({'error': 'URL is required.'}), 400
@@ -502,7 +506,7 @@ def api_stream_proxy():
 
 if __name__ == '__main__':
     print("=" * 65)
-    print(" 🚀 CINEMANA PREMIUM - PREMIUM AD-FREE PORTAL STARTING...")
+    print(" 🚀 AleX CINEMA - PREMIUM AD-FREE PORTAL STARTING...")
     print(" Scrape sources: cinemana.cc (Main) | arabseed.show (Hybrid Match)")
     print(" Running at http://0.0.0.0:5000")
     print("=" * 65)

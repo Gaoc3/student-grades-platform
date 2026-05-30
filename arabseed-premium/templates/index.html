@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cinemana Premium - سينمانا بريميوم | المنصة الترفيهية الفاخرة بدون إعلانات</title>
+    <title>AleX CINEMA - أليكس سينما | المنصة الترفيهية الفاخرة بدون إعلانات</title>
     <!-- SEO Optimization -->
-    <meta name="description" content="منصة سينمانا بريميوم - تصفح وشاهد أحدث الأفلام والمسلسلات والأنمي من شبكتي سينمانا مجاناً وبجودة عالية مباشرة داخل متصفحك مع مشغل ذكي خالٍ تماماً من الإعلانات والنوافذ المنبثقة.">
-    <meta name="keywords" content="سينمانا, شبكتي, افلام, مسلسلات, انمي, مشاهدة بدون اعلانات, بث مباشر, تحميل مباشر, عرب سيد, سينما فور يو, ايجي بست">
+    <meta name="description" content="منصة أليكس سينما - تصفح وشاهد أحدث الأفلام والمسلسلات والأنمي من شبكتي سينمانا مجاناً وبجودة عالية مباشرة داخل متصفحك مع مشغل ذكي خالٍ تماماً من الإعلانات والنوافذ المنبثقة.">
+    <meta name="keywords" content="أليكس سينما, سينمانا, شبكتي, افلام, مسلسلات, انمي, مشاهدة بدون اعلانات, بث مباشر, تحميل مباشر, عرب سيد, سينما فور يو, ايجي بست">
     
     <!-- Google Fonts: Cairo (Arabic) & Inter (English/UI) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,8 +32,8 @@
     <header class="navbar" id="app-header">
         <div class="nav-container">
             <div class="nav-logo" id="logo-trigger">
-                <i class="fa-solid fa-compact-disc logo-icon text-red-600 animate-spin-slow"></i>
-                <span class="logo-text">CINEMANA <span class="logo-highlight text-red-600">PREMIUM</span></span>
+                <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
+                <span class="logo-text">AleX <span class="logo-highlight">CINEMA</span></span>
             </div>
             
             <nav class="nav-links">
@@ -58,14 +58,14 @@
             <div class="hero-content">
                 <span class="hero-tagline"><i class="fa-solid fa-shield-halved"></i> الجيل الجديد من منصات المشاهدة الذكية</span>
                 <h1 class="hero-title">تصفح مكتبة شبكتي <br><span class="gradient-text">بشكل مباشر وخالٍ من الإعلانات</span></h1>
-                <p class="hero-desc">قمنا بإعادة بناء هيكلة سينمانا شبكتي لتوفير مكتبة سينمائية فائقة التنظيم. ندمج واجهة تصفح سينمانا مع محرك بحث هجين فائق السرعة يجلب لك أفضل جودة بث 1080p BluRay خالية 100% من النوافذ المنبثقة المزعجة.</p>
+                <p class="hero-desc">قمنا بإعادة بناء هيكلة سينمانا شبكتي لتوفير مكتبة سينمائية فائقة التنظيم تحت علامة أليكس سينما. ندمج واجهة تصفح سينمانا مع محرك بحث هجين فائق السرعة يجلب لك أفضل جودة بث 1080p BluRay بنقرة واحدة خالية 100% من النوافذ المنبثقة المزعجة.</p>
                 
                 <!-- Search Form Grid -->
                 <div class="search-wrapper">
                     <form class="search-form" id="main-search-form">
                         <div class="search-input-group">
                             <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                            <input type="text" id="search-input" placeholder="ابحث عن فيلم، مسلسل، أو أنمي في مكتبة سينمانا..." required autocomplete="off">
+                            <input type="text" id="search-input" placeholder="ابحث عن فيلم، مسلسل، أو أنمي في مكتبة أليكس سينما..." required autocomplete="off">
                             <button type="submit" class="search-btn" id="search-submit-btn">ابحث الآن</button>
                         </div>
                     </form>
@@ -83,7 +83,7 @@
             <!-- Loading Indicator -->
             <div class="loader-container" id="spinner-loader" style="display: none;">
                 <div class="cyber-spinner"></div>
-                <p class="loading-text">جاري البحث في قواعد بيانات سينمانا ومطابقة مصادر البث...</p>
+                <p class="loading-text">جاري البحث في قواعد البيانات ومطابقة مصادر البث...</p>
             </div>
             
             <!-- Grid Layout / Carousels Container -->
@@ -126,12 +126,12 @@
                     <h4 class="info-label"><i class="fa-solid fa-quote-right"></i> القصة والتفاصيل:</h4>
                     <p class="modal-story" id="modal-story-text">جاري تحميل قصة العرض...</p>
                     
-                    <!-- Quick Play Button (Automatic Best Server Playback) -->
+                    <!-- Netflix-style Watch Button (Prominent Playback Trigger) -->
                     <button class="quick-play-btn" id="modal-quick-play-btn" style="display: none;">
-                        <i class="fa-solid fa-circle-play"></i> تشغيل الآن بأعلى جودة (بدون إعلانات)
+                        <i class="fa-solid fa-play"></i> مشاهدة الآن (بأعلى جودة)
                     </button>
                     
-                    <!-- Seasons Section (Legacy season wrapper if needed, usually hidden in Cinemana) -->
+                    <!-- Seasons Section (Vertical/Horizontal list of seasons parsed natively) -->
                     <div class="seasons-wrapper" id="modal-seasons-section" style="display: none;">
                         <h4 class="info-label"><i class="fa-solid fa-folder-open"></i> المواسم المتوفرة:</h4>
                         <div class="seasons-grid" id="modal-seasons-grid">
@@ -156,11 +156,11 @@
                         <i class="fa-solid fa-circle-notch fa-spin"></i> جاري توليد روابط البث الذكية وفك تشفير الجودة العالية...
                     </div>
                     
-                    <!-- Servers Section -->
-                    <div class="servers-wrapper" id="modal-servers-section">
-                        <h4 class="info-label"><i class="fa-solid fa-circle-play"></i> اختر سيرفر تشغيل آمن:</h4>
+                    <!-- Hidden Servers List (Maintained silently for Netflix-play fallback) -->
+                    <div class="servers-wrapper" id="modal-servers-section" style="display: none;">
+                        <h4 class="info-label"><i class="fa-solid fa-circle-play"></i> خيارات التشغيل المتقدمة:</h4>
                         <div class="servers-list" id="modal-servers-list">
-                            <!-- Server buttons injected dynamically -->
+                            <!-- Injected dynamically but kept hidden -->
                         </div>
                     </div>
                 </div>
@@ -190,7 +190,7 @@
 
     <!-- Footer -->
     <footer class="app-footer">
-        <p>© 2026 سينمانا بريميوم (Cinemana Premium). كل الحقوق محفوظة. تطوير فريق Antigravity.</p>
+        <p>© 2026 أليكس سينما (AleX CINEMA). كل الحقوق محفوظة. تطوير فريق Antigravity.</p>
         <p class="footer-subtext">هذا المشروع مبني لأغراض تجريبية وتعليمية لتسليط الضوء على كفاءة منع الإعلانات وتحسين تجربة المستخدم.</p>
     </footer>
 
