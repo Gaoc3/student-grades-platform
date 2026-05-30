@@ -1,0 +1,914 @@
+/* Core CSS Classes */
+.gap__10 {
+    gap: 10px;
+}
+.gap__20 {
+    gap: 20px;
+}
+.gap__30 {
+    gap: 30px;
+}
+.gap__40 {
+    gap: 40px;
+}
+.gap__50 {
+    gap: 50px;
+}
+.gap__60 {
+    gap: 60px;
+}
+.gap__70 {
+    gap: 70px;
+}
+.gap__80 {
+    gap: 80px;
+}
+.gap__90 {
+    gap: 90px;
+}
+.gap__100 {
+    gap: 100px;
+}
+.row__gap__5 {
+    row-gap: 5px !important;
+}
+.row__gap__10 {
+    row-gap: 10px !important;
+}
+.row__gap__20 {
+    row-gap: 20px !important;
+}
+.row__gap__30 {
+    row-gap: 30px !important;
+}
+.row__gap__40 {
+    row-gap: 40px !important;
+}
+.row__gap__50 {
+    row-gap: 50px !important;
+}
+.row__gap__60 {
+    row-gap: 60px !important;
+}
+.row__gap__70 {
+    row-gap: 70px !important;
+}
+.row__gap__80 {
+    row-gap: 80px !important;
+}
+.row__gap__90 {
+    row-gap: 90px !important;
+}
+.row__gap__100 {
+    row-gap: 100px !important;
+}
+.d__flex {
+    display: flex;
+}
+.flex__1 {
+    flex: 1
+}
+.flex__wrap {
+    flex-wrap: wrap !important;
+}
+.flex__nowrap {
+    flex-wrap: nowrap !important;
+}
+.flex__wrap__reverse {
+    flex-wrap: wrap-reverse !important;
+}
+.justify__content__start {
+    justify-content: flex-start !important;
+}
+.justify__content__end {
+    justify-content: flex-end !important;
+}
+.justify__content__center {
+    justify-content: center !important;
+}
+.justify__content__between {
+    justify-content: space-between !important;
+}
+.justify__content__around {
+    justify-content: space-around !important;
+}
+.justify__content__evenly {
+    justify-content: space-evenly !important;
+}
+.align__items__start {
+    align-items: flex-start !important;
+}
+.align__items__end {
+    align-items: flex-end !important;
+}
+.align__items__center {
+    align-items: center !important;
+}
+.align__items__baseline {
+    align-items: baseline !important;
+}
+.align__items__stretch {
+    align-items: stretch !important;
+}
+.align__content__start {
+    align-content: flex-start !important;
+}
+.align__content__end {
+    align-content: flex-end !important;
+}
+.align__content__center {
+    align-content: center !important;
+}
+.align__content__between {
+    align-content: space-between !important;
+}
+.align__content__around {
+    align-content: space-around !important;
+}
+.align__content__stretch {
+    align-content: stretch !important;
+}
+.align__self__auto {
+    align-self: auto !important;
+}
+.align__self__start {
+    align-self: flex-start !important;
+}
+.align__self__end {
+    align-self: flex-end !important;
+}
+.align__self__center {
+    align-self: center !important;
+}
+.align__self__baseline {
+    align-self: baseline !important;
+}
+.align__self__stretch {
+    align-self: stretch !important;
+}
+.pt__10 {
+    padding-top: 10px !important;
+}
+.pt__20 {
+    padding-top: 20px !important;
+}
+.pt__30 {
+    padding-top: 30px !important;
+}
+.pt__40 {
+    padding-top: 40px !important;
+}
+.pt__50 {
+    padding-top: 50px !important;
+}
+.pt__60 {
+    padding-top: 60px !important;
+}
+.pt__70 {
+    padding-top: 70px !important;
+}
+.pt__80 {
+    padding-top: 80px !important;
+}
+.pt__90 {
+    padding-top: 90px !important;
+}
+.pt__100 {
+    padding-top: 100px !important;
+}
+.pb__10 {
+    padding-bottom: 10px !important;
+}
+.pb__20 {
+    padding-bottom: 20px !important;
+}
+.pb__30 {
+    padding-bottom: 30px !important;
+}
+.pb__40 {
+    padding-bottom: 40px !important;
+}
+.pb__50 {
+    padding-bottom: 50px !important;
+}
+.pb__60 {
+    padding-bottom: 60px !important;
+}
+.pb__70 {
+    padding-bottom: 70px !important;
+}
+.pb__80 {
+    padding-bottom: 80px !important;
+}
+.pb__90 {
+    padding-bottom: 90px !important;
+}
+.pb__100 {
+    padding-bottom: 100px !important;
+}
+.mt__10 {
+    margin-top: 10px !important;
+}
+.mt__20 {
+    margin-top: 20px !important;
+}
+.mt__30 {
+    margin-top: 30px !important;
+}
+.mt__40 {
+    margin-top: 40px !important;
+}
+.mt__50 {
+    margin-top: 50px !important;
+}
+.mt__60 {
+    margin-top: 60px !important;
+}
+.mt__70 {
+    margin-top: 70px !important;
+}
+.mt__80 {
+    margin-top: 80px !important;
+}
+.mt__90 {
+    margin-top: 90px !important;
+}
+.mt__100 {
+    margin-top: 100px !important;
+}
+.mb__10 {
+    margin-bottom: 10px !important;
+}
+.mb__20 {
+    margin-bottom: 20px !important;
+}
+.mb__30 {
+    margin-bottom: 30px !important;
+}
+.mb__40 {
+    margin-bottom: 40px !important;
+}
+.mb__50 {
+    margin-bottom: 50px !important;
+}
+.mb__60 {
+    margin-bottom: 60px !important;
+}
+.mb__70 {
+    margin-bottom: 70px !important;
+}
+.mb__80 {
+    margin-bottom: 80px !important;
+}
+.mb__90 {
+    margin-bottom: 90px !important;
+}
+.mb__100 {
+    margin-bottom: 100px !important;
+}
+[class*="box__"] {
+    padding-left: 10px;
+    padding-right: 10px;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+}
+.boxs__wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -10px;
+    margin-right: -10px;
+    row-gap: 20px !important;
+}
+.box__xs__1 {
+    flex: 0 0 100.0%;
+    max-width: 100.0%;
+}
+.box__xs__2 {
+    flex: 0 0 50.0%;
+    max-width: 50.0%;
+}
+.box__xs__3 {
+    flex: 0 0 33.33333%;
+    max-width: 33.33333%;
+}
+.box__xs__4 {
+    flex: 0 0 25.0%;
+    max-width: 25.0%;
+}
+.box__xs__5 {
+    flex: 0 0 20.0%;
+    max-width: 20.0%;
+}
+.box__xs__6 {
+    flex: 0 0 16.66667%;
+    max-width: 16.66667%;
+}
+.box__xs__7 {
+    flex: 0 0 14.28571%;
+    max-width: 14.28571%;
+}
+.box__xs__8 {
+    flex: 0 0 12.5%;
+    max-width: 12.5%;
+}
+.box__xs__9 {
+    flex: 0 0 11.11111%;
+    max-width: 11.11111%;
+}
+.box__xs__10 {
+    flex: 0 0 10.0%;
+    max-width: 10.0%;
+}
+.box__xs__11 {
+    flex: 0 0 9.09091%;
+    max-width: 9.09091%;
+}
+.box__xs__12 {
+    flex: 0 0 8.33333%;
+    max-width: 8.33333%;
+}
+@media (min-width: 576px) {
+    .box__sm__1 {
+        flex: 0 0 100.0%;
+        max-width: 100.0%;
+    }
+    .box__sm__2 {
+        flex: 0 0 50.0%;
+        max-width: 50.0%;
+    }
+    .box__sm__3 {
+        flex: 0 0 33.33333%;
+        max-width: 33.33333%;
+    }
+    .box__sm__4 {
+        flex: 0 0 25.0%;
+        max-width: 25.0%;
+    }
+    .box__sm__5 {
+        flex: 0 0 20.0%;
+        max-width: 20.0%;
+    }
+    .box__sm__6 {
+        flex: 0 0 16.66667%;
+        max-width: 16.66667%;
+    }
+    .box__sm__7 {
+        flex: 0 0 14.28571%;
+        max-width: 14.28571%;
+    }
+    .box__sm__8 {
+        flex: 0 0 12.5%;
+        max-width: 12.5%;
+    }
+    .box__sm__9 {
+        flex: 0 0 11.11111%;
+        max-width: 11.11111%;
+    }
+    .box__sm__10 {
+        flex: 0 0 10.0%;
+        max-width: 10.0%;
+    }
+    .box__sm__11 {
+        flex: 0 0 9.09091%;
+        max-width: 9.09091%;
+    }
+    .box__sm__12 {
+        flex: 0 0 8.33333%;
+        max-width: 8.33333%;
+    }
+}
+@media (min-width: 768px) {
+    .box__md__1 {
+        flex: 0 0 100.0%;
+        max-width: 100.0%;
+    }
+    .box__md__2 {
+        flex: 0 0 50.0%;
+        max-width: 50.0%;
+    }
+    .box__md__3 {
+        flex: 0 0 33.33333%;
+        max-width: 33.33333%;
+    }
+    .box__md__4 {
+        flex: 0 0 25.0%;
+        max-width: 25.0%;
+    }
+    .box__md__5 {
+        flex: 0 0 20.0%;
+        max-width: 20.0%;
+    }
+    .box__md__6 {
+        flex: 0 0 16.66667%;
+        max-width: 16.66667%;
+    }
+    .box__md__7 {
+        flex: 0 0 14.28571%;
+        max-width: 14.28571%;
+    }
+    .box__md__8 {
+        flex: 0 0 12.5%;
+        max-width: 12.5%;
+    }
+    .box__md__9 {
+        flex: 0 0 11.11111%;
+        max-width: 11.11111%;
+    }
+    .box__md__10 {
+        flex: 0 0 10.0%;
+        max-width: 10.0%;
+    }
+    .box__md__11 {
+        flex: 0 0 9.09091%;
+        max-width: 9.09091%;
+    }
+    .box__md__12 {
+        flex: 0 0 8.33333%;
+        max-width: 8.33333%;
+    }
+}
+@media (min-width: 992px) {
+    .box__lg__1 {
+        flex: 0 0 100.0%;
+        max-width: 100.0%;
+    }
+    .box__lg__2 {
+        flex: 0 0 50.0%;
+        max-width: 50.0%;
+    }
+    .box__lg__3 {
+        flex: 0 0 33.33333%;
+        max-width: 33.33333%;
+    }
+    .box__lg__4 {
+        flex: 0 0 25.0%;
+        max-width: 25.0%;
+    }
+    .box__lg__5 {
+        flex: 0 0 20.0%;
+        max-width: 20.0%;
+    }
+    .box__lg__6 {
+        flex: 0 0 16.66667%;
+        max-width: 16.66667%;
+    }
+    .box__lg__7 {
+        flex: 0 0 14.28571%;
+        max-width: 14.28571%;
+    }
+    .box__lg__8 {
+        flex: 0 0 12.5%;
+        max-width: 12.5%;
+    }
+    .box__lg__9 {
+        flex: 0 0 11.11111%;
+        max-width: 11.11111%;
+    }
+    .box__lg__10 {
+        flex: 0 0 10.0%;
+        max-width: 10.0%;
+    }
+    .box__lg__11 {
+        flex: 0 0 9.09091%;
+        max-width: 9.09091%;
+    }
+    .box__lg__12 {
+        flex: 0 0 8.33333%;
+        max-width: 8.33333%;
+    }
+}
+@media (min-width: 1200px) {
+    .box__xl__1 {
+        flex: 0 0 100.0%;
+        max-width: 100.0%;
+    }
+    .box__xl__2 {
+        flex: 0 0 50.0%;
+        max-width: 50.0%;
+    }
+    .box__xl__3 {
+        flex: 0 0 33.33333%;
+        max-width: 33.33333%;
+    }
+    .box__xl__4 {
+        flex: 0 0 25.0%;
+        max-width: 25.0%;
+    }
+    .box__xl__5 {
+        flex: 0 0 20.0%;
+        max-width: 20.0%;
+    }
+    .box__xl__6 {
+        flex: 0 0 16.66667%;
+        max-width: 16.66667%;
+    }
+    .box__xl__7 {
+        flex: 0 0 14.28571%;
+        max-width: 14.28571%;
+    }
+    .box__xl__8 {
+        flex: 0 0 12.5%;
+        max-width: 12.5%;
+    }
+    .box__xl__9 {
+        flex: 0 0 11.11111%;
+        max-width: 11.11111%;
+    }
+    .box__xl__10 {
+        flex: 0 0 10.0%;
+        max-width: 10.0%;
+    }
+    .box__xl__11 {
+        flex: 0 0 9.09091%;
+        max-width: 9.09091%;
+    }
+    .box__xl__12 {
+        flex: 0 0 8.33333%;
+        max-width: 8.33333%;
+    }
+}
+.hide__xl {
+    display: none !important;
+}
+@media (min-width: 1201px) {
+    .hide__xl {
+        display: block !important;
+    }
+}
+.hide__lg {
+    display: none !important;
+}
+@media (min-width: 993px) {
+    .hide__lg {
+        display: block !important;
+    }
+}
+.hide__md {
+    display: none !important;
+}
+@media (min-width: 769px) {
+    .hide__md {
+        display: block !important;
+    }
+}
+.hide__sm {
+    display: none !important;
+}
+@media (min-width: 577px) {
+    .hide__sm {
+        display: block !important;
+    }
+}
+.show__md {
+    display: block !important;
+}
+@media (min-width: 769px) {
+    .show__md {
+        display: none !important;
+    }
+}
+/* أقل من 1399px */
+@media (max-width: 1399px) {
+    .wrap__1399 {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .space__1399 {
+        display: flex;
+        justify-content: space-between;
+    }
+    .full__1399 {
+        flex: 0 0 100%;
+    }
+    .flex__1399 {
+        flex: 1;
+    }
+}
+/* أقل من 1199px */
+@media (max-width: 1199px) {
+    .wrap__1199 {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .space__1199 {
+        display: flex;
+        justify-content: space-between;
+    }
+    .full__1199 {
+        flex: 0 0 100%;
+    }
+    .flex__1199 {
+        flex: 1;
+    }
+}
+/* أقل من 991px */
+@media (max-width: 991px) {
+    .wrap__991 {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .space__991 {
+        display: flex;
+        justify-content: space-between;
+    }
+    .full__991 {
+        flex: 0 0 100%;
+    }
+    .flex__991 {
+        flex: 1;
+    }
+}
+/* أقل من 767px */
+@media (max-width: 767px) {
+    .wrap__767 {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .space__767 {
+        display: flex;
+        justify-content: space-between;
+    }
+    .full__767 {
+        flex: 0 0 100%;
+    }
+    .flex__767 {
+        flex: 1;
+    }
+}
+/* أقل من 575px */
+@media (max-width: 575px) {
+    .wrap__575 {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .space__575 {
+        display: flex;
+        justify-content: space-between;
+    }
+    .full__575 {
+        flex: 0 0 100%;
+    }
+    .flex__575 {
+        flex: 1;
+    }
+}
+/* ===========================================================
+   🎬 ArabSeed Ultimate Player (CimaLight/YouTube Style)
+   =========================================================== */
+
+/* --- 1. حاوية المشغل الرئيسية --- */
+.arabseed-video-player {
+  position: relative;
+  width: 100%;
+  max-width: 1280px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 12px; /* حواف ناعمة للمشغل ككل */
+  overflow: hidden;
+  isolation: isolate;
+  margin: 0 auto 40px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  animation: fadeInPlayer 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  cursor: pointer;
+  transform: translateZ(0);
+}
+
+@keyframes fadeInPlayer {
+  from { opacity: 0; transform: translateY(20px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- 2. صورة البوستر --- */
+.poster-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover !important;
+    transition: transform 0.7s ease;
+    z-index: 1;
+}
+
+/* زووم خفيف عند وقوف الماوس */
+.arabseed-video-player:hover .poster-image {
+    transform: scale(1.03);
+}
+
+/* --- 3. طبقة التظليل (Overlay) --- */
+/* تدرج لوني خفيف جداً فوق الصورة بالكامل */
+.arabseed-video-player::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.1); /* تعتيم بسيط جداً */
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* --- 4. زر التشغيل العملاق (وسط الشاشة) --- */
+.animated-play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  width: 80px;
+  height: 80px;
+  background: rgba(229, 9, 20, 0.9); /* أحمر */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 0 rgba(229, 9, 20, 0.7);
+  z-index: 20;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  backdrop-filter: blur(2px);
+}
+
+.arabseed-video-player:hover .animated-play-button {
+    transform: translate(-50%, -50%) scale(1.15);
+    background: #ff0a16;
+    box-shadow: 0 0 30px rgba(255, 10, 22, 0.6);
+}
+
+.animated-play-button::after {
+  content: '';
+  border-style: solid;
+  border-width: 12px 0 12px 22px;
+  border-color: transparent transparent transparent #fff;
+  margin-left: 5px;
+}
+
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0.7); }
+    70% { box-shadow: 0 0 0 20px rgba(229, 9, 20, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0); }
+}
+.animated-play-button { animation: pulse-red 2s infinite; }
+
+/* --- 5. شريط التحكم السفلي (تدرج سينمائي مثل CimaLight) --- */
+.main-player-controls {
+  position: absolute;
+  bottom: 0;        /* ملتصق بالأسفل تماماً */
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 90px;     /* ارتفاع كافٍ للتدرج */
+  
+  /* السر هنا: تدرج من الأسود (أسفل) إلى الشفاف (أعلى) */
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, transparent 100%);
+  
+  display: flex;
+  align-items: flex-end; /* جعل الأيقونات في الأسفل */
+  padding: 0 25px 20px;  /* مسافات داخلية */
+  box-sizing: border-box;
+  gap: 20px;
+  z-index: 15;
+  direction: ltr;
+}
+
+/* أيقونات التحكم */
+.main-player-controls .controls-play-pause-btn svg,
+.main-player-controls .controls-fullscreen-btn svg {
+    fill: #fff;
+    width: 24px;
+    height: 24px;
+    /* ظل للأيقونات لتظهر بوضوح فوق أي خلفية */
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));
+    transition: transform 0.2s, fill 0.2s;
+}
+
+.main-player-controls .controls-play-pause-btn:hover svg,
+.main-player-controls .controls-fullscreen-btn:hover svg {
+    transform: scale(1.2);
+    fill: #e50914;
+}
+
+/* شريط التقدم (Progress Bar) */
+.main-player-controls .controls-progress-bar {
+  flex-grow: 1;
+  height: 5px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  margin-bottom: 8px; /* رفع الشريط قليلاً ليتوسط المسافة */
+  transition: height 0.2s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.main-player-controls .controls-progress-bar:hover {
+    height: 7px;
+}
+
+/* القيمة الحالية للشريط */
+.main-player-controls .controls-progress-bar-value {
+  display: block;
+  height: 100%;
+  width: 30%; /* وهمي */
+  background: #e50914;
+  border-radius: 3px;
+  position: relative;
+}
+
+/* توقيت الفيديو */
+.main-player-controls .controls-time-display {
+  font-family: monospace, sans-serif;
+  font-size: 14px;
+  color: #fff;
+  font-weight: bold;
+  margin-bottom: 5px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9); /* ظل للنص */
+}
+
+/* --- 6. عنوان الفيديو (فوق المشغل) --- */
+.post-title-video {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  margin: 20px auto;
+  padding: 0 15px;
+  line-height: 1.4;
+}
+
+/* --- تحسينات الموبايل --- */
+@media (max-width: 768px) {
+  .arabseed-video-player {
+    border-radius: 0;
+    margin-bottom: 20px;
+  }
+  .animated-play-button {
+    width: 60px;
+    height: 60px;
+  }
+  .main-player-controls {
+    height: 70px; /* تقليل ارتفاع التدرج في الموبايل */
+    padding: 0 15px 15px;
+    gap: 10px;
+  }
+  .post-title-video {
+    font-size: 1.2rem;
+    margin: 15px 0;
+  }
+}
+
+@media(max-width:768px){
+
+    .info__side{
+        min-height: calc(100vh + 200px); 
+        /* يحجز ارتفاع مناسب يمنع الشفت */
+    }
+
+    .post__story,
+    .info__area,
+    .watch__and__download{
+        margin-bottom:20px;
+    }
+
+    .poster__single img{
+        aspect-ratio: 450/550;
+        height:auto;
+    }
+}
+
+/* ========================================================
+   FIX MOBILE CLS FOR CATEGORY GRID (ARABSEED)
+   ======================================================== */
+
+/* 1. تثبيت حاوية القائمة لمنع انهيارها */
+ul.movie__blocks__ul.boxs__wrapper {
+    /* هذه الخاصية تمنع المتصفح من إعادة حساب التخطيط الخارجي عند تغير المحتوى الداخلي */
+    contain: content; 
+    min-height: 100vh; /* حجز ارتفاع مبدئي للشاشة */
+    display: flex;
+    flex-wrap: wrap;
+}
+
+/* 2. تثبيت أبعاد "البوست" نفسه (Li) على الموبايل */
+@media (max-width: 768px) {
+    ul.movie__blocks__ul li {
+        /* افترضنا هنا أن العرض بوستين في الصف (حوالي 48% لكل واحد) */
+        /* عدل الرقم حسب تصميمك لو كان 3 بوستات */
+        width: 48% !important; 
+        
+        /* 🔥 السحر هنا: حجز النسبة الطولية للبوست (مثلاً 2:3 للبوسترات) */
+        /* هذا سيجبر المتصفح رسم المستطيل قبل تحميل الصورة */
+        aspect-ratio: 2 / 3.2; 
+        
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 10px; /* مسافة ثابتة */
+    }
+
+    /* 3. إجبار الصورة على ملء المساحة المحجوزة */
+    ul.movie__blocks__ul li img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover;
+    }
+}
