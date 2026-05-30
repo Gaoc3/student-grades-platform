@@ -68,6 +68,67 @@ def extract_direct_mp4(embed_url: str) -> str:
         
     return ""
 
+def extract_mp4_from_download(download_url: str) -> str:
+    """
+    Simulates the two-stage POST filesharing flow on reviewrate.net
+    to extract the raw high-quality 1080p .mp4 CDN URL.
+    """
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://m.asd.ink/'
+    }
+    try:
+        parts = download_url.rstrip('/').split('/')
+        file_id = parts[-1]
+        
+        # 1. GET page to find fname
+        r = requests.get(download_url, headers=headers, timeout=10)
+        r.raise_for_status()
+        
+        soup = BeautifulSoup(r.text, 'html.parser')
+        fname_input = soup.find('input', {'name': 'fname'})
+        fname = fname_input.get('value') if fname_input else ""
+        if not fname:
+            match = re.search(r'name=["\']fname["\']\s+value=["\']([^"\']+)["\']', r.text)
+            if match:
+                fname = match.group(1)
+                
+        if not fname:
+            return ""
+            
+        # 2. First POST (op = download1)
+        data1 = {
+            'op': 'download1',
+            'usr_login': '',
+            'id': file_id,
+            'fname': fname,
+            'referer': 'https://m.asd.ink/',
+            'method_free': 'Free Download'
+        }
+        r1 = requests.post(download_url, headers=headers, data=data1, timeout=12)
+        r1.raise_for_status()
+        
+        # 3. Second POST (op = download2)
+        data2 = {
+            'op': 'download2',
+            'id': file_id,
+            'rand': '',
+            'referer': 'https://m.asd.ink/',
+            'method_free': 'Free Download',
+            'method_premium': ''
+        }
+        r2 = requests.post(download_url, headers=headers, data=data2, timeout=12)
+        r2.raise_for_status()
+        
+        mp4_matches = re.findall(r'(https?://[^\s"\'>]+\.mp4[^\s"\']*)', r2.text)
+        if mp4_matches:
+            return mp4_matches[0]
+            
+    except Exception as e:
+        print(f"Error extracting direct MP4 from download link {download_url}: {e}")
+        
+    return ""
+
 def scrape_listing_page(url: str) -> list:
     """
     Scrapes any standard listing page (like category pages or homepages) on ArabSeed
@@ -129,64 +190,121 @@ def scrape_listing_page(url: str) -> list:
         print(f"Error scraping listing page {url}: {e}")
         return []
 
-def clean_series_title(title: str) -> str:
+def parse_series_info(title: str):
     """
-    Cleans series titles by stripping episode numbers, spelled-out numbers,
-    translation suffixes, and quality badges while fully preserving season words and numbers.
-    Uses truncation to drop everything after the season or episode descriptor.
+    Parses base series title and season name from any ArabSeed title.
     """
     t = title
     
-    # 1. If it contains "الموسم", keep everything up to the season value and drop the rest
-    # We match "الموسم" followed by space and one or more digits or Arabic characters
+    # Extract season if present
+    season_name = "الموسم الأول" # Default
     season_match = re.search(r'(الموسم\s+(?:\d+|[\u0600-\u06FF]+))', t)
+    
     if season_match:
-        end_pos = season_match.end()
-        t = t[:end_pos]
+        season_name = season_match.group(1)
+        base_title = t[:season_match.start()].strip()
     else:
-        # 2. If it doesn't contain "الموسم" but has "الحلقة" or "حلقة", drop from "الحلقة" onwards
         ep_match = re.search(r'\s+(?:الحلقة|حلقة)\b', t)
         if ep_match:
-            start_pos = ep_match.start()
-            t = t[:start_pos]
+            base_title = t[:ep_match.start()].strip()
+        else:
+            base_title = t
             
-    # Remove common quality and translation badges
+    # Clean base title from quality/translation badges
     badges = [
         "مترجم", "مترجمة", "مدبلج", "مدبلجة", "بلوراي", "كامل", "كاملة", "HD", "FHD", "WEB-DL", "وب-دل", "وب ديل"
     ]
     badges_pattern = r'\b(?:' + '|'.join(badges) + r')\b'
-    t = re.sub(badges_pattern, '', t, flags=re.IGNORECASE)
+    base_title = re.sub(badges_pattern, '', base_title, flags=re.IGNORECASE)
+    base_title = re.sub(r'[-\s/|]+', ' ', base_title).strip()
     
-    # Clean up any leftover punctuation or extra spaces
-    t = re.sub(r'[-\s/|]+', ' ', t).strip()
-    return t
+    return base_title, season_name
+
+def clean_series_title(title: str) -> str:
+    """
+    Cleans series titles by stripping episode numbers, quality badges, and season names.
+    """
+    base_title, _ = parse_series_info(title)
+    return base_title
 
 def group_results(results: list) -> list:
     """
-    Groups scattered series episodes under a single series card.
-    Updates the card title to the clean series name and retains only one card per series/season.
+    Groups scattered series episodes and seasons under a single series card.
+    Every grouped series card contains a 'seasons' list mapping season names to URLs.
     """
     grouped = {}
     for item in results:
         title = item.get('title', '')
         media_type = item.get('type', 'فيلم')
         
-        # We only group series (type is "مسلسل" or contains "مسلسل" or "حلقة" or "الموسم" in title)
         is_series = "مسلسل" in title or "حلقة" in title or media_type == "مسلسل" or "الموسم" in title
         
         if is_series:
-            clean_title = clean_series_title(title)
-            # If we haven't seen this series before, add it
-            if clean_title not in grouped:
-                item['title'] = clean_title
+            base_title, season_name = parse_series_info(title)
+            
+            # If we haven't seen this series base title before, create its group
+            if base_title not in grouped:
+                item['title_original'] = title
+                item['title'] = base_title
                 item['type'] = 'مسلسل'
-                grouped[clean_title] = item
+                item['seasons'] = [{'title': season_name, 'url': item.get('url'), 'quality': item.get('quality')}]
+                grouped[base_title] = item
             else:
-                # Retain the one we found first (which is usually the latest episode link)
-                pass
+                existing_item = grouped[base_title]
+                
+                # Check if this season already exists in the seasons list
+                season_exists = False
+                for s in existing_item['seasons']:
+                    if s['title'] == season_name:
+                        season_exists = True
+                        
+                        # Prioritize higher quality URLs for the same season
+                        def get_quality_score(q_str):
+                            score = 0
+                            q_lower = q_str.lower()
+                            if '1080' in q_lower or 'fhd' in q_lower:
+                                score = 3
+                            elif '720' in q_lower or 'hd' in q_lower:
+                                score = 2
+                            elif '480' in q_lower or 'sd' in q_lower:
+                                score = 1
+                            return score
+                            
+                        if get_quality_score(item.get('quality', '')) > get_quality_score(s.get('quality', '')):
+                            s['url'] = item.get('url')
+                            s['quality'] = item.get('quality')
+                        break
+                        
+                if not season_exists:
+                    existing_item['seasons'].append({
+                        'title': season_name,
+                        'url': item.get('url'),
+                        'quality': item.get('quality')
+                    })
         else:
-            # Keep movie entries as unique by title
             grouped[title] = item
+            
+    # For all grouped series, sort their seasons in a clean logical order (newest season first)
+    for base_title, item in grouped.items():
+        if 'seasons' in item:
+            def extract_season_num(s_title):
+                s_name = s_title.replace("الموسم", "").strip()
+                mapping = {
+                    "الاول": 1, "الأول": 1, "الأولى": 1, "الاولى": 1, "الاولي": 1,
+                    "الثاني": 2, "الثانية": 2, "الثالث": 3, "الثالثة": 3,
+                    "الرابع": 4, "الرابعة": 4, "الخامس": 5, "الخامسة": 5,
+                    "السادس": 6, "السادسة": 6, "السابع": 7, "السابعة": 7,
+                    "الثامن": 8, "الثامنة": 8, "التاسع": 9, "التاسعة": 9,
+                    "العاشر": 10, "العاشرة": 10
+                }
+                if s_name in mapping:
+                    return mapping[s_name]
+                num_match = re.search(r'\d+', s_name)
+                if num_match:
+                    return int(num_match.group())
+                return 0
+                
+            item['seasons'] = sorted(item['seasons'], key=lambda s: extract_season_num(s['title']), reverse=True)
             
     return list(grouped.values())
 
@@ -276,17 +394,40 @@ def api_details():
 @app.route('/api/watch')
 def api_watch():
     """
-    Fetches streaming links, automatically extracts raw CDN streams from preferred servers,
-    and formats them for Plyr.js or sandboxed fallback.
+    Fetches streaming and download links, automatically extracts raw CDN streams from preferred servers 
+    (prioritizing direct 1080p download links and watch servers), and formats them for Plyr.js.
     """
     url = request.args.get('url', '').strip()
     if not url:
         return jsonify({'error': 'URL is required.'}), 400
         
     try:
-        watch_links = api.get_watch_links(url)
         formatted_players = []
         
+        # 1. Fetch download links to search for high-speed direct 1080p reviewrate streams
+        try:
+            download_links = api.get_download_links(url)
+            for dl in download_links:
+                direct_link = dl.get('direct_link', '')
+                quality = dl.get('quality', '')
+                # We specifically look for reviewrate.net or direct download links with 1080p quality
+                if 'reviewrate.net' in direct_link and '1080' in quality:
+                    cdn_url = extract_mp4_from_download(direct_link)
+                    if cdn_url:
+                        encoded_cdn = urllib.parse.quote(cdn_url)
+                        formatted_players.append({
+                            'type': 'direct',
+                            'server': f'✨ سيرفر مباشر فائق الجودة 1080p (خالٍ من الإعلانات)',
+                            'url': f'/api/stream?url={encoded_cdn}',
+                            'original_url': cdn_url
+                        })
+                        # Stop after adding the best 1080p link to keep it clean
+                        break
+        except Exception as dl_err:
+            print(f"Error fetching download links for streaming extraction: {dl_err}")
+            
+        # 2. Fetch standard watch links
+        watch_links = api.get_watch_links(url)
         for idx, wl in enumerate(watch_links):
             direct_link = wl.get('direct_link', '')
             server_name = wl.get('server', f'سيرفر {idx+1}')
