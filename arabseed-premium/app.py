@@ -207,37 +207,47 @@ def extract_mp4_from_download(download_url: str) -> str:
         
     return ""
 
-def resolve_hybrid_stream(cinemana_url: str) -> list:
+def resolve_hybrid_stream(cinemana_url: str, title: str = "", is_series: bool = False, season: str = "", episode: str = "") -> list:
     """
-    Takes a Cinemana watch page URL, scrapes its details/title,
+    Takes a Cinemana watch page URL, scrapes its details/title (or uses provided ones),
     searches ArabSeed for the matching item, resolves the correct
     season/episode, and extracts the direct 1080p ad-free stream.
     """
     try:
-        # 1. Scrape details from Cinemana
-        details = cinemana_api.get_details(cinemana_url)
-        cinemana_title = details.get('title', '')
-        is_series = details.get('is_series', False)
-        
-        print(f"Hybrid Resolving: '{cinemana_title}' (Series: {is_series})")
-        
-        # 2. Clean title for searching ArabSeed
-        season_num = 1
-        ep_num = 1
-        
-        if is_series and details.get('seasons'):
-            for s in details['seasons']:
-                for ep in s.get('episodes', []):
-                    if ep.get('active'):
-                        season_num = parse_season_num(s.get('title', ''))
-                        ep_num = parse_episode_num(ep.get('title', ''))
+        if not title:
+            # 1. Scrape details from Cinemana
+            details = cinemana_api.get_details(cinemana_url)
+            cinemana_title = details.get('title', '')
+            is_series = details.get('is_series', False)
+            
+            # 2. Clean title for searching ArabSeed
+            season_num = 1
+            ep_num = 1
+            
+            if is_series and details.get('seasons'):
+                found_active = False
+                for s in details['seasons']:
+                    for ep in s.get('episodes', []):
+                        if ep.get('active'):
+                            season_num = parse_season_num(s.get('title', ''))
+                            ep_num = parse_episode_num(ep.get('title', ''))
+                            found_active = True
+                            break
+                    if found_active:
                         break
+            else:
+                season_num = parse_season_num(cinemana_title)
+                ep_num = parse_episode_num(cinemana_title)
+            
+            # Clean title to base name
+            base_title = clean_for_search(cinemana_title)
         else:
-            season_num = parse_season_num(cinemana_title)
-            ep_num = parse_episode_num(cinemana_title)
-        
-        # Clean title to base name
-        base_title = clean_for_search(cinemana_title)
+            cinemana_title = title
+            season_num = int(season) if season.isdigit() else parse_season_num(season) if season else 1
+            ep_num = int(episode) if episode.isdigit() else parse_episode_num(episode) if episode else 1
+            base_title = clean_for_search(cinemana_title)
+            
+        print(f"Hybrid Resolving: '{cinemana_title}' | Base: '{base_title}' | Season: {season_num} | Episode: {ep_num} | Series: {is_series}")
         print(f"Cleaned search keyword: '{base_title}', Season: {season_num}, Episode: {ep_num}")
         
         # 3. Search ArabSeed
@@ -382,7 +392,7 @@ def home():
 def api_search():
     """
     Searches Cinemana for movies/series or routes directly to homepage categories
-    and specific movies/series grids.
+    and specific movies/series grids, with dynamic deduplication for series.
     """
     query = request.args.get('q', '').strip()
     if not query:
@@ -392,6 +402,20 @@ def api_search():
         if query == '__home__':
             # Retrieve beautiful horizontal categorized carousels directly from Cinemana
             categories = cinemana_api.get_homepage_categories()
+            # Deduplicate series episodes in home carousels
+            for cat in categories:
+                deduped_cards = []
+                seen_bases = set()
+                for r in cat.get('cards', []):
+                    title = r.get('title', '')
+                    r_type = r.get('type', 'فيلم')
+                    if r_type == 'مسلسل' or any(x in title for x in ["مسلسل", "الحلقة", "حلقة", "الموسم"]):
+                        base = clean_for_search(title).lower().strip()
+                        if base in seen_bases:
+                            continue
+                        seen_bases.add(base)
+                    deduped_cards.append(r)
+                cat['cards'] = deduped_cards
             return jsonify({
                 'categories': categories,
                 'category': 'الرئيسية'
@@ -404,22 +428,54 @@ def api_search():
             })
         elif query == '__series__':
             results = cinemana_api.scrape_listing_page("https://cinemana.cc/series/")
+            # Deduplicate episodes in series catalog
+            deduped_results = []
+            seen_bases = set()
+            for r in results:
+                title = r.get('title', '')
+                base = clean_for_search(title).lower().strip()
+                if base in seen_bases:
+                    continue
+                seen_bases.add(base)
+                deduped_results.append(r)
             return jsonify({
-                'results': results,
+                'results': deduped_results,
                 'category': 'المسلسلات'
             })
         elif query == '__anime__':
             # Scrape عالم الأنمي by pulling its categorised results
-            results = cinemana_api.scrape_listing_page("https://cinemana.cc/watch=category/%D8%A3%D9%86%D9%85%D9%8A-%D9%88%D8%A3%D9%83%D8%B4%D9%86/")
+            results = cinemana_api.scrape_listing_page("https://cinemana.cc/watch=category/%D8%A3%D9%86%D9%85%D9%8I-%D9%88%D8%A3%D9%83%D8%B4%D9%86/")
+            # Deduplicate episodes in anime catalog
+            deduped_results = []
+            seen_bases = set()
+            for r in results:
+                title = r.get('title', '')
+                base = clean_for_search(title).lower().strip()
+                if base in seen_bases:
+                    continue
+                seen_bases.add(base)
+                deduped_results.append(r)
             return jsonify({
-                'results': results,
+                'results': deduped_results,
                 'category': 'عالم الأنمي'
             })
         else:
             # Standard search directly from Cinemana.cc
             results = cinemana_api.search(query)
+            # Deduplicate episodes in search results
+            deduped_results = []
+            seen_bases = set()
+            for r in results:
+                title = r.get('title', '')
+                r_type = r.get('type', 'فيلم')
+                if r_type == 'مسلسل' or any(x in title for x in ["مسلسل", "الحلقة", "حلقة", "الموسم"]):
+                    base = clean_for_search(title).lower().strip()
+                    if base in seen_bases:
+                        continue
+                    seen_bases.add(base)
+                deduped_results.append(r)
             return jsonify({
-                'results': results,
+                'results': deduped_results,
                 'category': f"البحث عن: {query}"
             })
     except Exception as e:
@@ -445,11 +501,16 @@ def api_watch():
     title to Arabseed servers and returns direct streams.
     """
     url = request.args.get('url', '').strip()
+    title = request.args.get('title', '').strip()
+    is_series = request.args.get('is_series', '').lower() == 'true'
+    season = request.args.get('season', '').strip()
+    episode = request.args.get('episode', '').strip()
+    
     if not url:
         return jsonify({'error': 'URL is required.'}), 400
         
     try:
-        servers = resolve_hybrid_stream(url)
+        servers = resolve_hybrid_stream(url, title, is_series, season, episode)
         if not servers:
             return jsonify({
                 'servers': [{
