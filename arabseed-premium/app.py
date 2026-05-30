@@ -245,7 +245,10 @@ def resolve_cinemana_stream(cinemana_url: str) -> list:
                 sorted_qualities = sorted(parsed_urls.keys(), key=lambda x: int(x) if x.isdigit() else 0, reverse=True)
                 for q in sorted_qualities:
                     orig_url = parsed_urls[q]
-                    proxied_url = f"https://cinemana.cc/wp-content/themes/EEE/Inc/Ajax/Single/stream.php?session={post_id}&url={urllib.parse.quote(orig_url)}"
+                    # Route via root stream.php which is the working Cinemana endpoint
+                    cinemana_stream_url = f"https://cinemana.cc/stream.php?session={post_id}&url={urllib.parse.quote(orig_url)}"
+                    # Wrap in our own /api/stream proxy to solve CORS and segment rewrite
+                    proxied_url = f"/api/stream?url={urllib.parse.quote(cinemana_stream_url)}"
                     
                     formatted_players.append({
                         'type': 'direct',
@@ -397,12 +400,20 @@ def api_watch():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/stream')
+@app.route('/api/stream', methods=['GET', 'OPTIONS'])
 def api_stream_proxy():
     """
-    Transparent chunked-streaming proxy supporting HTTP Range requests.
-    Pipes video chunks directly to bypass Nginx hotlink protections.
+    Transparent chunked-streaming proxy supporting HTTP Range requests, CORS,
+    and recursive HLS (.m3u8) playlist URL rewriting to force all segment loads through proxy.
     """
+    # Gracefully handle CORS preflight requests
+    if request.method == 'OPTIONS':
+        resp = Response()
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Access-Control-Allow-Headers'] = '*'
+        resp.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        return resp
+        
     video_url = request.args.get('url', '').strip()
     if not video_url:
         return "Video URL parameter is required", 400
@@ -411,7 +422,7 @@ def api_stream_proxy():
     
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': 'https://m.reviewrate.net/'
+        'Referer': 'https://cinemana.cc/'
     }
     
     range_header = request.headers.get('Range')
@@ -419,8 +430,64 @@ def api_stream_proxy():
         headers['Range'] = range_header
         
     try:
+        # We fetch stream.php or direct ts segment using stream=True
         r = requests.get(video_url, headers=headers, stream=True, timeout=20)
         
+        # Check if the resource is an HLS playlist (.m3u8) by checking headers or content structure
+        content_type = r.headers.get('Content-Type', '').lower()
+        is_m3u8 = 'mpegurl' in content_type or 'm3u8' in video_url.lower() or 'playlist.m3u8' in video_url.lower()
+        
+        # Read the small playlist body in memory to rewrite it
+        if is_m3u8 or 'application/octet-stream' in content_type:
+            content = r.content
+            try:
+                # Decode to string (taking care of UTF-8 BOM)
+                text_content = content.decode('utf-8-sig')
+                if text_content.strip().startswith('#EXTM3U'):
+                    lines = text_content.split('\n')
+                    rewritten_lines = []
+                    scheme = request.scheme
+                    host = request.host
+                    
+                    for line in lines:
+                        line_stripped = line.strip()
+                        if not line_stripped:
+                            rewritten_lines.append('')
+                            continue
+                        if line_stripped.startswith('#'):
+                            # Rewrite URI paths in EXT-X-KEY encryption tags if they point to stream.php
+                            if 'URI=' in line_stripped:
+                                m = re.search(r'URI=["\']([^"\']+)["\']', line_stripped)
+                                if m:
+                                    key_uri = m.group(1)
+                                    if key_uri.startswith('stream.php'):
+                                        abs_key_url = "https://cinemana.cc/" + key_uri
+                                    else:
+                                        abs_key_url = key_uri
+                                    proxied_key_url = f"{scheme}://{host}/api/stream?url={urllib.parse.quote(abs_key_url)}"
+                                    line_stripped = line_stripped.replace(key_uri, proxied_key_url)
+                            rewritten_lines.append(line_stripped)
+                        else:
+                            # It's a segment or sub-playlist URL
+                            if line_stripped.startswith('stream.php'):
+                                abs_segment_url = "https://cinemana.cc/" + line_stripped
+                            else:
+                                abs_segment_url = line_stripped
+                            
+                            proxied_segment_url = f"{scheme}://{host}/api/stream?url={urllib.parse.quote(abs_segment_url)}"
+                            rewritten_lines.append(proxied_segment_url)
+                            
+                    rewritten_content = '\n'.join(rewritten_lines)
+                    
+                    resp = Response(rewritten_content, status=200, content_type='application/vnd.apple.mpegurl')
+                    resp.headers['Access-Control-Allow-Origin'] = '*'
+                    resp.headers['Access-Control-Allow-Headers'] = '*'
+                    resp.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+                    return resp
+            except Exception as decode_err:
+                print(f"Decoding HLS playlist failed, falling back to direct stream: {decode_err}")
+                
+        # Pipe binary .ts segment or standard file chunk streaming
         def generate():
             try:
                 for chunk in r.iter_content(chunk_size=131072):
@@ -435,6 +502,11 @@ def api_stream_proxy():
             if name.lower() not in excluded_headers:
                 resp_headers.append((name, value))
                 
+        # Inject CORS headers for dynamic web clients
+        resp_headers.append(('Access-Control-Allow-Origin', '*'))
+        resp_headers.append(('Access-Control-Allow-Headers', '*'))
+        resp_headers.append(('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'))
+        
         return Response(generate(), status=r.status_code, headers=resp_headers)
     except Exception as e:
         return f"Streaming Proxy Error: {e}", 502
