@@ -75,7 +75,14 @@ const elements = {
     // Live Search Elements
     liveSearchDropdown: document.getElementById('live-search-dropdown'),
     liveSearchLoader: document.getElementById('live-search-loader'),
-    liveSearchResults: document.getElementById('live-search-results')
+    liveSearchResults: document.getElementById('live-search-results'),
+    
+    // Giant Hero Slider Elements
+    heroSliderArea: document.getElementById('hero-slider-area'),
+    heroSliderWrapper: document.getElementById('hero-slider-wrapper'),
+    heroSliderDots: document.getElementById('hero-slider-dots'),
+    heroSliderPrev: document.getElementById('hero-slider-prev'),
+    heroSliderNext: document.getElementById('hero-slider-next')
 };
 
 // ============================================================================
