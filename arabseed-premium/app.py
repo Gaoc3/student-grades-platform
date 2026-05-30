@@ -94,20 +94,67 @@ def parse_episode_num(title: str) -> int:
     return 1 # Default to Episode 1
 
 def clean_for_search(title: str) -> str:
-    """Cleans up Cinemana title to base name for ArabSeed searches."""
+    """Cleans up Cinemana title to base name for ArabSeed searches and dynamic grouping."""
     t = title
-    # Remove Season and Episode details
-    t = re.sub(r'الموسم\s+[\u0600-\u06FF\w\d]+', '', t)
-    t = re.sub(r'(?:الحلقة|حلقة)\s+[\u0600-\u06FF\d]+', '', t)
-    t = re.sub(r'والاخيرة', '', t)
-    t = re.sub(r'والأخيرة', '', t)
-    # Remove standard quality/translation badges
-    t = re.sub(r'\b(?:مترجم|مترجمة|مدبلج|مدبلجة|بلوراي|كامل|كاملة|HD|FHD|WEB-DL|وب-دل|4th Season)\b', '', t, flags=re.IGNORECASE)
-    # Remove leading prefixes
-    t = re.sub(r'^(?:فيلم|مسلسل|أنمي|انمي|اونا)\s+', '', t).strip()
-    # Clean punctuation
-    t = re.sub(r'[-\s/|–]+', ' ', t).strip()
+    
+    # 1. Lowercase to normalize English titles
+    t = t.lower()
+    
+    # 2. Remove year inside parentheses or brackets, e.g., (2017) or [2020]
+    t = re.sub(r'[\(\[\{]\s*\d{4}\s*[\)\]\}]', '', t)
+    # Also bare year at the end, e.g., " 2017"
+    t = re.sub(r'\b\d{4}\b', '', t)
+    
+    # 3. Remove Season patterns in English and Arabic:
+    # Arabic: الموسم الاول, الموسم الثاني, الموسم 2, موسم 02
+    t = re.sub(r'(?:الموسم|موسم)\s+(?:الاول|الأول|الأولى|الاولى|الاولي|اول|أول|الثاني|الثانية|ثاني|ثانية|الثالث|الثالثة|ثالث|ثالثة|الرابع|الرابعة|رابع|رابعة|الخامس|الخامسة|خامس|خامسة|السادس|السادسة|سادس|سادسة|السابع|السابعة|سابع|سابعة|الثامن|الثامنة|ثامن|ثامنة|التاسع|التاسعة|تاسع|تاسعة|العاشر|العاشرة|عاشر|عاشرة|[\u0600-\u06FF\w\d]+)', '', t)
+    # English: Season 1, Season 02, S1, S02, S 2, 4th Season, etc.
+    t = re.sub(r'\b(?:season|seasons)\s+\d+\b', '', t)
+    t = re.sub(r'\b\d+(?:st|nd|rd|th)\s+season\b', '', t)
+    t = re.sub(r'\bs\d+\b', '', t)
+    
+    # 4. Remove Episode patterns in English and Arabic:
+    # Arabic: الحلقة 10, حلقة 5, الحلقة العاشرة, الاخيرة, والأخيرة
+    t = re.sub(r'(?:الحلقة|حلقة)\s+(?:[\u0600-\u06FF\d]+)', '', t)
+    t = re.sub(r'\b(?:والاخيرة|والأخيرة|الأخيرة|الاخيرة|اخيرة|أخيرة)\b', '', t)
+    # English: Episode 10, Ep 5, Ep05, E10, E 10, etc.
+    t = re.sub(r'\b(?:episode|episodes|ep|e)\s*\d+\b', '', t)
+    
+    # 5. Remove standard badges/quality/translation words
+    t = re.sub(r'\b(?:مترجم|مترجمة|مدبلج|مدبلجة|بلوراي|كامل|كاملة|HD|FHD|WEB-DL|وب-دل|وب\s+دل|برابط\s+واحد|نسخة|تحميل|مشاهدة|اون\s+لاين|اونلاين)\b', '', t)
+    
+    # 6. Remove leading prefixes like: فيلم, مسلسل, أنمي, انمي, اونا, كرتون
+    t = re.sub(r'^(?:فيلم|مسلسل|أنمي|انمي|اونا|كرتون|برنامج|مسرحية)\s+', '', t)
+    
+    # 7. Clean up non-word characters and punctuation
+    t = re.sub(r'[-\s/|–\.,:\?!\(\)\[\]\{\}_]+', ' ', t)
+    
+    # 8. Strip spaces and multiple spaces
+    t = re.sub(r'\s+', ' ', t).strip()
+    
     return t
+
+def clean_display_title(title: str, r_type: str) -> str:
+    """Creates a beautiful clean title for series/movies on their display cards."""
+    if r_type == 'فيلم':
+        return title
+        
+    cleaned = clean_for_search(title)
+    
+    # Capitalize English words nicely
+    words = cleaned.split(' ')
+    capitalized_words = []
+    for w in words:
+        if w.isascii() and w.isalpha():
+            capitalized_words.append(w.capitalize())
+        else:
+            capitalized_words.append(w)
+    base_title = ' '.join(capitalized_words)
+    
+    # Prepend 'مسلسل' if not already present
+    if r_type == 'مسلسل' and not base_title.startswith('مسلسل'):
+        return f"مسلسل {base_title}"
+    return base_title
 
 def extract_direct_mp4(embed_url: str) -> str:
     """
