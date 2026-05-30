@@ -402,7 +402,22 @@ def calculate_match_score(item_title: str, query: str) -> int:
 def fetch_slide_title(slide, session):
     """Fetches the watch page to extract the actual title of the slide."""
     try:
-        r = session.get(slide['url'], t@app.route('/api/cache/clear')
+        r = session.get(slide['url'], timeout=4)
+        if r.status_code == 200:
+            soup = BeautifulSoup(r.text, 'html.parser')
+            title_el = soup.find('h1') or soup.find('h2') or soup.title
+            if title_el:
+                title = title_el.get_text(strip=True)
+                title = title.replace("– افلام ومسلسلات | قنوات بث", "").replace("سينمانا شبكتي ⭐️", "").strip()
+                slide['title'] = title
+                is_special = "special" in title.lower() or "سبيشال" in title or "خاص" in title or "فيلم" in title
+                if not is_special:
+                    if any(x in title for x in ["مسلسل", "حلقة", "حلقه", "الحلقة", "الحلقه", "الموسم"]) or "انمي" in title.lower() or "أنمي" in title:
+                        slide['type'] = "مسلسل"
+    except Exception as e:
+        print(f"Error fetching slide title: {e}")
+
+@app.route('/api/cache/clear')
 def api_cache_clear():
     """Manually flushes and triggers background pre-warming of the cache."""
     app_cache.clear()
@@ -704,36 +719,7 @@ def api_search():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/details') if not is_special and (r_type == 'مسلسل' or any(x in title for x in ["مسلسل", "الحلقة", "الحلقه", "حلقة", "حلقه", "الموسم"])):
-                base = clean_for_search(title).lower().strip()
-                if base in seen_bases:
-                    continue
-                seen_bases.add(base)
-                r['title'] = clean_display_title(title, 'مسلسل')
-                r['type'] = 'مسلسل'
-            deduped_results.append(r)
-            
-        # Rank results intelligently based on relevance score
-        scored_results = []
-        for r in deduped_results:
-            score = calculate_match_score(r['title'], query)
-            scored_results.append((score, r))
-            
-        # Sort descending by score, maintaining stable order for equal scores
-        scored_results.sort(key=lambda x: x[0], reverse=True)
-        final_results = [item for score, item in scored_results]
-        
-        res = {
-            'results': final_results,
-            'category': f"البحث عن: {query}"
-        }
-        
-        if final_results:
-            app_cache.set(cache_key, res, ttl=300)
-            
-        return jsonify(res)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/details')
 def api_details():
@@ -891,4 +877,11 @@ if __name__ == '__main__':
     print(" Scrape source: cinemana.cc (Main)")
     print(" Running at http://127.0.0.1:5000")
     print("=" * 65)
+    
+    # Start cache warming worker in a background daemon thread
+    # WERKZEUG_RUN_MAIN ensures it only runs once in the reloader sub-process
+    if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        warmer_thread = threading.Thread(target=warm_caching_worker, daemon=True)
+        warmer_thread.start()
+        
     app.run(host='0.0.0.0', port=5000, debug=True)
