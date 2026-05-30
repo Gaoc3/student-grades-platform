@@ -751,20 +751,28 @@ function handleKeyboardShortcuts(e) {
         return;
     }
     
-    const key = e.key.toLowerCase();
-    const handledKeys = [' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'f', 'm', 'k', 'j', 'l', '>', '<', ',', '.'];
-    const isDigit = /^[0-9]$/.test(key);
+    const code = e.code;
+    const handledCodes = [
+        'Space', 'KeyK',
+        'ArrowLeft', 'KeyJ',
+        'ArrowRight', 'KeyL',
+        'ArrowUp', 'ArrowDown',
+        'KeyF', 'KeyM',
+        'Period', 'Comma',
+        'Digit0', 'Digit1', 'Digit2', 'Digit3', 'Digit4',
+        'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9'
+    ];
     
-    if (handledKeys.includes(key) || isDigit) {
+    if (handledCodes.includes(code)) {
         e.preventDefault();
         e.stopPropagation();
     } else {
         return;
     }
     
-    switch (key) {
-        case ' ':
-        case 'k': // Toggle Play/Pause
+    switch (code) {
+        case 'Space':
+        case 'KeyK': // Toggle Play/Pause
             if (state.activePlayer.paused) {
                 state.activePlayer.play().catch(()=>{});
                 showCenterIndicator('fa-solid fa-play');
@@ -774,40 +782,39 @@ function handleKeyboardShortcuts(e) {
             }
             break;
             
-        case 'arrowright':
-        case 'l': // Seek Forward 10s
+        case 'ArrowRight':
+        case 'KeyL': // Seek Forward 10s
             state.activePlayer.currentTime = Math.min(state.activePlayer.duration || 0, state.activePlayer.currentTime + 10);
             showCenterIndicator('fa-solid fa-forward');
             break;
             
-        case 'arrowleft':
-        case 'j': // Seek Backward 10s
+        case 'ArrowLeft':
+        case 'KeyJ': // Seek Backward 10s
             state.activePlayer.currentTime = Math.max(0, state.activePlayer.currentTime - 10);
             showCenterIndicator('fa-solid fa-backward');
             break;
             
-        case 'arrowup': // Volume Up 10%
+        case 'ArrowUp': // Volume Up 10%
             state.activePlayer.volume = Math.min(1, state.activePlayer.volume + 0.1);
             showCenterIndicator('fa-solid fa-volume-high');
             break;
             
-        case 'arrowdown': // Volume Down 10%
+        case 'ArrowDown': // Volume Down 10%
             state.activePlayer.volume = Math.max(0, state.activePlayer.volume - 0.1);
             showCenterIndicator(state.activePlayer.volume === 0 ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-low');
             break;
             
-        case 'f': // Fullscreen Toggle
+        case 'KeyF': // Fullscreen Toggle
             state.activePlayer.fullscreen.toggle();
             break;
             
-        case 'm': // Mute Toggle
+        case 'KeyM': // Mute Toggle
             state.activePlayer.muted = !state.activePlayer.muted;
             showCenterIndicator(state.activePlayer.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high');
             break;
             
-        case '>':
-        case '.': // Increase playback speed (Shift + . or >)
-            if (e.key === '>' || (e.key === '.' && e.shiftKey)) {
+        case 'Period': // Increase playback speed (Shift + >)
+            if (e.shiftKey) {
                 const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
                 let currentSpeed = state.activePlayer.speed;
                 let nextIdx = speeds.indexOf(currentSpeed) + 1;
@@ -818,9 +825,8 @@ function handleKeyboardShortcuts(e) {
             }
             break;
             
-        case '<':
-        case ',': // Decrease playback speed (Shift + , or <)
-            if (e.key === '<' || (e.key === ',' && e.shiftKey)) {
+        case 'Comma': // Decrease playback speed (Shift + <)
+            if (e.shiftKey) {
                 const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
                 let currentSpeed = state.activePlayer.speed;
                 let prevIdx = speeds.indexOf(currentSpeed) - 1;
@@ -832,9 +838,9 @@ function handleKeyboardShortcuts(e) {
             break;
             
         default:
-            // Handle numeric keys 0-9 to seek directly to that percentage of the video
-            if (isDigit) {
-                const digit = parseInt(key);
+            // Handle numeric keys Digit0-Digit9 to seek directly to that percentage of the video
+            if (code.startsWith('Digit')) {
+                const digit = parseInt(code.replace('Digit', ''));
                 if (state.activePlayer.duration) {
                     state.activePlayer.currentTime = state.activePlayer.duration * (digit / 10);
                     showCenterIndicator('fa-solid fa-arrow-right-to-bracket');
@@ -1018,8 +1024,9 @@ function launchPlayer(server, title) {
     // Single Click & Double Click gesture actions inside a unified Click handler in CAPTURING phase
     state.clickTimer = null;
     state.playerClickListener = (e) => {
-        // If click was on controls overlay or settings menus, let them work normally
-        if (e.target.closest('.plyr__controls') || e.target.closest('.plyr__menu')) return;
+        // Only capture and coordinate clicks directly on the video viewport wrapper
+        const isVideoClick = e.target.closest('.plyr__video-wrapper') || e.target.tagName === 'VIDEO';
+        if (!isVideoClick) return; // Let all other clicks (like controls, menus, etc.) pass through normally!
         
         e.preventDefault();
         e.stopPropagation();
