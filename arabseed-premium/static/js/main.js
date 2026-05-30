@@ -593,8 +593,41 @@ function closeDetailsModal() {
 // Immersive Cinema Player Modal Handlers
 // ============================================================================
 
+// ============================================================================
+// Immersive Cinema Player Modal Handlers
+// ============================================================================
+
+// LocalStorage key helper
+function getProgressKey(url) {
+    return `alex_cinema_progress_${url}`;
+}
+
+function showCenterIndicator(iconClass) {
+    const indicator = document.getElementById('player-center-indicator');
+    if (!indicator) return;
+    
+    indicator.innerHTML = `<i class="${iconClass}"></i>`;
+    indicator.style.display = 'flex';
+    indicator.classList.remove('trigger-anim');
+    void indicator.offsetWidth; // Trigger reflow to restart CSS keyframe animation
+    indicator.classList.add('trigger-anim');
+}
+
 function loadPlayerSource(server, startTime = 0, autoplay = true) {
     elements.playerServerBadge.innerText = server.server;
+    
+    // Display Custom Elegant Loading Overlay inside player
+    const customLoader = document.getElementById('player-custom-loader');
+    const loaderStatus = document.getElementById('player-loader-status');
+    if (customLoader && loaderStatus) {
+        customLoader.style.display = 'flex';
+        loaderStatus.innerText = "جارِ تأمين اتصال البث المباشر الآمن...";
+        
+        // Dynamic transitioning status messages
+        state.loaderIntervals = [];
+        state.loaderIntervals.push(setTimeout(() => { loaderStatus.innerText = "جارِ فك تشفير مسارات البث السينمائي الفائق..."; }, 400));
+        state.loaderIntervals.push(setTimeout(() => { loaderStatus.innerText = "جارِ تهيئة البث بأعلى جودة متوفرة..."; }, 800));
+    }
     
     // Clean existing Hls instance if present
     if (state.hlsInstance) {
@@ -604,6 +637,31 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
     
     const video = document.getElementById('video-player');
     if (!video) return;
+    
+    // Check if progress exists in localStorage to resume playing
+    let progressTime = startTime;
+    if (progressTime === 0) {
+        const savedTime = localStorage.getItem(getProgressKey(server.url));
+        if (savedTime) {
+            progressTime = parseFloat(savedTime);
+            console.log("Resuming progress from Saved Time:", progressTime);
+        }
+    }
+    
+    const hideLoaderSmoothly = () => {
+        if (customLoader) {
+            customLoader.style.transition = 'opacity 0.4s ease';
+            customLoader.style.opacity = '0';
+            setTimeout(() => {
+                customLoader.style.display = 'none';
+                customLoader.style.opacity = '1';
+            }, 400);
+        }
+        // Clear status transition timers
+        if (state.loaderIntervals) {
+            state.loaderIntervals.forEach(t => clearTimeout(t));
+        }
+    };
     
     if (server.url.includes('.m3u8')) {
         // HLS Stream (.m3u8) using Hls.js
@@ -622,12 +680,13 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
             state.hlsInstance = hls;
             
             hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                if (startTime > 0) {
-                    video.currentTime = startTime;
+                if (progressTime > 0) {
+                    video.currentTime = progressTime;
                 }
                 if (autoplay) {
                     state.activePlayer.play().catch(()=>{});
                 }
+                hideLoaderSmoothly();
             });
             
             // Seamless Hls.js error recovery
@@ -653,8 +712,9 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
             // iOS / Safari Native HLS support
             video.src = server.url;
             const onLoaded = () => {
-                if (startTime > 0) video.currentTime = startTime;
+                if (progressTime > 0) video.currentTime = progressTime;
                 if (autoplay) state.activePlayer.play().catch(()=>{});
+                hideLoaderSmoothly();
                 video.removeEventListener('loadedmetadata', onLoaded);
             };
             video.addEventListener('loadedmetadata', onLoaded);
@@ -663,17 +723,158 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
         // Direct MP4 Stream
         video.src = server.url;
         const onLoaded = () => {
-            if (startTime > 0) video.currentTime = startTime;
+            if (progressTime > 0) video.currentTime = progressTime;
             if (autoplay) state.activePlayer.play().catch(()=>{});
+            hideLoaderSmoothly();
             video.removeEventListener('loadedmetadata', onLoaded);
         };
         video.addEventListener('loadedmetadata', onLoaded);
     }
 }
 
+function handleKeyboardShortcuts(e) {
+    if (!state.activePlayer) return;
+    
+    // Prevent default scrolling for control keys
+    const keys = [' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'f', 'm'];
+    if (keys.includes(e.key)) {
+        e.preventDefault();
+    }
+    
+    switch (e.key) {
+        case ' ': // Play / Pause
+            if (state.activePlayer.paused) {
+                state.activePlayer.play().catch(()=>{});
+                showCenterIndicator('fa-solid fa-play');
+            } else {
+                state.activePlayer.pause();
+                showCenterIndicator('fa-solid fa-pause');
+            }
+            break;
+            
+        case 'ArrowRight': // Seek Forward 10s
+            state.activePlayer.currentTime = Math.min(state.activePlayer.duration, state.activePlayer.currentTime + 10);
+            showCenterIndicator('fa-solid fa-forward');
+            break;
+            
+        case 'ArrowLeft': // Seek Backward 10s
+            state.activePlayer.currentTime = Math.max(0, state.activePlayer.currentTime - 10);
+            showCenterIndicator('fa-solid fa-backward');
+            break;
+            
+        case 'ArrowUp': // Volume Up 10%
+            state.activePlayer.volume = Math.min(1, state.activePlayer.volume + 0.1);
+            showCenterIndicator('fa-solid fa-volume-high');
+            break;
+            
+        case 'ArrowDown': // Volume Down 10%
+            state.activePlayer.volume = Math.max(0, state.activePlayer.volume - 0.1);
+            showCenterIndicator(state.activePlayer.volume === 0 ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-low');
+            break;
+            
+        case 'f': // Fullscreen Toggle
+            state.activePlayer.fullscreen.toggle();
+            break;
+            
+        case 'm': // Mute Toggle
+            state.activePlayer.muted = !state.activePlayer.muted;
+            showCenterIndicator(state.activePlayer.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high');
+            break;
+    }
+}
+
+function setupAutoplayNext(currentUrl) {
+    const nextEpisodeCard = document.getElementById('player-next-episode-card');
+    const nextEpisodeTitle = document.getElementById('player-next-episode-title');
+    const nextEpisodeSkipBtn = document.getElementById('player-next-skip-btn');
+    const progressRing = document.getElementById('countdown-progress-ring');
+    const countdownText = document.getElementById('player-next-countdown-text');
+    
+    if (!nextEpisodeCard || !nextEpisodeTitle || !nextEpisodeSkipBtn || !progressRing || !countdownText) return;
+    
+    // Hide card initially
+    nextEpisodeCard.style.display = 'none';
+    
+    if (state.selectedItem && state.selectedItem.type === 'مسلسل' && state.currentEpisodes && state.currentEpisodes.length > 0) {
+        // Find index of current episode
+        const currentIdx = state.currentEpisodes.findIndex(ep => ep.url === currentUrl);
+        if (currentIdx !== -1 && currentIdx + 1 < state.currentEpisodes.length) {
+            const nextEp = state.currentEpisodes[currentIdx + 1];
+            
+            // Set title
+            nextEpisodeTitle.innerText = nextEp.title;
+            
+            // Listen to ended event on player
+            const onEpisodeEnded = () => {
+                // Show countdown card overlay inside player
+                nextEpisodeCard.style.display = 'flex';
+                
+                let secondsLeft = 5;
+                countdownText.innerText = secondsLeft;
+                
+                // Animate progress ring
+                progressRing.style.strokeDasharray = "100, 100";
+                
+                const triggerNextEpisode = () => {
+                    clearInterval(state.countdownTimer);
+                    nextEpisodeCard.style.display = 'none';
+                    
+                    // Highlight the next episode button in details grid silently
+                    highlightActiveEpisode(nextEp.url);
+                    
+                    // Build next display title
+                    const activeSeasonBtn = elements.modalSeasonsGrid.querySelector('.season-btn.active');
+                    const seasonTitle = activeSeasonBtn ? activeSeasonBtn.getAttribute('data-title') : "";
+                    const nextDisplayTitle = seasonTitle ? `${state.selectedItem.title} - ${seasonTitle} - ${nextEp.title}` : `${state.selectedItem.title} - ${nextEp.title}`;
+                    
+                    // Trigger resolved list update silently, then play!
+                    fetchStreamingServers(
+                        nextEp.url, 
+                        nextDisplayTitle, 
+                        state.selectedItem.title, 
+                        true, 
+                        seasonTitle, 
+                        nextEp.title
+                    ).then(() => {
+                        // Launch the new stream
+                        if (state.bestServer) {
+                            launchPlayer(state.bestServer, nextDisplayTitle);
+                        }
+                    });
+                };
+                
+                nextEpisodeSkipBtn.onclick = () => {
+                    triggerNextEpisode();
+                };
+                
+                state.countdownTimer = setInterval(() => {
+                    secondsLeft -= 1;
+                    countdownText.innerText = Math.max(0, secondsLeft);
+                    
+                    // Calculate stroke ring dash offset
+                    const percentage = (secondsLeft / 5) * 100;
+                    progressRing.style.strokeDasharray = `${percentage}, 100`;
+                    
+                    if (secondsLeft <= 0) {
+                        triggerNextEpisode();
+                    }
+                }, 1000);
+            };
+            
+            state.activePlayer.on('ended', onEpisodeEnded);
+        }
+    }
+}
+
 function launchPlayer(server, title) {
     elements.playerTitleDisplay.innerText = title;
     elements.playerRenderArea.innerHTML = '';
+    
+    // Hide overlays initially
+    const nextEpisodeCard = document.getElementById('player-next-episode-card');
+    if (nextEpisodeCard) nextEpisodeCard.style.display = 'none';
+    const centerIndicator = document.getElementById('player-center-indicator');
+    if (centerIndicator) centerIndicator.style.display = 'none';
     
     // Display Player Overlay Panel
     elements.playerModal.style.display = 'flex';
@@ -701,13 +902,24 @@ function launchPlayer(server, title) {
         tooltips: { controls: true, seek: true }
     });
     
+    // Setup Playback progress saver (save current time every 2 seconds)
+    state.progressSaveTimer = setInterval(() => {
+        if (state.activePlayer && !state.activePlayer.paused && state.activePlayer.currentTime > 5) {
+            // Only save if progress is less than 95% complete to prevent looping completed videos
+            if (state.activePlayer.currentTime < state.activePlayer.duration * 0.95) {
+                localStorage.setItem(getProgressKey(server.url), state.activePlayer.currentTime);
+            } else {
+                localStorage.removeItem(getProgressKey(server.url)); // remove completed progress
+            }
+        }
+    }, 2000);
+    
     // Configure Custom Quality Selector dropdown
     elements.playerQualitySelect.innerHTML = '';
     if (state.activeServerList && state.activeServerList.length > 1) {
         state.activeServerList.forEach((srv, idx) => {
             const opt = document.createElement('option');
             opt.value = idx;
-            // Parse display quality (e.g. 1080p, 720p)
             let qName = "جودة غير معروفة";
             const qMatch = srv.server.match(/(\d+p)/);
             if (qMatch) {
@@ -742,11 +954,55 @@ function launchPlayer(server, title) {
         elements.playerQualitySelect.onchange = null;
     }
     
+    // Bind Advanced Keyboard control listener
+    window.addEventListener('keydown', handleKeyboardShortcuts);
+    
+    // Double click gesture actions (Seek Back, Seek Forward, Fullscreen)
+    const viewport = elements.playerRenderArea.parentElement;
+    if (viewport) {
+        viewport.ondblclick = (e) => {
+            // Get tap location in percent
+            const rect = viewport.getBoundingClientRect();
+            const tapX = e.clientX - rect.left;
+            const widthPercent = (tapX / rect.width) * 100;
+            
+            if (widthPercent > 65) {
+                // Double tap on right: Fast Forward 10s
+                state.activePlayer.currentTime = Math.min(state.activePlayer.duration, state.activePlayer.currentTime + 10);
+                showCenterIndicator('fa-solid fa-forward-step');
+            } else if (widthPercent < 35) {
+                // Double tap on left: Seek back 10s
+                state.activePlayer.currentTime = Math.max(0, state.activePlayer.currentTime - 10);
+                showCenterIndicator('fa-solid fa-backward-step');
+            } else {
+                // Double tap in middle: Toggle Fullscreen
+                state.activePlayer.fullscreen.toggle();
+            }
+        };
+    }
+    
+    // Setup next episode autoplay
+    setupAutoplayNext(server.url);
+    
     // Load initial source
     loadPlayerSource(server, 0, true);
 }
 
 function closePlayerModal() {
+    // Clear Saved save progress timer
+    if (state.progressSaveTimer) {
+        clearInterval(state.progressSaveTimer);
+    }
+    if (state.countdownTimer) {
+        clearInterval(state.countdownTimer);
+    }
+    if (state.loaderIntervals) {
+        state.loaderIntervals.forEach(t => clearTimeout(t));
+    }
+    
+    // Unbind Keyboard shortcuts
+    window.removeEventListener('keydown', handleKeyboardShortcuts);
+    
     if (state.activePlayer) {
         state.activePlayer.destroy();
         state.activePlayer = null;
@@ -755,6 +1011,11 @@ function closePlayerModal() {
     if (state.hlsInstance) {
         state.hlsInstance.destroy();
         state.hlsInstance = null;
+    }
+    
+    const viewport = elements.playerRenderArea.parentElement;
+    if (viewport) {
+        viewport.ondblclick = null;
     }
     
     elements.playerQualityWrapper.style.display = 'none';
