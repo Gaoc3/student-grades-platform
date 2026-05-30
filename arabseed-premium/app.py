@@ -809,12 +809,8 @@ def api_stream_proxy():
                             else:
                                 abs_segment_url = line_stripped
                             
-                            # Only proxy sub-playlists (.m3u8), let binary .ts segments load directly from CDN!
-                            if '.m3u8' in abs_segment_url.lower() or 'playlist' in abs_segment_url.lower():
-                                proxied_segment_url = f"{scheme}://{host}/api/stream?url={urllib.parse.quote(abs_segment_url)}"
-                                rewritten_lines.append(proxied_segment_url)
-                            else:
-                                rewritten_lines.append(abs_segment_url)
+                            proxied_segment_url = f"{scheme}://{host}/api/stream?url={urllib.parse.quote(abs_segment_url)}"
+                            rewritten_lines.append(proxied_segment_url)
                             
                     rewritten_content = '\n'.join(rewritten_lines)
                     
@@ -825,15 +821,6 @@ def api_stream_proxy():
                     return resp
             except Exception as decode_err:
                 print(f"Decoding HLS playlist failed, falling back to direct stream: {decode_err}")
-                
-        # Pipe binary .ts segment or standard file chunk streaming
-        def generate():
-            try:
-                for chunk in r.iter_content(chunk_size=131072):
-                    if chunk:
-                        yield chunk
-            except Exception as e:
-                print(f"Streaming Proxy Interrupted: {e}")
                 
         excluded_headers = ['connection', 'transfer-encoding', 'keep-alive', 'content-encoding']
         resp_headers = []
@@ -846,7 +833,7 @@ def api_stream_proxy():
         resp_headers.append(('Access-Control-Allow-Headers', '*'))
         resp_headers.append(('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'))
         
-        return Response(generate(), status=r.status_code, headers=resp_headers)
+        return Response(r.iter_content(chunk_size=262144), status=r.status_code, headers=resp_headers)
     except Exception as e:
         return f"Streaming Proxy Error: {e}", 502
 
