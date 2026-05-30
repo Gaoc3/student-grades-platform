@@ -43,6 +43,22 @@
                 <a href="#" class="nav-link" id="nav-anime-btn"><i class="fa-solid fa-dragon"></i> عالم الأنمي</a>
             </nav>
             
+            <!-- Sleek Navbar Search capsule -->
+            <div class="nav-search-wrapper">
+                <form class="nav-search-form" id="main-search-form">
+                    <i class="fa-solid fa-magnifying-glass nav-search-icon"></i>
+                    <input type="text" id="search-input" placeholder="ابحث عن العروض..." required autocomplete="off">
+                </form>
+                
+                <!-- Live Search Dropdown -->
+                <div class="live-search-dropdown" id="live-search-dropdown" style="display: none;">
+                    <div class="live-search-loader" id="live-search-loader" style="display: none;">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i> جاري البحث...
+                    </div>
+                    <div class="live-search-results" id="live-search-results"></div>
+                </div>
+            </div>
+            
             <div class="network-badge" id="net-badge">
                 <i class="fa-solid fa-wifi badge-icon"></i>
                 <span id="network-name">الشبكة: متصل مباشر</span>
@@ -53,30 +69,19 @@
     <!-- Main Container -->
     <main class="main-content" id="app-main">
         
-        <!-- Welcome Hero Section -->
-        <section class="hero-section" id="welcome-hero">
-            <div class="hero-content">
-                <span class="hero-tagline"><i class="fa-solid fa-shield-halved"></i> الجيل الجديد من منصات المشاهدة الذكية</span>
-                <h1 class="hero-title">تصفح مكتبة AleX <span class="gradient-text">CINEMA</span> <br><span class="gradient-text">بشكل مباشر وخالٍ من الإعلانات</span></h1>
-                <p class="hero-desc">استمتع بتجربة ترفيهية استثنائية تحت علامة أليكس سينما (AleX CINEMA). ندمج واجهة تصفح فائقة السرعة مع مشغل ذكي متطور يجلب لك أفضل جودة بث 1080p BluRay بنقرة واحدة خالية 100% من الإعلانات والنوافذ المنبثقة المزعجة وبدون أي اشتراكات.</p>
-                
-                <!-- Search Form Grid -->
-                <div class="search-wrapper">
-                    <form class="search-form" id="main-search-form">
-                        <div class="search-input-group">
-                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                            <input type="text" id="search-input" placeholder="ابحث عن فيلم، مسلسل، أو أنمي في مكتبة أليكس سينما..." required autocomplete="off">
-                            <button type="submit" class="search-btn" id="search-submit-btn">ابحث الآن</button>
-                        </div>
-                    </form>
-                    <!-- Live Search Dropdown -->
-                    <div class="live-search-dropdown" id="live-search-dropdown" style="display: none;">
-                        <div class="live-search-loader" id="live-search-loader" style="display: none;">
-                            <i class="fa-solid fa-circle-notch fa-spin"></i> جاري البحث...
-                        </div>
-                        <div class="live-search-results" id="live-search-results"></div>
-                    </div>
+        <!-- Giant Premium Trending Hero Slider -->
+        <section class="hero-slider-section" id="hero-slider-area" style="display: none;">
+            <div class="hero-slider-container">
+                <div class="hero-slider-wrapper" id="hero-slider-wrapper">
+                    <!-- Slides loaded dynamically -->
                 </div>
+                
+                <!-- Slide Navigation Dots (Vertical or Horizontal Left) -->
+                <div class="hero-slider-dots" id="hero-slider-dots"></div>
+                
+                <!-- Slide Navigation Arrows -->
+                <button class="hero-slider-arrow prev" id="hero-slider-prev"><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="hero-slider-arrow next" id="hero-slider-next"><i class="fa-solid fa-chevron-left"></i></button>
             </div>
         </section>
 
