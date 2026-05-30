@@ -113,14 +113,13 @@ def clean_for_search(title: str) -> str:
     t = re.sub(r'\b\d+(?:st|nd|rd|th)\s+season\b', '', t)
     t = re.sub(r'\bs\d+\b', '', t)
     
-    # 4. Remove Episode patterns in English and Arabic:
-    # Arabic: الحلقة 10, حلقة 5, الحلقة العاشرة, الاخيرة, والأخيرة
-    t = re.sub(r'(?:الحلقة|حلقة)\s+(?:[\u0600-\u06FF\d]+)', '', t)
-    t = re.sub(r'\b(?:والاخيرة|والأخيرة|الأخيرة|الاخيرة|اخيرة|أخيرة)\b', '', t)
+    # 4. Remove Episode patterns in Arabic and English:
+    # Arabic: الحلقة 10, حلقة 5, الحلقة العاشرة, الاخيرة, والأخيرة (supporting both teh marbuta and heh)
+    t = re.sub(r'(?:الحلقة|الحلقه|حلقة|حلقه)\s+(?:[\u0600-\u06FF\d]+)', '', t)
+    t = re.sub(r'\b(?:والاخيرة|والأخيرة|والأخيره|والاخيره|الأخيرة|الاخيرة|الأخيره|الاخيره|اخيرة|أخيرة|أخيره|اخيره)\b', '', t)
     # English: Episode 10, Ep 5, Ep05, E10, E 10, etc.
     t = re.sub(r'\b(?:episode|episodes|ep|e)\s*\d+\b', '', t)
     
-    # 5. Remove standard badges/quality/translation words
     t = re.sub(r'\b(?:مترجم|مترجمة|مدبلج|مدبلجة|بلوراي|كامل|كاملة|HD|FHD|WEB-DL|وب-دل|وب\s+دل|برابط\s+واحد|نسخة|تحميل|مشاهدة|اون\s+لاين|اونلاين)\b', '', t)
     
     # 6. Remove leading prefixes like: فيلم, مسلسل, أنمي, انمي, اونا, كرتون
