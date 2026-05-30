@@ -1400,10 +1400,10 @@ body {
     opacity: 0.95;
 }
 .plyr__control--overlaid:hover {
-    transform: translate(-50%, -50%) scale(1.1) !important;
-    background: rgba(255, 255, 255, 0.15) !important;
-    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5) !important;
-    border-color: rgba(255, 255, 255, 0.5) !important;
+    transform: translate(-50%, -50%) !important;
+    background: rgba(0, 0, 0, 0.45) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
     opacity: 1;
 }
 .plyr__control--overlaid svg {
