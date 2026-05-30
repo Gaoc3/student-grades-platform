@@ -326,6 +326,36 @@ def resolve_cinemana_stream(cinemana_url: str) -> list:
         
     return []
 
+# ============================================================================
+# Caching System (Thread-Safe Memory Cache)
+# ============================================================================
+import time
+from threading import Lock
+import concurrent.futures
+
+class SimpleCache:
+    def __init__(self, default_ttl=300):
+        self.cache = {}
+        self.default_ttl = default_ttl
+        self.lock = Lock()
+        
+    def get(self, key):
+        with self.lock:
+            if key in self.cache:
+                val, expiry = self.cache[key]
+                if time.time() < expiry:
+                    return val
+                else:
+                    del self.cache[key]
+            return None
+            
+    def set(self, key, value, ttl=None):
+        with self.lock:
+            t = ttl if ttl is not None else self.default_ttl
+            self.cache[key] = (value, time.time() + t)
+
+app_cache = SimpleCache()
+
 @app.route('/')
 def home():
     """Renders the main single page web interface."""
@@ -342,6 +372,12 @@ def api_search():
         return jsonify({'error': 'Search query is required.'}), 400
         
     try:
+        # Check Cache first
+        cache_key = f"search_{query}"
+        cached_val = app_cache.get(cache_key)
+        if cached_val:
+            return jsonify(cached_val)
+            
         if query == '__home__':
             # Retrieve beautiful horizontal categorized carousels directly from Cinemana
             categories = cinemana_api.get_homepage_categories()
@@ -362,18 +398,84 @@ def api_search():
                         r['type'] = 'مسلسل'
                     deduped_cards.append(r)
                 cat['cards'] = deduped_cards
-            return jsonify({
+                
+            # Scrape top slider items for Hero swiper (Cinemana featured slider)
+            slides = []
+            try:
+                # Reuse persistent session to eliminate TLS handshake overhead
+                r_main = cinemana_api.session.get("https://cinemana.cc/main/", timeout=8)
+                if r_main.status_code == 200:
+                    soup_main = BeautifulSoup(r_main.text, 'html.parser')
+                    carousel = soup_main.find('div', class_='HeroCarousel')
+                    if carousel:
+                        slide_items = carousel.find_all('div', class_='HeroSlideItem')
+                        for s in slide_items:
+                            a = s.find('a', href=True)
+                            href = a['href'] if a else ""
+                            if href.startswith('/'):
+                                href = "https://cinemana.cc" + href
+                            bg_image = ""
+                            bg_div = s.find('div', style=True)
+                            if bg_div:
+                                style = bg_div.get('style', '')
+                                m = re.search(r"url\(['\"]?([^'\")]+)['\"]?\)", style)
+                                if m:
+                                    bg_image = m.group(1)
+                            
+                            slides.append({
+                                "url": href,
+                                "poster": bg_image,
+                                "title": "عرض حصري مميز",
+                                "type": "فيلم",
+                                "rating": "8.5",
+                                "quality": "1080p FHD"
+                            })
+            except Exception as slide_err:
+                print(f"Error scraping hero slides: {slide_err}")
+                
+            res = {
                 'categories': categories,
+                'slides': slides,
                 'category': 'الرئيسية'
-            })
+            }
+            app_cache.set(cache_key, res, ttl=900) # Cache homepage for 15 minutes
+            return jsonify(res)
+            
         elif query == '__movies__':
-            results = cinemana_api.scrape_listing_page("https://cinemana.cc/movies/")
-            return jsonify({
+            # Parallel scrape pages 1, 2, 3, 4 to expand library 4x!
+            urls = [f"https://cinemana.cc/movies/page/{p}/" for p in [1, 2, 3, 4]]
+            results = []
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+                futures = {executor.submit(cinemana_api.scrape_listing_page, url): url for url in urls}
+                for f in concurrent.futures.as_completed(futures):
+                    try:
+                        page_results = f.result()
+                        for r in page_results:
+                            if not any(x['url'] == r['url'] for x in results):
+                                results.append(r)
+                    except Exception as e:
+                        print(f"Error parallel scraping movies: {e}")
+            res = {
                 'results': results,
                 'category': 'الأفلام'
-            })
+            }
+            app_cache.set(cache_key, res, ttl=600) # Cache listings for 10 minutes
+            return jsonify(res)
+            
         elif query == '__series__':
-            results = cinemana_api.scrape_listing_page("https://cinemana.cc/series/")
+            # Parallel scrape pages 1, 2, 3, 4 to expand library 4x!
+            urls = [f"https://cinemana.cc/series/page/{p}/" for p in [1, 2, 3, 4]]
+            results = []
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+                futures = {executor.submit(cinemana_api.scrape_listing_page, url): url for url in urls}
+                for f in concurrent.futures.as_completed(futures):
+                    try:
+                        page_results = f.result()
+                        for r in page_results:
+                            if not any(x['url'] == r['url'] for x in results):
+                                results.append(r)
+                    except Exception as e:
+                        print(f"Error parallel scraping series: {e}")
             # Deduplicate episodes in series catalog
             deduped_results = []
             seen_bases = set()
@@ -386,13 +488,27 @@ def api_search():
                 r['title'] = clean_display_title(title, 'مسلسل')
                 r['type'] = 'مسلسل'
                 deduped_results.append(r)
-            return jsonify({
+            res = {
                 'results': deduped_results,
                 'category': 'المسلسلات'
-            })
+            }
+            app_cache.set(cache_key, res, ttl=600)
+            return jsonify(res)
+            
         elif query == '__anime__':
-            # Scrape عالم الأنمي by pulling its categorised results
-            results = cinemana_api.scrape_listing_page("https://cinemana.cc/watch=category/%D8%A3%D9%86%D9%85%D9%8I-%D9%88%D8%A3%D9%83%D8%B4%D9%86/")
+            # Parallel scrape pages 1, 2, 3, 4 to expand library 4x!
+            urls = [f"https://cinemana.cc/watch=category/%D8%A3%D9%86%D9%85%D9%8I/page/{p}/" for p in [1, 2, 3, 4]]
+            results = []
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+                futures = {executor.submit(cinemana_api.scrape_listing_page, url): url for url in urls}
+                for f in concurrent.futures.as_completed(futures):
+                    try:
+                        page_results = f.result()
+                        for r in page_results:
+                            if not any(x['url'] == r['url'] for x in results):
+                                results.append(r)
+                    except Exception as e:
+                        print(f"Error parallel scraping anime: {e}")
             # Deduplicate episodes in anime catalog
             deduped_results = []
             seen_bases = set()
@@ -405,10 +521,13 @@ def api_search():
                 r['title'] = clean_display_title(title, 'مسلسل')
                 r['type'] = 'مسلسل'
                 deduped_results.append(r)
-            return jsonify({
+            res = {
                 'results': deduped_results,
                 'category': 'عالم الأنمي'
-            })
+            }
+            app_cache.set(cache_key, res, ttl=600)
+            return jsonify(res)
+            
         else:
             # Standard search directly from Cinemana.cc
             results = cinemana_api.search(query)
@@ -427,10 +546,13 @@ def api_search():
                     r['title'] = clean_display_title(title, 'مسلسل')
                     r['type'] = 'مسلسل'
                 deduped_results.append(r)
-            return jsonify({
+            res = {
                 'results': deduped_results,
                 'category': f"البحث عن: {query}"
-            })
+            }
+            app_cache.set(cache_key, res, ttl=300) # Cache search queries for 5 minutes
+            return jsonify(res)
+            
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -442,7 +564,13 @@ def api_details():
         return jsonify({'error': 'URL is required.'}), 400
         
     try:
+        cache_key = f"details_{url}"
+        cached_val = app_cache.get(cache_key)
+        if cached_val:
+            return jsonify(cached_val)
+            
         details = cinemana_api.get_details(url)
+        app_cache.set(cache_key, details, ttl=3600) # Cache details for 1 hour
         return jsonify(details)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -458,16 +586,21 @@ def api_watch():
         return jsonify({'error': 'URL is required.'}), 400
         
     try:
+        cache_key = f"watch_{url}"
+        cached_val = app_cache.get(cache_key)
+        if cached_val:
+            return jsonify(cached_val)
+            
         servers = resolve_cinemana_stream(url)
         if not servers:
-            return jsonify({
-                'servers': [{
-                    'type': 'direct',
-                    'server': '⚠️ عذراً، هذا العرض غير متوفر حالياً للبث المباشر',
-                    'url': 'about:blank'
-                }]
-            })
-        return jsonify({'servers': servers})
+            servers = [{
+                'type': 'direct',
+                'server': '⚠️ عذراً، هذا العرض غير متوفر حالياً للبث المباشر',
+                'url': 'about:blank'
+            }]
+        res = {'servers': servers}
+        app_cache.set(cache_key, res, ttl=300) # Cache watch streams for 5 minutes
+        return jsonify(res)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
