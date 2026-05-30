@@ -131,18 +131,37 @@ def scrape_listing_page(url: str) -> list:
 
 def clean_series_title(title: str) -> str:
     """
-    Cleans series titles by stripping episode numbers, episode words,
-    and trailing quality tags to aggregate scattered episodes under a main series name.
+    Cleans series titles by stripping episode numbers, spelled-out feminine numbers,
+    translation suffixes, and quality badges while fully preserving season words and masculine numbers.
     """
     t = title
-    # Remove "الحلقة XX" or "حلقة XX"
+    
+    # 1. Remove "الحلقة XX" or "حلقة XX"
     t = re.sub(r'(?:الحلقة|حلقة)\s+\d+', '', t)
-    # Remove "الحلقة" or "حلقة" if followed by any word (e.g. الحلقة الاخيرة or الحلقة الخامسة)
-    t = re.sub(r'(?:الحلقة|حلقة)\s+[\u0600-\u06FF\w\d]+', '', t)
-    # Remove trailing quality tags, مترجم, مدبلج, etc.
-    t = re.sub(r'\s+(?:مترجم|مدبلج|بلوراي|كامل|HD|FHD|WEB-DL|وب-دل)\b', '', t, flags=re.IGNORECASE)
-    # Clean up spaces
-    t = re.sub(r'\s+', ' ', t).strip()
+    
+    # 2. Remove ONLY feminine spelled-out Arabic numbers and words like "الأولى", "الاخيرة", etc.
+    # These feminine forms refer to "الحلقة" (episode), whereas masculine forms refer to "الموسم" (season).
+    feminine_arabic_numbers = [
+        "الاولى", "الأولى", "الاولي", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة", 
+        "السابعة", "الثامنة", "التاسعة", "العاشرة", "الاخيرة", "الأخيرة", "والاخيرة", "والأخيرة",
+        "الاخير", "الأخير"
+    ]
+    # Build regex to match these words as full words
+    words_pattern = r'\b(?:' + '|'.join(feminine_arabic_numbers) + r')\b'
+    t = re.sub(words_pattern, '', t)
+    
+    # 3. Remove "الحلقة" or "حلقة" if it remains
+    t = re.sub(r'\b(?:الحلقة|حلقة)\b', '', t)
+    
+    # 4. Remove common quality and translation badges (including feminine versions)
+    badges = [
+        "مترجم", "مترجمة", "مدبلج", "مدبلجة", "بلوراي", "كامل", "كاملة", "HD", "FHD", "WEB-DL", "وب-دل", "وب ديل"
+    ]
+    badges_pattern = r'\b(?:' + '|'.join(badges) + r')\b'
+    t = re.sub(badges_pattern, '', t, flags=re.IGNORECASE)
+    
+    # Clean up any leftover punctuation like trailing dashes, slashes, or extra spaces
+    t = re.sub(r'[-\s/|]+', ' ', t).strip()
     return t
 
 def group_results(results: list) -> list:
@@ -203,9 +222,31 @@ def api_search():
             results = scrape_listing_page(target_url)
             category_title = "أحدث الأفلام"
         elif query == '__series__':
-            target_url = f"{api.base_url}/series-3/"
-            results = scrape_listing_page(target_url)
-            category_title = "أحدث المسلسلات"
+            urls = [
+                f"{api.base_url}/category/foreign-series-7/",
+                f"{api.base_url}/category/arabic-series-14/",
+                f"{api.base_url}/category/turkish-series-2/",
+                f"{api.base_url}/category/cartoon-series/"
+            ]
+            from concurrent.futures import ThreadPoolExecutor
+            all_results = []
+            
+            def scrape_and_assign_type(url):
+                res = scrape_listing_page(url)
+                for item in res:
+                    item['type'] = 'مسلسل'
+                return res
+                
+            with ThreadPoolExecutor(max_workers=len(urls)) as executor:
+                futures = [executor.submit(scrape_and_assign_type, url) for url in urls]
+                for f in futures:
+                    try:
+                        all_results.extend(f.result())
+                    except Exception as exc:
+                        print(f"Error executing task for series scraping: {exc}")
+                        
+            results = all_results
+            category_title = "أحدث المسلسلات المضافة"
         else:
             # Standard search
             results = api.search(query)
