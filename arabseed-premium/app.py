@@ -793,10 +793,26 @@ def api_stream_proxy():
         
     video_url = urllib.parse.unquote(video_url)
     
+    # Bypass Cinemana stream.php proxy completely!
+    # If the URL points to stream.php, extract the direct target HLS/CDN URL from the query string
+    if 'stream.php' in video_url and 'url=' in video_url:
+        try:
+            parsed_query = urllib.parse.parse_qs(urllib.parse.urlparse(video_url).query)
+            if 'url' in parsed_query and parsed_query['url']:
+                direct_target = parsed_query['url'][0]
+                print(f"⚡ Bypassing Cinemana stream.php! Direct CDN target: {direct_target[:120]}...")
+                video_url = direct_target
+        except Exception as parse_err:
+            print(f"Error parsing stream.php direct target: {parse_err}")
+            
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Referer': 'https://cinemana.cc/'
     }
+    
+    # Dynamically inject legitimizing Referer based on the target CDN domain
+    if 'fasel-hd' in video_url or 'scdns.io' in video_url:
+        headers['Referer'] = 'https://www.fasel-hd.cam/'
     
     range_header = request.headers.get('Range')
     if range_header:
