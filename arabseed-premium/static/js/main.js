@@ -436,8 +436,7 @@ function renderHeroSlider(slides) {
         slideEl.setAttribute('data-index', idx);
         
         slideEl.innerHTML = `
-            <div class="hero-slide-bg" style="background-image: url('${slide.poster}')"></div>
-            <div class="hero-slide-overlay"></div>
+            <div class="hero-slide-bg" style="--slide-img: url('${slide.poster}')"></div>
             <div class="hero-slide-content">
                 <span class="hero-slide-tagline"><i class="fa-solid fa-wand-magic-sparkles"></i> عرض مميز وحصري</span>
                 <div class="hero-slide-title">${slide.title}</div>
