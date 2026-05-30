@@ -43,6 +43,10 @@ const elements = {
     modalStoryText: document.getElementById('modal-story-text'),
     modalQuickPlayBtn: document.getElementById('modal-quick-play-btn'),
     
+    // Seasons Section
+    modalSeasonsSection: document.getElementById('modal-seasons-section'),
+    modalSeasonsGrid: document.getElementById('modal-seasons-grid'),
+    
     // Episodes Section
     modalEpisodesSection: document.getElementById('modal-episodes-section'),
     episodeFilterInput: document.getElementById('episode-filter-input'),
@@ -217,6 +221,8 @@ async function openDetailsModal(item) {
     
     // Loading State
     elements.modalStoryText.innerText = "جاري تصفح قصة العرض واستخراج التفاصيل الكلية...";
+    elements.modalSeasonsSection.style.display = 'none';
+    elements.modalSeasonsGrid.innerHTML = '';
     elements.modalEpisodesSection.style.display = 'none';
     elements.modalQuickPlayBtn.style.display = 'none';
     state.bestServer = null;
@@ -227,25 +233,43 @@ async function openDetailsModal(item) {
     elements.detailsModal.style.display = 'flex';
     document.body.style.overflow = 'hidden'; // Lock background scroll
     
+    // If the item is a series and has multiple seasons, render the seasons row
+    if (item.type === 'مسلسل' && item.seasons && item.seasons.length > 1) {
+        renderSeasons(item.seasons);
+        elements.modalSeasonsSection.style.display = 'block';
+        // Auto load the latest season (which is first in the sorted array)
+        loadSeasonData(item.seasons[0].url, item.seasons[0].title);
+    } else {
+        // Fallback or single season: load the main URL directly
+        const initialSeasonTitle = (item.seasons && item.seasons.length > 0) ? item.seasons[0].title : "";
+        loadSeasonData(item.url, initialSeasonTitle);
+    }
+}
+
+async function loadSeasonData(url, seasonTitle) {
+    elements.modalEpisodesSection.style.display = 'none';
+    elements.modalQuickPlayBtn.style.display = 'none';
+    elements.modalServersList.innerHTML = '';
+    elements.serversLoader.style.display = 'block';
+    
     try {
-        // Fetch full description + episode lists
-        const response = await fetch(`/api/details?url=${encodeURIComponent(item.url)}`);
+        const response = await fetch(`/api/details?url=${encodeURIComponent(url)}`);
         const details = await response.json();
         
         elements.modalStoryText.innerText = details.description || "لا توجد قصة متوفرة لهذا العرض حالياً.";
         
-        // Render Episodes grid if it is a series
         if (details.is_series && details.episodes && details.episodes.length > 0) {
             state.currentEpisodes = details.episodes;
-            renderEpisodes(details.episodes);
+            renderEpisodes(details.episodes, seasonTitle);
             elements.modalEpisodesSection.style.display = 'block';
             
             // Trigger server fetching automatically for the CURRENT ACTIVE episode
             const activeEp = details.episodes.find(ep => ep.active) || details.episodes[0];
-            fetchStreamingServers(activeEp.url, activeEp.title);
+            const displayTitle = seasonTitle ? `${state.selectedItem.title} - ${seasonTitle} - ${activeEp.title}` : `${state.selectedItem.title} - ${activeEp.title}`;
+            fetchStreamingServers(activeEp.url, displayTitle);
         } else {
-            // For movies, fetch servers for the main URL directly
-            fetchStreamingServers(item.url, item.title);
+            // For movies
+            fetchStreamingServers(url, state.selectedItem.title);
         }
     } catch (e) {
         elements.modalStoryText.innerText = `فشل تحميل تفاصيل العرض: ${e.message}`;
@@ -253,7 +277,26 @@ async function openDetailsModal(item) {
     }
 }
 
-function renderEpisodes(episodes) {
+function renderSeasons(seasons) {
+    elements.modalSeasonsGrid.innerHTML = '';
+    
+    seasons.forEach((season, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `season-btn ${idx === 0 ? 'active' : ''}`;
+        btn.innerText = season.title;
+        btn.title = season.title;
+        
+        btn.onclick = () => {
+            elements.modalSeasonsGrid.querySelectorAll('.season-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            loadSeasonData(season.url, season.title);
+        };
+        
+        elements.modalSeasonsGrid.appendChild(btn);
+    });
+}
+
+function renderEpisodes(episodes, seasonTitle = "") {
     elements.modalEpisodesGrid.innerHTML = '';
     
     episodes.forEach((ep) => {
@@ -268,7 +311,8 @@ function renderEpisodes(episodes) {
             btn.classList.add('active');
             
             // Fetch streaming servers for this episode
-            fetchStreamingServers(ep.url, `${state.selectedItem.title} - ${ep.title}`);
+            const displayTitle = seasonTitle ? `${state.selectedItem.title} - ${seasonTitle} - ${ep.title}` : `${state.selectedItem.title} - ${ep.title}`;
+            fetchStreamingServers(ep.url, displayTitle);
         };
         
         elements.modalEpisodesGrid.appendChild(btn);
@@ -288,7 +332,12 @@ function handleEpisodeFilter() {
         btn.onclick = () => {
             elements.modalEpisodesGrid.querySelectorAll('.episode-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            fetchStreamingServers(ep.url, `${state.selectedItem.title} - ${ep.title}`);
+            
+            // Find active season title if any
+            const activeSeasonBtn = elements.modalSeasonsGrid.querySelector('.season-btn.active');
+            const seasonTitle = activeSeasonBtn ? activeSeasonBtn.innerText : "";
+            const displayTitle = seasonTitle ? `${state.selectedItem.title} - ${seasonTitle} - ${ep.title}` : `${state.selectedItem.title} - ${ep.title}`;
+            fetchStreamingServers(ep.url, displayTitle);
         };
         
         elements.modalEpisodesGrid.appendChild(btn);
