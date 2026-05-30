@@ -519,20 +519,57 @@ def calculate_match_score(item_title: str, query: str) -> int:
     return 0
 
 def fetch_slide_title(slide, session):
-    """Fetches the watch page to extract the actual title of the slide."""
+    """Fetches the watch page to extract the actual title of the slide.
+    For series, cleans the title and resolves the base series URL (first episode)
+    so the detail modal opens the full series view with all seasons/episodes."""
     try:
-        r = session.get(slide['url'], timeout=4)
+        r = session.get(slide['url'], timeout=6)
         if r.status_code == 200:
             soup = BeautifulSoup(r.text, 'html.parser')
             title_el = soup.find('h1') or soup.find('h2') or soup.title
             if title_el:
                 title = title_el.get_text(strip=True)
                 title = title.replace("– افلام ومسلسلات | قنوات بث", "").replace("سينمانا شبكتي ⭐️", "").strip()
-                slide['title'] = title
+                
                 is_special = "special" in title.lower() or "سبيشال" in title or "خاص" in title or "فيلم" in title
+                is_series = False
                 if not is_special:
                     if any(x in title for x in ["مسلسل", "حلقة", "حلقه", "الحلقة", "الحلقه", "الموسم"]) or "انمي" in title.lower() or "أنمي" in title:
-                        slide['type'] = "مسلسل"
+                        is_series = True
+                
+                if is_series:
+                    slide['type'] = "مسلسل"
+                    # Clean the title: remove episode/season info for a beautiful base series name
+                    slide['title'] = clean_display_title(title, 'مسلسل')
+                    
+                    # Smart resolution: find the first episode of the first season
+                    # so the modal opens the full series view instead of a single episode
+                    try:
+                        season_triggers = soup.find_all(class_='season-trigger')
+                        season_wrappers = soup.find_all(class_='season-wrapper')
+                        if season_triggers and len(season_triggers) == len(season_wrappers):
+                            # Find the first episode of the first season
+                            first_wrapper = season_wrappers[0]
+                            ep_anchors = first_wrapper.find_all('a', href=True)
+                            first_ep_url = None
+                            first_ep_num = float('inf')
+                            for a in ep_anchors:
+                                if 'watch=' in a['href']:
+                                    ep_text = a.get_text(strip=True)
+                                    ep_match = re.search(r'\d+', ep_text)
+                                    ep_num = int(ep_match.group()) if ep_match else 9999
+                                    if ep_num < first_ep_num:
+                                        first_ep_num = ep_num
+                                        ep_href = a['href']
+                                        if ep_href.startswith('/'):
+                                            ep_href = "https://cinemana.cc" + ep_href
+                                        first_ep_url = ep_href
+                            if first_ep_url:
+                                slide['url'] = first_ep_url
+                    except Exception as base_err:
+                        print(f"Error resolving base series URL: {base_err}")
+                else:
+                    slide['title'] = title
     except Exception as e:
         print(f"Error fetching slide title: {e}")
 
