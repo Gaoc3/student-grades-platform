@@ -273,6 +273,9 @@ async function performLiveSearch(query) {
     }
 }
 
+let heroSliderTimer = null;
+let currentHeroSlideIdx = 0;
+
 async function performSearch(query, customTitle = null) {
     // UI Loading State
     elements.cardsGrid.innerHTML = '';
@@ -293,22 +296,123 @@ async function performSearch(query, customTitle = null) {
             elements.resultsCount.innerText = `${data.categories.length} تصنيف`;
             elements.resultsHeader.style.display = 'flex';
             
+            // Show and render dynamic Hero Slider
+            if (data.slides && data.slides.length > 0) {
+                renderHeroSlider(data.slides);
+                elements.heroSliderArea.style.display = 'block';
+            } else {
+                elements.heroSliderArea.style.display = 'none';
+            }
+            
             renderCarousels(data.categories);
-        } else if (data.results && data.results.length > 0) {
-            state.searchResults = data.results;
-            
-            elements.resultsTitleText.innerHTML = `<i class="fa-solid fa-fire" style="color: var(--accent-blue);"></i> ${customTitle || `نتائج البحث عن: "${query}"`}`;
-            elements.resultsCount.innerText = `${data.results.length} عرض`;
-            elements.resultsHeader.style.display = 'flex';
-            
-            renderCards(data.results);
         } else {
-            renderEmptyState(`عذراً، لم نجد أي عروض تطابق "${query}". جرب كلمات بحث أخرى.`);
+            // Hide Hero Slider when not on homepage
+            elements.heroSliderArea.style.display = 'none';
+            if (heroSliderTimer) {
+                clearInterval(heroSliderTimer);
+                heroSliderTimer = null;
+            }
+            
+            if (data.results && data.results.length > 0) {
+                state.searchResults = data.results;
+                
+                elements.resultsTitleText.innerHTML = `<i class="fa-solid fa-fire" style="color: var(--accent-blue);"></i> ${customTitle || `نتائج البحث عن: "${query}"`}`;
+                elements.resultsCount.innerText = `${data.results.length} عرض`;
+                elements.resultsHeader.style.display = 'flex';
+                
+                renderCards(data.results);
+            } else {
+                renderEmptyState(`عذراً، لم نجد أي عروض تطابق "${query}". جرب كلمات بحث أخرى.`);
+            }
         }
     } catch (e) {
         elements.spinnerLoader.style.display = 'none';
+        elements.heroSliderArea.style.display = 'none';
         renderEmptyState(`حدث خطأ أثناء تحميل البيانات: ${e.message}. يرجى التحقق من اتصال الشبكة.`);
     }
+}
+
+function renderHeroSlider(slides) {
+    elements.heroSliderWrapper.innerHTML = '';
+    elements.heroSliderDots.innerHTML = '';
+    
+    if (heroSliderTimer) {
+        clearInterval(heroSliderTimer);
+        heroSliderTimer = null;
+    }
+    currentHeroSlideIdx = 0;
+    
+    slides.forEach((slide, idx) => {
+        const slideEl = document.createElement('div');
+        slideEl.className = `hero-slide-item ${idx === 0 ? 'active' : ''}`;
+        slideEl.setAttribute('data-index', idx);
+        
+        slideEl.innerHTML = `
+            <div class="hero-slide-bg" style="background-image: url('${slide.poster}')"></div>
+            <div class="hero-slide-overlay"></div>
+            <div class="hero-slide-content">
+                <span class="hero-slide-tagline"><i class="fa-solid fa-wand-magic-sparkles"></i> عرض مميز وحصري</span>
+                <div class="hero-slide-title">${slide.title}</div>
+                <button class="hero-slide-btn" id="hero-play-btn-${idx}">
+                    <i class="fa-solid fa-play"></i> شاهد الآن
+                </button>
+            </div>
+        `;
+        
+        // Bind Play Button
+        const playBtn = slideEl.querySelector(`#hero-play-btn-${idx}`);
+        if (playBtn) {
+            playBtn.onclick = (e) => {
+                e.stopPropagation();
+                openDetailsModal(slide);
+            };
+        }
+        
+        elements.heroSliderWrapper.appendChild(slideEl);
+        
+        // Create pagination dot
+        const dot = document.createElement('span');
+        dot.className = `hero-slider-dot ${idx === 0 ? 'active' : ''}`;
+        dot.setAttribute('data-index', idx);
+        dot.onclick = () => goToHeroSlide(idx, slides.length);
+        
+        elements.heroSliderDots.appendChild(dot);
+    });
+    
+    // Bind Arrow controls
+    elements.heroSliderPrev.onclick = () => {
+        let prevIdx = currentHeroSlideIdx - 1;
+        if (prevIdx < 0) prevIdx = slides.length - 1;
+        goToHeroSlide(prevIdx, slides.length);
+    };
+    
+    elements.heroSliderNext.onclick = () => {
+        let nextIdx = currentHeroSlideIdx + 1;
+        if (nextIdx >= slides.length) nextIdx = 0;
+        goToHeroSlide(nextIdx, slides.length);
+    };
+    
+    // Start Autoplay (every 5 seconds)
+    heroSliderTimer = setInterval(() => {
+        let nextIdx = currentHeroSlideIdx + 1;
+        if (nextIdx >= slides.length) nextIdx = 0;
+        goToHeroSlide(nextIdx, slides.length);
+    }, 5000);
+}
+
+function goToHeroSlide(idx, total) {
+    if (idx === currentHeroSlideIdx) return;
+    
+    const slideItems = elements.heroSliderWrapper.querySelectorAll('.hero-slide-item');
+    const dots = elements.heroSliderDots.querySelectorAll('.hero-slider-dot');
+    
+    if (slideItems[currentHeroSlideIdx]) slideItems[currentHeroSlideIdx].classList.remove('active');
+    if (dots[currentHeroSlideIdx]) dots[currentHeroSlideIdx].classList.remove('active');
+    
+    currentHeroSlideIdx = idx;
+    
+    if (slideItems[currentHeroSlideIdx]) slideItems[currentHeroSlideIdx].classList.add('active');
+    if (dots[currentHeroSlideIdx]) dots[currentHeroSlideIdx].classList.add('active');
 }
 
 function getTypeIconClass(type) {
