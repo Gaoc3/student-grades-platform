@@ -773,6 +773,17 @@ def api_watch():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Shared persistent Session with connection pooling for high-performance HLS proxying
+stream_proxy_session = requests.Session()
+stream_adapter = requests.adapters.HTTPAdapter(
+    pool_connections=50,       # Number of connection pools to cache
+    pool_maxsize=50,           # Max number of connections in each pool
+    max_retries=3,             # Automatically retry failed requests up to 3 times!
+    pool_block=False
+)
+stream_proxy_session.mount('https://', stream_adapter)
+stream_proxy_session.mount('http://', stream_adapter)
+
 @app.route('/api/stream', methods=['GET', 'OPTIONS'])
 def api_stream_proxy():
     """
@@ -793,34 +804,18 @@ def api_stream_proxy():
         
     video_url = urllib.parse.unquote(video_url)
     
-    # Bypass Cinemana stream.php proxy completely!
-    # If the URL points to stream.php, extract the direct target HLS/CDN URL from the query string
-    if 'stream.php' in video_url and 'url=' in video_url:
-        try:
-            parsed_query = urllib.parse.parse_qs(urllib.parse.urlparse(video_url).query)
-            if 'url' in parsed_query and parsed_query['url']:
-                direct_target = parsed_query['url'][0]
-                print(f"⚡ Bypassing Cinemana stream.php! Direct CDN target: {direct_target[:120]}...")
-                video_url = direct_target
-        except Exception as parse_err:
-            print(f"Error parsing stream.php direct target: {parse_err}")
-            
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Referer': 'https://cinemana.cc/'
     }
-    
-    # Dynamically inject legitimizing Referer based on the target CDN domain
-    if 'fasel-hd' in video_url or 'scdns.io' in video_url:
-        headers['Referer'] = 'https://www.fasel-hd.cam/'
     
     range_header = request.headers.get('Range')
     if range_header:
         headers['Range'] = range_header
         
     try:
-        # We fetch stream.php or direct ts segment using stream=True
-        r = requests.get(video_url, headers=headers, stream=True, timeout=20)
+        # Fetch HLS playlist or ts segment utilizing the high-performance persistent connection pool session!
+        r = stream_proxy_session.get(video_url, headers=headers, stream=True, timeout=30)
         
         # Check if the resource is an HLS playlist (.m3u8) by checking headers or content structure
         content_type = r.headers.get('Content-Type', '').lower()
