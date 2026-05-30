@@ -597,21 +597,8 @@ function closeDetailsModal() {
 
 // LocalStorage key helper
 function getProgressKey(url) {
-    return `alex_cinema_progress_${url}`;
-}
-
-function showCenterIndicator(iconClass) {
-    const indicator = document.getElementById('player-center-indicator');
-    if (!indicator) return;
-    
-    indicator.innerHTML = `<i class="${iconClass}"></i>`;
-    indicator.style.display = 'flex';
-    indicator.classList.remove('trigger-anim');
-    void indicator.offsetWidth; // Trigger reflow to restart CSS keyframe animation
-    indicator.classList.add('trigger-anim');
-}
-
-function loadPlayerSource(server, startTime = 0, autoplay = true) {
+    return `function loadPlayerSource(server, startTime = 0, autoplay = true) {
+    state.currentPlayingServer = server;
     elements.playerServerBadge.innerText = server.server;
     
     // Display Custom Elegant Loading Overlay inside player
@@ -733,14 +720,24 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
 function handleKeyboardShortcuts(e) {
     if (!state.activePlayer) return;
     
-    // Prevent default scrolling for control keys
-    const keys = [' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'f', 'm'];
-    if (keys.includes(e.key)) {
-        e.preventDefault();
+    // Prevent shortcut firing if user is writing in input or search fields
+    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+        return;
     }
     
-    switch (e.key) {
-        case ' ': // Play / Pause
+    const key = e.key.toLowerCase();
+    const handledKeys = [' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'f', 'm', 'k', 'j', 'l', '>', '<', ',', '.'];
+    const isDigit = /^[0-9]$/.test(key);
+    
+    if (handledKeys.includes(key) || isDigit) {
+        e.preventDefault();
+    } else {
+        return;
+    }
+    
+    switch (key) {
+        case ' ':
+        case 'k': // Toggle Play/Pause
             if (state.activePlayer.paused) {
                 state.activePlayer.play().catch(()=>{});
                 showCenterIndicator('fa-solid fa-play');
@@ -750,22 +747,24 @@ function handleKeyboardShortcuts(e) {
             }
             break;
             
-        case 'ArrowRight': // Seek Forward 10s
-            state.activePlayer.currentTime = Math.min(state.activePlayer.duration, state.activePlayer.currentTime + 10);
+        case 'arrowright':
+        case 'l': // Seek Forward 10s
+            state.activePlayer.currentTime = Math.min(state.activePlayer.duration || 0, state.activePlayer.currentTime + 10);
             showCenterIndicator('fa-solid fa-forward');
             break;
             
-        case 'ArrowLeft': // Seek Backward 10s
+        case 'arrowleft':
+        case 'j': // Seek Backward 10s
             state.activePlayer.currentTime = Math.max(0, state.activePlayer.currentTime - 10);
             showCenterIndicator('fa-solid fa-backward');
             break;
             
-        case 'ArrowUp': // Volume Up 10%
+        case 'arrowup': // Volume Up 10%
             state.activePlayer.volume = Math.min(1, state.activePlayer.volume + 0.1);
             showCenterIndicator('fa-solid fa-volume-high');
             break;
             
-        case 'ArrowDown': // Volume Down 10%
+        case 'arrowdown': // Volume Down 10%
             state.activePlayer.volume = Math.max(0, state.activePlayer.volume - 0.1);
             showCenterIndicator(state.activePlayer.volume === 0 ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-low');
             break;
@@ -777,6 +776,43 @@ function handleKeyboardShortcuts(e) {
         case 'm': // Mute Toggle
             state.activePlayer.muted = !state.activePlayer.muted;
             showCenterIndicator(state.activePlayer.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high');
+            break;
+            
+        case '>':
+        case '.': // Increase playback speed (Shift + . or >)
+            if (e.key === '>' || (e.key === '.' && e.shiftKey)) {
+                const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+                let currentSpeed = state.activePlayer.speed;
+                let nextIdx = speeds.indexOf(currentSpeed) + 1;
+                if (nextIdx < speeds.length) {
+                    state.activePlayer.speed = speeds[nextIdx];
+                    showCenterIndicator('fa-solid fa-gauge-high');
+                }
+            }
+            break;
+            
+        case '<':
+        case ',': // Decrease playback speed (Shift + , or <)
+            if (e.key === '<' || (e.key === ',' && e.shiftKey)) {
+                const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+                let currentSpeed = state.activePlayer.speed;
+                let prevIdx = speeds.indexOf(currentSpeed) - 1;
+                if (prevIdx >= 0) {
+                    state.activePlayer.speed = speeds[prevIdx];
+                    showCenterIndicator('fa-solid fa-gauge-simple');
+                }
+            }
+            break;
+            
+        default:
+            // Handle numeric keys 0-9 to seek directly to that percentage of the video
+            if (isDigit) {
+                const digit = parseInt(key);
+                if (state.activePlayer.duration) {
+                    state.activePlayer.currentTime = state.activePlayer.duration * (digit / 10);
+                    showCenterIndicator('fa-solid fa-arrow-right-to-bracket');
+                }
+            }
             break;
     }
 }
@@ -889,14 +925,51 @@ function launchPlayer(server, title) {
     
     elements.playerRenderArea.appendChild(video);
     
-    // Initialize Plyr
+    // Extract available quality resolutions
+    const qualityOptions = [];
+    state.activeServerList.forEach(srv => {
+        const qMatch = srv.server.match(/(\d+)/);
+        if (qMatch) {
+            qualityOptions.push(parseInt(qMatch[1]));
+        }
+    });
+    qualityOptions.sort((a, b) => b - a);
+    
+    const initialQMatch = server.server.match(/(\d+)/);
+    const defaultQuality = initialQMatch ? parseInt(initialQMatch[1]) : (qualityOptions[0] || 1080);
+    
+    // Initialize Plyr with native settings menu quality options
     state.activePlayer = new Plyr(video, {
         controls: [
             'play-large', 'play', 'progress', 'current-time', 'duration',
             'mute', 'volume', 'settings', 'pip', 'fullscreen'
         ],
-        settings: ['speed'], // Remove native quality setting from Plyr as we build our customized quality dropdown
+        settings: ['quality', 'speed'],
         speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
+        quality: {
+            default: defaultQuality,
+            options: qualityOptions,
+            forced: true,
+            onChange: (newQuality) => {
+                const currentQMatch = state.currentPlayingServer ? state.currentPlayingServer.server.match(/(\d+)/) : null;
+                const currentQuality = currentQMatch ? parseInt(currentQMatch[1]) : null;
+                
+                if (currentQuality === newQuality) return;
+                
+                const targetServer = state.activeServerList.find(srv => {
+                    const qMatch = srv.server.match(/(\d+)/);
+                    const size = qMatch ? parseInt(qMatch[1]) : 1080;
+                    return size === newQuality;
+                });
+                
+                if (targetServer) {
+                    const currentTime = state.activePlayer ? state.activePlayer.currentTime : 0;
+                    const isPlaying = state.activePlayer ? !state.activePlayer.paused : true;
+                    console.log("Player quality switched in gear settings menu to:", newQuality);
+                    loadPlayerSource(targetServer, currentTime, isPlaying);
+                }
+            }
+        },
         tooltips: { controls: true, seek: true }
     });
     
@@ -912,46 +985,6 @@ function launchPlayer(server, title) {
         }
     }, 2000);
     
-    // Configure Custom Quality Selector dropdown
-    elements.playerQualitySelect.innerHTML = '';
-    if (state.activeServerList && state.activeServerList.length > 1) {
-        state.activeServerList.forEach((srv, idx) => {
-            const opt = document.createElement('option');
-            opt.value = idx;
-            let qName = "جودة غير معروفة";
-            const qMatch = srv.server.match(/(\d+p)/);
-            if (qMatch) {
-                qName = qMatch[1];
-            } else {
-                qName = srv.server.replace('✨ سيرفر مباشر ', '').replace(' (خالٍ من الإعلانات)', '');
-            }
-            opt.textContent = qName;
-            elements.playerQualitySelect.appendChild(opt);
-        });
-        
-        // Match currently selected index
-        const currentIdx = state.activeServerList.findIndex(s => s.url === server.url);
-        if (currentIdx !== -1) {
-            elements.playerQualitySelect.value = currentIdx;
-        }
-        
-        elements.playerQualityWrapper.style.display = 'flex';
-        
-        // Handle Change event for seamless quality switching
-        elements.playerQualitySelect.onchange = () => {
-            const selectedIdx = parseInt(elements.playerQualitySelect.value);
-            const targetServer = state.activeServerList[selectedIdx];
-            if (targetServer) {
-                const currentTime = state.activePlayer ? state.activePlayer.currentTime : 0;
-                const isPlaying = state.activePlayer ? !state.activePlayer.paused : true;
-                loadPlayerSource(targetServer, currentTime, isPlaying);
-            }
-        };
-    } else {
-        elements.playerQualityWrapper.style.display = 'none';
-        elements.playerQualitySelect.onchange = null;
-    }
-    
     // Bind Advanced Keyboard control listener
     window.addEventListener('keydown', handleKeyboardShortcuts);
     
@@ -959,21 +992,20 @@ function launchPlayer(server, title) {
     const viewport = elements.playerRenderArea.parentElement;
     if (viewport) {
         viewport.ondblclick = (e) => {
-            // Get tap location in percent
             const rect = viewport.getBoundingClientRect();
             const tapX = e.clientX - rect.left;
             const widthPercent = (tapX / rect.width) * 100;
             
             if (widthPercent > 65) {
-                // Double tap on right: Fast Forward 10s
-                state.activePlayer.currentTime = Math.min(state.activePlayer.duration, state.activePlayer.currentTime + 10);
+                // Double click on right: Fast Forward 10s
+                state.activePlayer.currentTime = Math.min(state.activePlayer.duration || 0, state.activePlayer.currentTime + 10);
                 showCenterIndicator('fa-solid fa-forward-step');
             } else if (widthPercent < 35) {
-                // Double tap on left: Seek back 10s
+                // Double click on left: Seek back 10s
                 state.activePlayer.currentTime = Math.max(0, state.activePlayer.currentTime - 10);
                 showCenterIndicator('fa-solid fa-backward-step');
             } else {
-                // Double tap in middle: Toggle Fullscreen
+                // Double click in middle: Toggle Fullscreen
                 state.activePlayer.fullscreen.toggle();
             }
         };
@@ -1000,6 +1032,26 @@ function closePlayerModal() {
     
     // Unbind Keyboard shortcuts
     window.removeEventListener('keydown', handleKeyboardShortcuts);
+    
+    if (state.activePlayer) {
+        state.activePlayer.destroy();
+        state.activePlayer = null;
+    }
+    
+    if (state.hlsInstance) {
+        state.hlsInstance.destroy();
+        state.hlsInstance = null;
+    }
+    
+    const viewport = elements.playerRenderArea.parentElement;
+    if (viewport) {
+        viewport.ondblclick = null;
+    }
+    
+    state.currentPlayingServer = null;
+    elements.playerRenderArea.innerHTML = '';
+    elements.playerModal.style.display = 'none';
+}ydown', handleKeyboardShortcuts);
     
     if (state.activePlayer) {
         state.activePlayer.destroy();
