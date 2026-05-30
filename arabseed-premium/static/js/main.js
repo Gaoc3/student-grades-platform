@@ -1075,6 +1075,16 @@ function launchPlayer(server, title) {
     
     elements.playerRenderArea.addEventListener('click', state.playerClickListener, true);
     
+    // Block native dblclick events on video viewport in capturing phase to prevent Plyr overlay takeovers
+    state.playerDblClickListener = (e) => {
+        const isVideoClick = e.target.closest('.plyr__video-wrapper') || e.target.tagName === 'VIDEO';
+        if (!isVideoClick) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+    };
+    elements.playerRenderArea.addEventListener('dblclick', state.playerDblClickListener, true);
+    
     // Setup next episode autoplay
     setupAutoplayNext(server.url);
     
@@ -1105,6 +1115,11 @@ function closePlayerModal() {
     if (state.playerClickListener) {
         elements.playerRenderArea.removeEventListener('click', state.playerClickListener, true);
         state.playerClickListener = null;
+    }
+    
+    if (state.playerDblClickListener) {
+        elements.playerRenderArea.removeEventListener('dblclick', state.playerDblClickListener, true);
+        state.playerDblClickListener = null;
     }
     
     if (state.activePlayer) {
