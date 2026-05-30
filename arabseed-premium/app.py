@@ -376,25 +376,20 @@ def api_details():
 @app.route('/api/watch')
 def api_watch():
     """
-    Transparent Hybrid stream playback matching. Resolves Cinemana
-    title to Arabseed servers and returns direct streams.
+    Direct Cinemana stream playback. Resolves Cinemana watch URL
+    directly to HLS streams and returns them.
     """
     url = request.args.get('url', '').strip()
-    title = request.args.get('title', '').strip()
-    is_series = request.args.get('is_series', '').lower() == 'true'
-    season = request.args.get('season', '').strip()
-    episode = request.args.get('episode', '').strip()
-    
     if not url:
         return jsonify({'error': 'URL is required.'}), 400
         
     try:
-        servers = resolve_hybrid_stream(url, title, is_series, season, episode)
+        servers = resolve_cinemana_stream(url)
         if not servers:
             return jsonify({
                 'servers': [{
-                    'type': 'iframe',
-                    'server': '⚠️ عذراً، لم نجد مصادر بث مطابقة حالياً (العرض في وضع الصيانة)',
+                    'type': 'direct',
+                    'server': '⚠️ عذراً، هذا العرض غير متوفر حالياً للبث المباشر',
                     'url': 'about:blank'
                 }]
             })
