@@ -64,18 +64,15 @@ class CinemanaAPI:
         # Clean title from quick search hints
         title = title.replace("بحث سريع ←", "").strip()
         if title == "▶︎  شاهد الآن" or title == "▶︎ شاهد الآن" or not title:
-            # Fallback to parent text search
             title_sibling = card_el.find(['span', 'h3', 'h4']) if card_el != a_tag else None
             if title_sibling:
                 title = title_sibling.get_text(strip=True)
                 
         # Parse Poster
         poster = ""
-        # Look for element with style background-image
         bg_el = a_tag.find(style=re.compile(r'background-image')) or card_el.find(style=re.compile(r'background-image'))
         if bg_el:
             style = bg_el.get('style', '')
-            # Extract first url in style
             m = re.search(r"url\(['\"]?([^'\")]+)['\"]?\)", style)
             if m:
                 poster = m.group(1)
@@ -90,7 +87,7 @@ class CinemanaAPI:
             "url": href,
             "poster": poster,
             "type": media_type,
-            "rating": "7.8", # Standard high premium aesthetic rating
+            "rating": "7.8",
             "quality": "1080p FHD"
         }
 
@@ -105,22 +102,18 @@ class CinemanaAPI:
             
             soup = BeautifulSoup(r.text, 'html.parser')
             
-            # Find all h2 category tags
             for h2 in soup.find_all('h2'):
                 cat_name = h2.get_text(strip=True)
                 if not cat_name or cat_name in ["قائمة المشاهدة لاحقاً", "استكمل المشاهدة"]:
                     continue
                     
-                # Find SliderClass owl-carousel sibling
                 slider = h2.parent.find_next_sibling()
                 if not slider or 'SliderClass' not in slider.get('class', []):
-                    # Try finding it directly under h2 sibling
                     slider = h2.find_next_sibling()
                     
                 if not slider:
                     continue
                     
-                # Scrape all card anchors inside the slider
                 cards = []
                 for a in slider.find_all('a', href=True):
                     if 'watch=' in a['href'] and 'cn-mega-item' not in a.get('class', []):
@@ -152,17 +145,14 @@ class CinemanaAPI:
             
             soup = BeautifulSoup(r.text, 'html.parser')
             
-            # Search results are inside block group relative anchors
             cards = []
             a_tags = soup.find_all('a', class_=re.compile(r'block.*group.*relative'))
-            # Fallback if class differs
             if not a_tags:
                 a_tags = [a for a in soup.find_all('a', href=True) if 'watch=' in a['href'] and 'cn-mega-item' not in a.get('class', [])]
                 
             for a in a_tags:
                 parsed = self.parse_card(a)
                 if parsed and parsed.get('title') and parsed['title'] != "N/A":
-                    # Avoid duplicate search entries
                     if not any(x['url'] == parsed['url'] for x in cards):
                         cards.append(parsed)
                         
@@ -217,9 +207,7 @@ class CinemanaAPI:
                 if story_div:
                     description = story_div.get_text(strip=True)
                     
-            # Clean banner text if any
             if "صيانة مؤقتة" in description:
-                # Search for another text block
                 divs = soup.find_all('div')
                 for d in divs:
                     text = d.get_text(strip=True)
@@ -229,43 +217,49 @@ class CinemanaAPI:
                         
             # 2. Scrape related episodes (scrollbar row)
             episodes = []
-            is_series = False
             
-            # Find the horizontal scrollable episodes container
+            # A show is classified as a series if title keywords match
+            is_series = any(x in title for x in ["مسلسل", "الحلقة", "حلقة", "الموسم"])
+            
             scroll_div = soup.find('div', class_=re.compile(r'overflow-x-auto|snap-x|no-scrollbar'))
             if scroll_div:
-                is_series = True
-                # Find all watch anchors in this scroll row
+                scroll_episodes = []
                 for a in scroll_div.find_all('a', href=True):
                     if 'watch=' in a['href']:
                         parsed = self.parse_card(a)
                         if parsed:
-                            # Match episode index if present (e.g. "الحلقة 5" -> "حلقة 5")
                             ep_title = parsed['title']
-                            ep_match = re.search(r'(الحلقة\s+\d+|حلقة\s+\d+)', ep_title)
-                            display_title = ep_match.group(1) if ep_match else ep_title
-                            
                             active = a['href'].rstrip('/') == watch_url.rstrip('/')
                             
-                            episodes.append({
-                                "title": display_title,
+                            # If scroll elements explicitly mention episodes, it's a series
+                            if any(x in ep_title for x in ["الحلقة", "حلقة", "الموسم"]):
+                                is_series = True
+                                
+                            scroll_episodes.append({
+                                "title": ep_title,
                                 "url": parsed['url'],
                                 "active": active
                             })
                             
-            # If no scrollbar was found, let's look for any related series anchors in the text content
-            if not episodes:
-                # Check if "الحلقة" is in title -> then it is a series
-                if "الحلقة" in title or "حلقة" in title or "الموسم" in title:
-                    is_series = True
-                    # Let's add the current page as a single episode since we don't have other links
-                    episodes.append({
-                        "title": "الحلقة الحالية",
-                        "url": watch_url,
-                        "active": True
-                    })
+                if is_series:
+                    for ep in scroll_episodes:
+                        ep_title = ep['title']
+                        ep_match = re.search(r'(الحلقة\s+\d+|حلقة\s+\d+)', ep_title)
+                        display_title = ep_match.group(1) if ep_match else ep_title
+                        
+                        episodes.append({
+                            "title": display_title,
+                            "url": ep['url'],
+                            "active": ep['active']
+                        })
+                            
+            if not episodes and is_series:
+                episodes.append({
+                    "title": "الحلقة الحالية",
+                    "url": watch_url,
+                    "active": True
+                })
 
-            # Sort episodes in logical order (lowest episode first e.g. Episode 1, 2, ...)
             if episodes:
                 def extract_ep_num(ep):
                     m = re.search(r'\d+', ep['title'])
