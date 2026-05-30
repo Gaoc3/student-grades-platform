@@ -599,44 +599,53 @@ function launchPlayer(server, title) {
     // Display Player Overlay Panel
     elements.playerModal.style.display = 'flex';
     
-    if (server.type === 'direct') {
-        // Direct MP4 stream -> HTML5 Video with Plyr.js (100% AD-FREE!)
-        const video = document.createElement('video');
-        video.id = 'video-player';
-        video.className = 'video-js vjs-fluid';
-        video.setAttribute('playsinline', '');
-        video.setAttribute('controls', '');
-        video.setAttribute('preload', 'auto');
-        
-        const source = document.createElement('source');
-        source.src = server.url;
-        source.type = 'video/mp4';
-        
-        video.appendChild(source);
-        elements.playerRenderArea.appendChild(video);
-        
-        // Initialize Plyr with premium red styling
-        state.activePlayer = new Plyr('#video-player', {
-            controls: [
-                'play-large', 'play', 'progress', 'current-time', 'duration',
-                'mute', 'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
-            ],
-            settings: ['quality', 'speed'],
-            speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
-            tooltips: { controls: true, seek: true }
-        });
-        
-        state.activePlayer.play();
+    const video = document.createElement('video');
+    video.id = 'video-player';
+    video.className = 'plyr-video-player';
+    video.setAttribute('playsinline', '');
+    video.setAttribute('controls', '');
+    video.setAttribute('preload', 'auto');
+    if (state.selectedItem && state.selectedItem.poster) {
+        video.setAttribute('poster', state.selectedItem.poster);
+    }
+    
+    elements.playerRenderArea.appendChild(video);
+    
+    // Initialize Plyr
+    state.activePlayer = new Plyr(video, {
+        controls: [
+            'play-large', 'play', 'progress', 'current-time', 'duration',
+            'mute', 'volume', 'settings', 'pip', 'fullscreen'
+        ],
+        settings: ['quality', 'speed'],
+        speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
+        tooltips: { controls: true, seek: true }
+    });
+    
+    if (server.url.includes('.m3u8')) {
+        // HLS Stream (.m3u8) using Hls.js
+        if (Hls.isSupported()) {
+            const hls = new Hls({
+                xhrSetup: function(xhr, url) {
+                    xhr.withCredentials = false;
+                }
+            });
+            hls.loadSource(server.url);
+            hls.attachMedia(video);
+            state.hlsInstance = hls;
+            
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                state.activePlayer.play().catch(()=>{});
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            // iOS / Safari Native HLS support
+            video.src = server.url;
+            state.activePlayer.play().catch(()=>{});
+        }
     } else {
-        // Fallback -> Sandboxed Iframe (STRICT POPUP BLOCKING!)
-        const iframe = document.createElement('iframe');
-        iframe.src = server.url;
-        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
-        iframe.setAttribute('allowfullscreen', 'true');
-        iframe.setAttribute('scrolling', 'no');
-        
-        elements.playerRenderArea.appendChild(iframe);
-        state.activePlayer = null;
+        // Direct MP4 Stream
+        video.src = server.url;
+        state.activePlayer.play().catch(()=>{});
     }
 }
 
@@ -644,6 +653,11 @@ function closePlayerModal() {
     if (state.activePlayer) {
         state.activePlayer.destroy();
         state.activePlayer = null;
+    }
+    
+    if (state.hlsInstance) {
+        state.hlsInstance.destroy();
+        state.hlsInstance = null;
     }
     
     elements.playerRenderArea.innerHTML = '';
