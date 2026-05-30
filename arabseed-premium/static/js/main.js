@@ -466,6 +466,7 @@ async function loadSeasonData(url, seasonTitle) {
         elements.modalStoryText.innerText = details.description || "لا توجد قصة متوفرة لهذا العرض حالياً.";
         
         if (details.is_series && details.seasons && details.seasons.length > 0) {
+            elements.modalType.innerText = "مسلسل";
             state.seasons = details.seasons;
             
             // Render the seasons buttons
@@ -504,6 +505,7 @@ async function loadSeasonData(url, seasonTitle) {
                 elements.serversLoader.style.display = 'none';
             }
         } else {
+            elements.modalType.innerText = "فيلم";
             // For movies
             fetchStreamingServers(url, state.selectedItem.title, state.selectedItem.title, false, "", "");
         }

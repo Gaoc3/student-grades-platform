@@ -120,10 +120,15 @@ def clean_for_search(title: str) -> str:
     # English: Episode 10, Ep 5, Ep05, E10, E 10, etc.
     t = re.sub(r'\b(?:episode|episodes|ep|e)\s*\d+\b', '', t)
     
-    t = re.sub(r'\b(?:مترجم|مترجمة|مدبلج|مدبلجة|بلوراي|كامل|كاملة|HD|FHD|WEB-DL|وب-دل|وب\s+دل|برابط\s+واحد|نسخة|تحميل|مشاهدة|اون\s+لاين|اونلاين)\b', '', t)
+    # 5. Remove standard badges/quality/translation words (supporting teh marbuta and heh)
+    t = re.sub(r'\b(?:مترجم|مترجمه|مترجمة|مدبلج|مدبلجه|مدبلجة|بلوراي|كامل|كامله|كاملة|HD|FHD|WEB-DL|وب-دل|وب\s+دل|برابط\s+واحد|نسخة|تحميل|مشاهدة|اون\s+لاين|اونلاين)\b', '', t)
     
-    # 6. Remove leading prefixes like: فيلم, مسلسل, أنمي, انمي, اونا, كرتون
-    t = re.sub(r'^(?:فيلم|مسلسل|أنمي|انمي|اونا|كرتون|برنامج|مسرحية)\s+', '', t)
+    # 6. Remove leading prefixes (loop to strip nested prefixes like "مسلسل حلقة")
+    while True:
+        new_t = re.sub(r'^(?:فيلم|مسلسل|أنمي|انمي|اونا|كرتون|برنامج|مسرحية|حلقة|حلقه)\s+', '', t)
+        if new_t == t:
+            break
+        t = new_t
     
     # 7. Clean up non-word characters and punctuation
     t = re.sub(r'[-\s/|–\.,:\?!\(\)\[\]\{\}_]+', ' ', t)
@@ -337,7 +342,8 @@ def api_search():
                 for r in cat.get('cards', []):
                     title = r.get('title', '')
                     r_type = r.get('type', 'فيلم')
-                    if r_type == 'مسلسل' or any(x in title for x in ["مسلسل", "الحلقة", "حلقة", "الموسم"]):
+                    is_special = "special" in title.lower() or "سبيشال" in title or "خاص" in title or "فيلم" in title
+                    if not is_special and (r_type == 'مسلسل' or any(x in title for x in ["مسلسل", "الحلقة", "الحلقه", "حلقة", "حلقه", "الموسم"])):
                         base = clean_for_search(title).lower().strip()
                         if base in seen_bases:
                             continue
@@ -402,7 +408,8 @@ def api_search():
             for r in results:
                 title = r.get('title', '')
                 r_type = r.get('type', 'فيلم')
-                if r_type == 'مسلسل' or any(x in title for x in ["مسلسل", "الحلقة", "حلقة", "الموسم"]):
+                is_special = "special" in title.lower() or "سبيشال" in title or "خاص" in title or "فيلم" in title
+                if not is_special and (r_type == 'مسلسل' or any(x in title for x in ["مسلسل", "الحلقة", "الحلقه", "حلقة", "حلقه", "الموسم"])):
                     base = clean_for_search(title).lower().strip()
                     if base in seen_bases:
                         continue
