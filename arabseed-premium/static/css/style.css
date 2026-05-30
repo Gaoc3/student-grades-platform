@@ -1776,7 +1776,7 @@ body {
 .hero-slide-content {
     position: absolute;
     bottom: 60px;
-    right: 60px;
+    right: 95px; /* Shifted to prevent overlapping with the navigation arrows */
     z-index: 10;
     max-width: 650px;
     opacity: 0;
