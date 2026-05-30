@@ -869,25 +869,7 @@ function showCenterIndicator(iconClass, persistent = false) {
     }, 500);
 }
 
-function hideCenterIndicator() {
-    const indicator = document.getElementById('player-center-indicator');
-    if (!indicator) return;
-    if (state.indicatorTimeout) {
-        clearTimeout(state.indicatorTimeout);
-        state.indicatorTimeout = null;
-    }
-    indicator.style.display = 'none';
-    indicator.classList.remove('trigger-anim');
-}
 
-function syncPlayPauseIndicator() {
-    if (!state.activePlayer) return;
-    if (state.activePlayer.paused) {
-        showCenterIndicator('fa-solid fa-play', true);
-    } else {
-        hideCenterIndicator();
-    }
-}
 
 function handleKeyboardShortcuts(e) {
     if (!state.activePlayer) return;
@@ -1118,7 +1100,7 @@ function launchPlayer(server, title) {
     // Initialize Plyr with native settings menu quality options
     state.activePlayer = new Plyr(video, {
         controls: [
-            'play', 'progress', 'current-time', 'duration',
+            'play-large', 'play', 'progress', 'current-time', 'duration',
             'mute', 'volume', 'settings', 'pip', 'fullscreen'
         ],
         settings: ['quality', 'speed'],
@@ -1216,10 +1198,6 @@ function launchPlayer(server, title) {
     };
     
     elements.playerRenderArea.addEventListener('click', state.playerClickListener, true);
-    
-    // Listen to Plyr play/pause events to sync the center indicator
-    state.activePlayer.on('play', () => syncPlayPauseIndicator());
-    state.activePlayer.on('pause', () => syncPlayPauseIndicator());
     
     // Block native dblclick events on video viewport in capturing phase to prevent Plyr overlay takeovers
     state.playerDblClickListener = (e) => {
