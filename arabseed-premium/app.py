@@ -354,6 +354,11 @@ class SimpleCache:
             t = ttl if ttl is not None else self.default_ttl
             self.cache[key] = (value, time.time() + t)
 
+    def clear(self):
+        """Flushes all cached entries from memory."""
+        with self.lock:
+            self.cache.clear()
+
 app_cache = SimpleCache()
 
 def normalize_arabic(text: str) -> str:
@@ -415,6 +420,15 @@ def fetch_slide_title(slide, session):
 def home():
     """Renders the main single page web interface."""
     return render_template('index.html')
+
+@app.route('/api/cache/clear')
+def api_cache_clear():
+    """Manually flushes the entire backend memory cache."""
+    app_cache.clear()
+    return jsonify({
+        'status': 'success',
+        'message': 'تم تحديث وتطهير ذاكرة التخزين المؤقت (Cache) بالكامل بنجاح!'
+    })
 
 @app.route('/api/home')
 def api_home():
