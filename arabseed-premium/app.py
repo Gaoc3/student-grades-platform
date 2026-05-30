@@ -514,7 +514,7 @@ def api_stream_proxy():
 if __name__ == '__main__':
     print("=" * 65)
     print(" 🚀 AleX CINEMA - PREMIUM AD-FREE PORTAL STARTING...")
-    print(" Scrape sources: cinemana.cc (Main) | arabseed.show (Hybrid Match)")
-    print(" Running at http://0.0.0.0:5000")
+    print(" Scrape source: cinemana.cc (Main)")
+    print(" Running at http://127.0.0.1:5000")
     print("=" * 65)
     app.run(host='0.0.0.0', port=5000, debug=True)

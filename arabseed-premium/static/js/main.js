@@ -64,6 +64,8 @@ const elements = {
     playerTitleDisplay: document.getElementById('player-title-display'),
     playerRenderArea: document.getElementById('player-render-area'),
     playerServerBadge: document.getElementById('player-server-badge'),
+    playerQualityWrapper: document.getElementById('player-quality-wrapper'),
+    playerQualitySelect: document.getElementById('player-quality-select'),
     
     // Navigation Buttons
     navHomeBtn: document.getElementById('nav-home-btn'),
@@ -591,9 +593,86 @@ function closeDetailsModal() {
 // Immersive Cinema Player Modal Handlers
 // ============================================================================
 
+function loadPlayerSource(server, startTime = 0, autoplay = true) {
+    elements.playerServerBadge.innerText = server.server;
+    
+    // Clean existing Hls instance if present
+    if (state.hlsInstance) {
+        state.hlsInstance.destroy();
+        state.hlsInstance = null;
+    }
+    
+    const video = document.getElementById('video-player');
+    if (!video) return;
+    
+    if (server.url.includes('.m3u8')) {
+        // HLS Stream (.m3u8) using Hls.js
+        if (Hls.isSupported()) {
+            const hls = new Hls({
+                maxBufferLength: 30,
+                maxMaxBufferLength: 60,
+                enableWorker: true,
+                lowLatencyMode: true,
+                xhrSetup: function(xhr, url) {
+                    xhr.withCredentials = false;
+                }
+            });
+            hls.loadSource(server.url);
+            hls.attachMedia(video);
+            state.hlsInstance = hls;
+            
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                if (startTime > 0) {
+                    video.currentTime = startTime;
+                }
+                if (autoplay) {
+                    state.activePlayer.play().catch(()=>{});
+                }
+            });
+            
+            // Seamless Hls.js error recovery
+            hls.on(Hls.Events.ERROR, function(event, data) {
+                if (data.fatal) {
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            console.warn("HLS Network Error, attempting reload...");
+                            hls.startLoad();
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            console.warn("HLS Media Error, attempting recovery...");
+                            hls.recoverMediaError();
+                            break;
+                        default:
+                            console.error("HLS Unrecoverable Error, destroying pipeline.");
+                            hls.destroy();
+                            break;
+                    }
+                }
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            // iOS / Safari Native HLS support
+            video.src = server.url;
+            const onLoaded = () => {
+                if (startTime > 0) video.currentTime = startTime;
+                if (autoplay) state.activePlayer.play().catch(()=>{});
+                video.removeEventListener('loadedmetadata', onLoaded);
+            };
+            video.addEventListener('loadedmetadata', onLoaded);
+        }
+    } else {
+        // Direct MP4 Stream
+        video.src = server.url;
+        const onLoaded = () => {
+            if (startTime > 0) video.currentTime = startTime;
+            if (autoplay) state.activePlayer.play().catch(()=>{});
+            video.removeEventListener('loadedmetadata', onLoaded);
+        };
+        video.addEventListener('loadedmetadata', onLoaded);
+    }
+}
+
 function launchPlayer(server, title) {
     elements.playerTitleDisplay.innerText = title;
-    elements.playerServerBadge.innerText = server.server;
     elements.playerRenderArea.innerHTML = '';
     
     // Display Player Overlay Panel
@@ -617,36 +696,54 @@ function launchPlayer(server, title) {
             'play-large', 'play', 'progress', 'current-time', 'duration',
             'mute', 'volume', 'settings', 'pip', 'fullscreen'
         ],
-        settings: ['quality', 'speed'],
+        settings: ['speed'], // Remove native quality setting from Plyr as we build our customized quality dropdown
         speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
         tooltips: { controls: true, seek: true }
     });
     
-    if (server.url.includes('.m3u8')) {
-        // HLS Stream (.m3u8) using Hls.js
-        if (Hls.isSupported()) {
-            const hls = new Hls({
-                xhrSetup: function(xhr, url) {
-                    xhr.withCredentials = false;
-                }
-            });
-            hls.loadSource(server.url);
-            hls.attachMedia(video);
-            state.hlsInstance = hls;
-            
-            hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                state.activePlayer.play().catch(()=>{});
-            });
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            // iOS / Safari Native HLS support
-            video.src = server.url;
-            state.activePlayer.play().catch(()=>{});
+    // Configure Custom Quality Selector dropdown
+    elements.playerQualitySelect.innerHTML = '';
+    if (state.activeServerList && state.activeServerList.length > 1) {
+        state.activeServerList.forEach((srv, idx) => {
+            const opt = document.createElement('option');
+            opt.value = idx;
+            // Parse display quality (e.g. 1080p, 720p)
+            let qName = "جودة غير معروفة";
+            const qMatch = srv.server.match(/(\d+p)/);
+            if (qMatch) {
+                qName = qMatch[1];
+            } else {
+                qName = srv.server.replace('✨ سيرفر مباشر ', '').replace(' (خالٍ من الإعلانات)', '');
+            }
+            opt.textContent = qName;
+            elements.playerQualitySelect.appendChild(opt);
+        });
+        
+        // Match currently selected index
+        const currentIdx = state.activeServerList.findIndex(s => s.url === server.url);
+        if (currentIdx !== -1) {
+            elements.playerQualitySelect.value = currentIdx;
         }
+        
+        elements.playerQualityWrapper.style.display = 'flex';
+        
+        // Handle Change event for seamless quality switching
+        elements.playerQualitySelect.onchange = () => {
+            const selectedIdx = parseInt(elements.playerQualitySelect.value);
+            const targetServer = state.activeServerList[selectedIdx];
+            if (targetServer) {
+                const currentTime = state.activePlayer ? state.activePlayer.currentTime : 0;
+                const isPlaying = state.activePlayer ? !state.activePlayer.paused : true;
+                loadPlayerSource(targetServer, currentTime, isPlaying);
+            }
+        };
     } else {
-        // Direct MP4 Stream
-        video.src = server.url;
-        state.activePlayer.play().catch(()=>{});
+        elements.playerQualityWrapper.style.display = 'none';
+        elements.playerQualitySelect.onchange = null;
     }
+    
+    // Load initial source
+    loadPlayerSource(server, 0, true);
 }
 
 function closePlayerModal() {
@@ -660,6 +757,8 @@ function closePlayerModal() {
         state.hlsInstance = null;
     }
     
+    elements.playerQualityWrapper.style.display = 'none';
+    elements.playerQualitySelect.onchange = null;
     elements.playerRenderArea.innerHTML = '';
     elements.playerModal.style.display = 'none';
 }
