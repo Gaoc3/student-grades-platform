@@ -1036,7 +1036,9 @@ function launchPlayer(server, title) {
             clearTimeout(state.clickTimer);
             state.clickTimer = null;
             
-            const rect = elements.playerRenderArea.getBoundingClientRect();
+            // Get bounding rect of the actual active Plyr container to support flawless coordinates in both standard and fullscreen views
+            const plyrContainer = elements.playerRenderArea.querySelector('.plyr');
+            const rect = plyrContainer ? plyrContainer.getBoundingClientRect() : elements.playerRenderArea.getBoundingClientRect();
             const tapX = e.clientX - rect.left;
             const widthPercent = (tapX / rect.width) * 100;
             
