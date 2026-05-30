@@ -32,6 +32,7 @@ const elements = {
     resultsCount: document.getElementById('results-count-badge'),
     resultsTitleText: document.getElementById('results-title-text'),
     netBadgeText: document.getElementById('network-name'),
+    netBadgeContainer: document.getElementById('net-badge'),
     
     // Details Modal
     detailsModal: document.getElementById('details-modal'),
