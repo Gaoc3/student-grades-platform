@@ -12,6 +12,7 @@ const state = {
     selectedItem: null,
     currentEpisodes: [],
     activeServerList: [],
+    bestServer: null,
     networkType: 'مباشر'
 };
 
@@ -40,6 +41,7 @@ const elements = {
     modalType: document.getElementById('modal-type'),
     modalTitleText: document.getElementById('modal-title-text'),
     modalStoryText: document.getElementById('modal-story-text'),
+    modalQuickPlayBtn: document.getElementById('modal-quick-play-btn'),
     
     // Episodes Section
     modalEpisodesSection: document.getElementById('modal-episodes-section'),
