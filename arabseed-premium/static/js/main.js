@@ -997,6 +997,42 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
             state.hlsInstance = hls;
             
             hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                console.log("HLS Manifest parsed. Available levels:", hls.levels);
+                
+                // Parse quality height from current server name, e.g. "✨ سيرفر مباشر 1080p"
+                const qMatch = server.server.match(/(\d+)/);
+                const targetHeight = qMatch ? parseInt(qMatch[1]) : 1080;
+                
+                let targetLevelIdx = -1;
+                let maxLevelIdx = 0;
+                let maxHeight = 0;
+                
+                // Find matching level or highest level
+                hls.levels.forEach((level, idx) => {
+                    console.log(`Level ${idx}: ${level.width}x${level.height} | Bitrate: ${level.bitrate}`);
+                    if (level.height > maxHeight) {
+                        maxHeight = level.height;
+                        maxLevelIdx = idx;
+                    }
+                    if (level.height === targetHeight) {
+                        targetLevelIdx = idx;
+                    }
+                });
+                
+                // If we found the specific quality level requested by the server
+                if (targetLevelIdx !== -1) {
+                    console.log(`Forcing HLS quality level index: ${targetLevelIdx} (${targetHeight}p)`);
+                    hls.currentLevel = targetLevelIdx;
+                    hls.loadLevel = targetLevelIdx;
+                    hls.startLevel = targetLevelIdx;
+                } else {
+                    // Fallback to highest quality level available
+                    console.log(`Specific quality level not found in HLS manifest. Forcing highest level: Level ${maxLevelIdx} (${maxHeight}p)`);
+                    hls.currentLevel = maxLevelIdx;
+                    hls.loadLevel = maxLevelIdx;
+                    hls.startLevel = maxLevelIdx;
+                }
+
                 if (progressTime > 0) {
                     video.currentTime = progressTime;
                 }
