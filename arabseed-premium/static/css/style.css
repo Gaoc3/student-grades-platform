@@ -2118,6 +2118,10 @@ body {
 
 /* Media Queries for Hero Slider */
 @media (max-width: 900px) {
+    .navbar {
+        position: static;
+        padding: 10px 0;
+    }
     .nav-container {
         flex-wrap: wrap;
         gap: 12px;
