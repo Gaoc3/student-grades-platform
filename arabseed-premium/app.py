@@ -706,6 +706,44 @@ def api_series():
         return jsonify(cached_val)
     return jsonify(get_series_data_fresh())
 
+@app.route('/api/search')
+def api_search():
+    """Bridges search queries dynamically to the new robust FaselHD scraping engine."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify({'results': [], 'count': 0})
+        
+    try:
+        cache_key = f"search_{query}"
+        cached_val = app_cache.get(cache_key)
+        if cached_val:
+            return jsonify(cached_val)
+            
+        results = fasel_api.search(query)
+        
+        # Format or clean up titles
+        formatted_results = []
+        for r in results:
+            clean_title = clean_display_title(r['title'], r['type'])
+            formatted_results.append({
+                'title': clean_title,
+                'url': r['url'],
+                'poster': r['poster'],
+                'type': r['type'],
+                'rating': r['rating'],
+                'quality': r['quality']
+            })
+            
+        res = {
+            'results': formatted_results,
+            'count': len(formatted_results)
+        }
+        app_cache.set(cache_key, res, ttl=300) # Cache search results for 5 minutes
+        return jsonify(res)
+    except Exception as e:
+        print(f"Error in api_search: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/details')
 def api_details():
     """Fetches story description, seasons, and episodes from FaselHD's details page."""
@@ -841,7 +879,7 @@ def api_stream_proxy():
                             rewritten_lines.append('')
                             continue
                         if line_stripped.startswith('#'):
-                            # Rewrite URI paths in EXT-X-KEY encryption tags to be absolute
+                            # Rewrite URI paths in EXT-X-KEY encryption tags to be absolute and proxied
                             if 'URI=' in line_stripped:
                                 m = re.search(r'URI=["\']([^"\']+)["\']', line_stripped)
                                 if m:
@@ -850,7 +888,10 @@ def api_stream_proxy():
                                         abs_key_url = "https://cinemana.cc/" + key_uri
                                     else:
                                         abs_key_url = urllib.parse.urljoin(video_url, key_uri)
-                                    line_stripped = line_stripped.replace(key_uri, abs_key_url)
+                                    
+                                    # Proxy the decryption key through our Flask backend to completely bypass CORS blockade!
+                                    proxied_key_url = f"/api/stream?url={urllib.parse.quote(abs_key_url)}"
+                                    line_stripped = line_stripped.replace(key_uri, proxied_key_url)
                             rewritten_lines.append(line_stripped)
                         else:
                             # It's a segment or sub-playlist URL
@@ -859,14 +900,9 @@ def api_stream_proxy():
                             else:
                                 abs_segment_url = urllib.parse.urljoin(video_url, line_stripped)
                             
-                            if 'm3u8' in abs_segment_url.lower():
-                                # Recursive playlist proxying to rewrite sub-playlist relative segments
-                                proxied_segment_url = f"/api/stream?url={urllib.parse.quote(abs_segment_url)}"
-                                rewritten_lines.append(proxied_segment_url)
-                            else:
-                                # Direct CDN streaming for all heavy video segments (.ts files)!
-                                # Completely bypasses Flask proxy & heavily throttled free Cloudflare tunnel!
-                                rewritten_lines.append(abs_segment_url)
+                            # Proxy ALL sub-playlists and ts segments through our Flask backend to resolve CORS blockade perfectly!
+                            proxied_segment_url = f"/api/stream?url={urllib.parse.quote(abs_segment_url)}"
+                            rewritten_lines.append(proxied_segment_url)
                             
                     rewritten_content = '\n'.join(rewritten_lines)
                     
