@@ -725,122 +725,53 @@ async function loadSeasonData(url, seasonTitle) {
     }
 }
 
-function normalizeVersionName(version) {
-    if (!version) return "مترجم";
-    const norm = version.trim().toLowerCase();
-    
-    const isDubbed = norm.includes("مدبلج") || norm.includes("دبلج") || norm.includes("dub");
-    const isNoir = norm.includes("ابيض") || norm.includes("أبيض") || norm.includes("أسود") || norm.includes("اسود") || norm.includes("noir");
-    const isSpecial = norm.includes("خاص") || norm.includes("سبيشال") || norm.includes("special");
-    
-    if (isDubbed && isNoir) {
-        return "مدبلج - نسخة الأبيض والأسود";
-    }
-    if (isDubbed) {
-        return "مدبلج";
-    }
-    if (isNoir) {
-        return "نسخة الأبيض والأسود";
-    }
-    if (isSpecial) {
-        return "حلقة خاصة";
-    }
-    return "مترجم";
-}
-
-function parseSeasonTitle(title) {
-    let seasonNum = 1;
-    let version = "مترجم"; // default to subtitled
-    
-    // Check for digits inside season title
-    let numMatch = title.match(/(?:موسم|الموسم)\s*(\d+)/i);
-    if (numMatch) {
-        seasonNum = parseInt(numMatch[1]);
-    } else {
-        // Handle word numbers (e.g. الأول, الثاني)
-        const wordNumbers = {
-            "الاول": 1, "الأول": 1, "الأولى": 1, "الاولى": 1,
-            "الثاني": 2, "الثانية": 2,
-            "الثالث": 3, "الثالثة": 3,
-            "الرابع": 4, "الرابعة": 4,
-            "الخامس": 5, "الخامسة": 5,
-            "السادس": 6, "السادسة": 6,
-            "السابع": 7, "السابعة": 7,
-            "الثامن": 8, "الثامنة": 8,
-            "التاسع": 9, "التاسعة": 9,
-            "العاشر": 10, "العاشرة": 10,
-            "الحادي عشر": 11, "الثاني عشر": 12, "الثالث عشر": 13, "الرابع عشر": 14, "الخامس عشر": 15,
-            "السادس عشر": 16, "السابع عشر": 17, "الثامن عشر": 18, "التاسع عشر": 19, "العشرون": 20, "العشرين": 20
-        };
-        const sortedWords = Object.keys(wordNumbers).sort((a, b) => b.length - a.length);
-        for (let word of sortedWords) {
-            if (title.includes(word)) {
-                seasonNum = wordNumbers[word];
-                break;
-            }
-        }
-    }
-    
-    // Check for versions inside parentheses, e.g. "موسم 1 (مدبلج)"
-    let verMatch = title.match(/\(([^)]+)\)/);
-    if (verMatch) {
-        version = verMatch[1].trim();
-    } else {
-        // Fallbacks
-        let verTags = [];
-        if (title.includes("مدبلج") || title.includes("مدبلجة")) {
-            verTags.push("مدبلج");
-        }
-        if (title.includes("الأبيض والاسود") || title.includes("الابيض والاسود") || title.includes("الأبيض والأسود")) {
-            verTags.push("نسخة الأبيض والأسود");
-        }
-        if (title.includes("خاصة") || title.includes("خاصه") || title.includes("سبيشال")) {
-            verTags.push("حلقة خاصة");
-        }
-        if (verTags.length > 0) {
-            version = verTags.join(" - ");
-        }
-    }
-    
-    // Standardize version name to avoid duplicates!
-    version = normalizeVersionName(version);
-    
-    return { seasonNum, version };
-}
-
 function renderGroupedSeasons(seasons) {
     elements.modalSeasonsGrid.innerHTML = '';
-    elements.modalVersionsGrid.innerHTML = '';
-    elements.modalVersionsSection.style.display = 'none';
     
-    // Group seasons by seasonNum
-    const grouped = {};
-    seasons.forEach((season) => {
-        const { seasonNum, version } = parseSeasonTitle(season.title);
-        if (!grouped[seasonNum]) {
-            grouped[seasonNum] = {
-                seasonNum: seasonNum,
-                versions: {}
-            };
-        }
-        grouped[seasonNum].versions[version] = season;
+    if (seasons.length === 0) return;
+    
+    // Sort seasons logically
+    const sortedSeasons = seasons.sort((a, b) => {
+        const numA = parseSeasonNumOnly(a.title);
+        const numB = parseSeasonNumOnly(b.title);
+        return numA - numB;
     });
-    
-    const seasonNums = Object.keys(grouped).sort((a, b) => parseInt(a) - parseInt(b));
-    if (seasonNums.length === 0) return;
+
+    function parseSeasonNumOnly(title) {
+        let match = title.match(/\d+/);
+        return match ? parseInt(match[0]) : 1;
+    }
     
     // Render Season Buttons
-    seasonNums.forEach((sNum) => {
+    sortedSeasons.forEach((season) => {
         const btn = document.createElement('button');
         btn.className = 'season-btn';
-        btn.innerText = `الموسم ${sNum}`;
-        btn.setAttribute('data-season-num', sNum);
+        btn.innerText = season.title;
+        btn.setAttribute('data-season-title', season.title);
         
         btn.onclick = () => {
             elements.modalSeasonsGrid.querySelectorAll('.season-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
-            renderVersionsForSeason(grouped[sNum]);
+            // Render episodes for this season directly!
+            state.currentEpisodes = season.episodes;
+            renderEpisodes(season.episodes, season.title);
+            elements.modalEpisodesSection.style.display = 'block';
+            
+            // Autoplay first episode of this season
+            const firstEp = season.episodes[0];
+            if (firstEp) {
+                highlightActiveEpisode(firstEp.url);
+                const displayTitle = `${state.selectedItem.title} - ${season.title} - ${firstEp.title}`;
+                fetchStreamingServers(
+                    firstEp.url, 
+                    displayTitle, 
+                    state.selectedItem.title, 
+                    true, 
+                    season.title, 
+                    firstEp.title
+                );
+            }
         };
         
         elements.modalSeasonsGrid.appendChild(btn);
@@ -849,139 +780,15 @@ function renderGroupedSeasons(seasons) {
     // Set first season active by default
     const firstSeasonBtn = elements.modalSeasonsGrid.querySelector('.season-btn');
     if (firstSeasonBtn) {
-        firstSeasonBtn.classList.add('active');
-        renderVersionsForSeason(grouped[seasonNums[0]]);
+        firstSeasonBtn.click();
     }
 }
-
-function renderVersionsForSeason(seasonGroup) {
-    elements.modalVersionsGrid.innerHTML = '';
-    
-    const versionKeys = Object.keys(seasonGroup.versions);
-    
-    // Sort versions to put canonical first, then other unique ones, preventing duplicates
-    const versionOrder = {
-        "مترجم": 1,
-        "مدبلج": 2,
-        "نسخة الأبيض والأسود": 3,
-        "مدبلج - نسخة الأبيض والأسود": 4,
-        "حلقة خاصة": 5
-    };
-    const filteredKeys = versionKeys.sort((a, b) => {
-        const orderA = versionOrder[a] || 99;
-        const orderB = versionOrder[b] || 99;
-        return orderA - orderB;
-    });
-    
-    if (filteredKeys.length <= 1) {
-        // Hide versions section if only 1 version is available
-        elements.modalVersionsSection.style.display = 'none';
-        const singleSeasonData = seasonGroup.versions[filteredKeys[0] || versionKeys[0]];
-        state.currentEpisodes = singleSeasonData.episodes;
-        renderEpisodes(singleSeasonData.episodes, singleSeasonData.title);
-        elements.modalEpisodesSection.style.display = 'block';
-        
-        const firstEp = singleSeasonData.episodes[0];
-        if (firstEp) {
-            highlightActiveEpisode(firstEp.url);
-            const displayTitle = `${state.selectedItem.title} - ${singleSeasonData.title} - ${firstEp.title}`;
-            fetchStreamingServers(
-                firstEp.url, 
-                displayTitle, 
-                state.selectedItem.title, 
-                true, 
-                singleSeasonData.title, 
-                firstEp.title
-            );
-        }
-        return;
-    }
-    
-    // Show versions selector
-    elements.modalVersionsSection.style.display = 'block';
-    
-    filteredKeys.forEach((versionName) => {
-        const pill = document.createElement('button');
-        pill.className = 'version-pill';
-        
-        let displayName = versionName;
-        let icon = "fa-compact-disc";
-        
-        if (versionName === "مدبلج") {
-            displayName = "النسخة المدبلجة بالعربية";
-            icon = "fa-microphone";
-        } else if (versionName === "مترجم") {
-            displayName = "النسخة الأصلية (مترجم)";
-            icon = "fa-closed-captioning";
-        } else if (versionName === "نسخة الأبيض والأسود") {
-            displayName = "نسخة الأبيض والأسود (Noir)";
-            icon = "fa-wand-magic-sparkles";
-        } else if (versionName === "مدبلج - نسخة الأبيض والأسود") {
-            displayName = "مدبلج (الأبيض والأسود)";
-            icon = "fa-microphone-lines";
-        }
-        
-        pill.innerHTML = `<i class="fa-solid ${icon}"></i> ${displayName}`;
-        pill.setAttribute('data-version', versionName);
-        
-        pill.onclick = () => {
-            elements.modalVersionsGrid.querySelectorAll('.version-pill').forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-            
-            const seasonData = seasonGroup.versions[versionName];
-            state.currentEpisodes = seasonData.episodes;
-            renderEpisodes(seasonData.episodes, seasonData.title);
-            elements.modalEpisodesSection.style.display = 'block';
-            
-            const firstEp = seasonData.episodes[0];
-            if (firstEp) {
-                highlightActiveEpisode(firstEp.url);
-                const displayTitle = `${state.selectedItem.title} - ${seasonData.title} - ${firstEp.title}`;
-                fetchStreamingServers(
-                    firstEp.url, 
-                    displayTitle, 
-                    state.selectedItem.title, 
-                    true, 
-                    seasonData.title, 
-                    firstEp.title
-                );
-            }
-        };
-        
-        elements.modalVersionsGrid.appendChild(pill);
-    });
-    
-    // Set first version active by default
-    const firstPill = elements.modalVersionsGrid.querySelector('.version-pill');
-    if (firstPill) {
-        firstPill.classList.add('active');
-        const defaultVerName = filteredKeys[0];
-        const seasonData = seasonGroup.versions[defaultVerName];
-        state.currentEpisodes = seasonData.episodes;
-        renderEpisodes(seasonData.episodes, seasonData.title);
-        elements.modalEpisodesSection.style.display = 'block';
-        
-        const firstEp = seasonData.episodes[0];
-        if (firstEp) {
-            highlightActiveEpisode(firstEp.url);
-            const displayTitle = `${state.selectedItem.title} - ${seasonData.title} - ${firstEp.title}`;
-            fetchStreamingServers(
-                firstEp.url, 
-                displayTitle, 
-                state.selectedItem.title, 
-                true, 
-                seasonData.title, 
-                firstEp.title
-            );
-        }
-    }
 }
 
 function highlightActiveSeason(seasonTitle) {
-    const { seasonNum } = parseSeasonTitle(seasonTitle);
     const buttons = elements.modalSeasonsGrid.querySelectorAll('.season-btn');
     buttons.forEach(btn => {
-        if (btn.getAttribute('data-season-num') == seasonNum) {
+        if (btn.getAttribute('data-season-title') === seasonTitle || btn.innerText.trim() === seasonTitle.trim()) {
             btn.classList.add('active');
         } else {
             btn.classList.remove('active');
@@ -1042,12 +849,7 @@ function normalizeArabicText(text) {
 
 function getActiveSeasonTitle() {
     const activeSeasonBtn = elements.modalSeasonsGrid.querySelector('.season-btn.active');
-    if (!activeSeasonBtn) return "";
-    
-    const sNum = activeSeasonBtn.getAttribute('data-season-num');
-    const activeVersionPill = elements.modalVersionsGrid.querySelector('.version-pill.active');
-    const ver = activeVersionPill ? activeVersionPill.getAttribute('data-version') : "";
-    return ver && ver !== "مترجم" ? `موسم ${sNum} (${ver})` : `موسم ${sNum}`;
+    return activeSeasonBtn ? activeSeasonBtn.innerText.trim() : "";
 }
 
 function parseArabicWordToNumber(text) {
@@ -1727,7 +1529,7 @@ function setupAutoplayNext(currentUrl) {
                     
                     // Build next display title
                     const activeSeasonBtn = elements.modalSeasonsGrid.querySelector('.season-btn.active');
-                    const seasonTitle = activeSeasonBtn ? activeSeasonBtn.getAttribute('data-title') : "";
+                    const seasonTitle = activeSeasonBtn ? activeSeasonBtn.innerText.trim() : "";
                     const nextDisplayTitle = seasonTitle ? `${state.selectedItem.title} - ${seasonTitle} - ${nextEp.title}` : `${state.selectedItem.title} - ${nextEp.title}`;
                     
                     // Trigger resolved list update silently, then play!
