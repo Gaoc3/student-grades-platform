@@ -747,9 +747,12 @@ function parseSeasonTitle(title) {
             "السابع": 7, "السابعة": 7,
             "الثامن": 8, "الثامنة": 8,
             "التاسع": 9, "التاسعة": 9,
-            "العاشر": 10, "العاشرة": 10
+            "العاشر": 10, "العاشرة": 10,
+            "الحادي عشر": 11, "الثاني عشر": 12, "الثالث عشر": 13, "الرابع عشر": 14, "الخامس عشر": 15,
+            "السادس عشر": 16, "السابع عشر": 17, "الثامن عشر": 18, "التاسع عشر": 19, "العشرون": 20, "العشرين": 20
         };
-        for (let word in wordNumbers) {
+        const sortedWords = Object.keys(wordNumbers).sort((a, b) => b.length - a.length);
+        for (let word of sortedWords) {
             if (title.includes(word)) {
                 seasonNum = wordNumbers[word];
                 break;
