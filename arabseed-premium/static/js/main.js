@@ -1234,6 +1234,7 @@ function renderServers(servers, displayTitle) {
 }
 
 function closeDetailsModal() {
+    closePlayerModal(); // Cleanly stop and unload player
     elements.detailsModal.style.display = 'none';
     document.body.style.overflow = 'auto'; // Unlock scroll
 }
