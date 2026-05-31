@@ -1060,19 +1060,8 @@ def api_watch():
         if cached_val:
             return jsonify(cached_val)
             
-        # 1. Resolve Cinemana HLS stream options
-        cinemana_servers = resolve_cinemana_stream(url)
-        
-        # 2. Resolve ArabSeed high-speed premium stream options (if title is provided)
-        arabseed_servers = []
-        if title:
-            try:
-                arabseed_servers = resolve_arabseed_stream(title, is_series, season, episode)
-            except Exception as hybrid_err:
-                print(f"❌ Error in hybrid resolver: {hybrid_err}")
-                
-        # 3. Merge servers (ArabSeed high-speed premium options first)
-        merged_servers = arabseed_servers + cinemana_servers
+        # Resolve Cinemana HLS stream options (Rely strictly on Cinemana!)
+        merged_servers = resolve_cinemana_stream(url)
         
         if not merged_servers:
             merged_servers = [{
