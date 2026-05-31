@@ -63,11 +63,11 @@ const elements = {
     modalServersList: document.getElementById('modal-servers-list'),
     serversLoader: document.getElementById('servers-loading-spinner'),
     
-    // Player Modal
-    playerModal: document.getElementById('player-modal'),
-    closePlayerBtn: document.getElementById('close-player-btn'),
-    playerTitleDisplay: document.getElementById('player-title-display'),
-    playerRenderArea: document.getElementById('player-render-area'),
+    // Player Modal (Embedded Widescreen Viewport inside details modal)
+    playerModal: document.getElementById('modal-player-viewport'),
+    closePlayerBtn: document.getElementById('modal-close-player-btn'),
+    playerTitleDisplay: document.getElementById('modal-title-text'),
+    playerRenderArea: document.getElementById('modal-player-render-area'),
     playerServerBadge: document.getElementById('player-server-badge'),
     
     // Navigation Buttons
@@ -98,6 +98,25 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.closeDetailsBtn.onclick = closeDetailsModal;
     elements.closePlayerBtn.onclick = closePlayerModal;
     elements.episodeFilterInput.addEventListener('input', handleEpisodeFilter);
+    
+    // Play button overlay click action
+    const posterPlayBtn = document.getElementById('modal-poster-play-btn');
+    if (posterPlayBtn) {
+        posterPlayBtn.onclick = () => {
+            // Trigger the prominent quick play button click
+            if (elements.modalQuickPlayBtn && elements.modalQuickPlayBtn.style.display !== 'none' && elements.modalQuickPlayBtn.onclick) {
+                elements.modalQuickPlayBtn.click();
+            } else {
+                // If quick play button is not ready or hidden, play the first available episode or server
+                const firstEpBtn = elements.modalEpisodesGrid.querySelector('.episode-btn');
+                if (firstEpBtn) {
+                    firstEpBtn.click();
+                } else {
+                    showToast("جاري تجهيز روابط البث، يرجى الانتظار ثوانٍ...", "info");
+                }
+            }
+        };
+    }
     
     // Live Search - debounced input handler
     let liveSearchTimer = null;
