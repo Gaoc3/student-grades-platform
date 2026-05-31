@@ -886,26 +886,18 @@ def api_search():
 def parse_episode_title(title):
     # Extract season number
     season_num = 1
-    # Match "الموسم الأول", "الموسم 1", "الموسم الثاني", etc.
-    season_match = re.search(r'(?:الموسم|موسم)\s+([^\s–]+|\d+)', title)
-    if season_match:
-        s_val = season_match.group(1).strip()
-        arabic_numbers = {
-            "الأول": 1, "الاول": 1, "الاولى": 1, "الأولى": 1,
-            "الثاني": 2, "الثانية": 2,
-            "الثالث": 3, "الثالثة": 3,
-            "الرابع": 4, "الرابعة": 4,
-            "الخامس": 5, "الخامسة": 5,
-            "السادس": 6, "السادسة": 6,
-            "السابع": 7, "السابعة": 7,
-            "الثامن": 8, "الثامنة": 8,
-            "التاسع": 9, "التاسعة": 9,
-            "العاشر": 10, "العاشرة": 10
-        }
-        if s_val.isdigit():
-            season_num = int(s_val)
-        elif s_val in arabic_numbers:
-            season_num = arabic_numbers[s_val]
+    t_clean = re.sub(r'\s+', ' ', title)
+    
+    # Check for Arabic number words first, sorted by length in reverse
+    for arabic_word in sorted(ARABIC_NUMBERS.keys(), key=lambda x: len(x), reverse=True):
+        if arabic_word in t_clean:
+            season_num = ARABIC_NUMBERS[arabic_word]
+            break
+    else:
+        # Then check for explicit digits
+        m = re.search(r'(?:موسم|الموسم)\s+(\d+)', t_clean)
+        if m:
+            season_num = int(m.group(1))
             
     # Extract episode number
     ep_num = 1
@@ -952,7 +944,7 @@ def api_details():
             try:
                 base_query = clean_for_search(details['title'])
                 if base_query:
-                    search_results = cinemana_api.search(base_query)
+                    search_results = cinemana_api.search(base_query, max_pages=4)
                     
                     matched_items = []
                     for r in search_results:
