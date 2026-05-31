@@ -682,6 +682,7 @@ async function openDetailsModal(item) {
 }
 
 async function loadSeasonData(url, seasonTitle) {
+    closePlayerModal(); // Stop any active player and restore poster view
     elements.modalEpisodesSection.style.display = 'none';
     elements.modalSeasonsSection.style.display = 'none';
     elements.modalVersionsSection.style.display = 'none';
