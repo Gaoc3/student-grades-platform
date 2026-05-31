@@ -137,34 +137,56 @@ class CinemanaAPI:
             print(f"Error scraping homepage categories: {e}")
             return []
 
-    def search(self, query: str) -> List[Dict[str, Any]]:
+    def search(self, query: str, max_pages: int = 1) -> List[Dict[str, Any]]:
         """
         Searches Cinemana by scraping the search results grid page.
+        Supports fetching multiple pages for comprehensive series aggregation.
         """
-        search_url = f"{self.base_url}/"
-        params = {"s": query}
+        cards = []
+        seen_urls = set()
         
-        try:
-            r = self.session.get(search_url, params=params, timeout=15)
-            r.raise_for_status()
-            
-            soup = BeautifulSoup(r.text, 'html.parser')
-            
-            cards = []
-            a_tags = soup.find_all('a', class_=re.compile(r'block.*group.*relative'))
-            if not a_tags:
-                a_tags = [a for a in soup.find_all('a', href=True) if 'watch=' in a['href'] and 'cn-mega-item' not in a.get('class', [])]
+        for page in range(1, max_pages + 1):
+            search_url = f"{self.base_url}/"
+            params = {"s": query}
+            if page > 1:
+                params["page"] = page
                 
-            for a in a_tags:
-                parsed = self.parse_card(a)
-                if parsed and parsed.get('title') and parsed['title'] != "N/A":
-                    if not any(x['url'] == parsed['url'] for x in cards):
-                        cards.append(parsed)
-                        
-            return cards
-        except Exception as e:
-            print(f"Error searching Cinemana for {query}: {e}")
-            return []
+            try:
+                print(f"Scraping Cinemana search page {page} for query '{query}'...")
+                r = self.session.get(search_url, params=params, timeout=15)
+                if r.status_code != 200:
+                    print(f"Stop paginating search: Page {page} returned status {r.status_code}")
+                    break
+                    
+                soup = BeautifulSoup(r.text, 'html.parser')
+                
+                a_tags = soup.find_all('a', class_=re.compile(r'block.*group.*relative'))
+                if not a_tags:
+                    a_tags = [a for a in soup.find_all('a', href=True) if 'watch=' in a['href'] and 'cn-mega-item' not in a.get('class', [])]
+                    
+                if not a_tags:
+                    print(f"No anchors found on page {page}. Stopping pagination.")
+                    break
+                    
+                page_added = 0
+                for a in a_tags:
+                    parsed = self.parse_card(a)
+                    if parsed and parsed.get('title') and parsed['title'] != "N/A":
+                        if parsed['url'] not in seen_urls:
+                            seen_urls.add(parsed['url'])
+                            cards.append(parsed)
+                            page_added += 1
+                            
+                print(f"Page {page} added {page_added} unique items.")
+                if page_added == 0:
+                    # No new results added, probably duplicates or end of pagination
+                    break
+                    
+            except Exception as e:
+                print(f"Error searching Cinemana for {query} on page {page}: {e}")
+                break
+                
+        return cards
 
     def scrape_listing_page(self, url: str) -> List[Dict[str, Any]]:
         """
