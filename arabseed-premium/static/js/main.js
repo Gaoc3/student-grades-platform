@@ -783,7 +783,6 @@ function renderGroupedSeasons(seasons) {
         firstSeasonBtn.click();
     }
 }
-}
 
 function highlightActiveSeason(seasonTitle) {
     const buttons = elements.modalSeasonsGrid.querySelectorAll('.season-btn');
