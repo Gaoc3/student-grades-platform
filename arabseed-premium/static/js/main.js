@@ -1843,6 +1843,20 @@ function launchPlayer(server, title) {
         tooltips: { controls: true, seek: true }
     });
     
+    // Fast Scrubbing: instant frame-by-frame seeking during timeline drag
+    state.activePlayer.on('ready', () => {
+        const seekInput = elements.playerRenderArea.querySelector('.plyr__progress input[data-plyr="seek"], .plyr__progress input[type="range"]');
+        if (seekInput) {
+            // Force immediate seek on input range drag
+            seekInput.addEventListener('input', () => {
+                const targetTime = (seekInput.value / 100) * video.duration;
+                if (isFinite(targetTime)) {
+                    video.currentTime = targetTime;
+                }
+            });
+        }
+    });
+    
     // Setup Playback progress saver (save current time every 2 seconds)
     state.progressSaveTimer = setInterval(() => {
         if (state.activePlayer && !state.activePlayer.paused && state.activePlayer.currentTime > 5) {
