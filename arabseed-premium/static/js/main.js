@@ -1318,13 +1318,17 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
         // HLS Stream (.m3u8) using Hls.js
         if (Hls.isSupported()) {
             const hls = new Hls({
-                maxBufferLength: 300,        // Pre-buffer up to 5 minutes (300 seconds) of video ahead!
-                maxMaxBufferLength: 600,     // Absolute limit of 10 minutes of buffer ahead!
-                maxBufferSize: 314572800,    // Pre-buffer up to 300 MB of video in memory (300 * 1024 * 1024)!
-                backBufferLength: 300,       // Keep up to 5 minutes of played video in back-buffer (no reload on seek-back)!
+                maxBufferLength: 30,
+                maxMaxBufferLength: 60,
+                maxBufferSize: 62914560,
+                backBufferLength: 30,
                 enableWorker: true,
-                lowLatencyMode: false,       // Prioritize large throughput segment preloading
-                progressive: true,           // Enable progressive segment loading
+                lowLatencyMode: false,
+                progressive: true,
+                capLevelToPlayerSize: true,
+                startLevel: -1,
+                abrBandWidthFactor: 0.85,
+                abrBandWidthUpFactor: 0.7,
                 xhrSetup: function(xhr, url) {
                     xhr.withCredentials = false;
                 }
@@ -1367,18 +1371,13 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
                     }
                 });
                 
-                // If we found the specific quality level requested by the server
+                // Cap auto level to target quality; allow ABR to adapt if bandwidth is weak
                 if (targetLevelIdx !== -1) {
-                    console.log(`Forcing HLS quality level index: ${targetLevelIdx} (${targetHeight}p)`);
-                    hls.currentLevel = targetLevelIdx;
-                    hls.loadLevel = targetLevelIdx;
-                    hls.startLevel = targetLevelIdx;
+                    console.log(`Capping HLS auto level to index: ${targetLevelIdx} (${targetHeight}p)`);
+                    hls.autoLevelCapping = targetLevelIdx;
                 } else {
-                    // Fallback to highest quality level available
-                    console.log(`Specific quality level not found in HLS manifest. Forcing highest level: Level ${maxLevelIdx} (${maxHeight}p)`);
-                    hls.currentLevel = maxLevelIdx;
-                    hls.loadLevel = maxLevelIdx;
-                    hls.startLevel = maxLevelIdx;
+                    console.log(`No specific quality match. Allowing auto up to max level: ${maxLevelIdx} (${maxHeight}p)`);
+                    hls.autoLevelCapping = -1;
                 }
 
                 if (progressTime > 0) {
