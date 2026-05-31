@@ -123,7 +123,10 @@ body {
 }
 .logo-icon {
     font-size: 1.55rem;
+    display: inline-block;
+    color: #a78bfa;
     background: var(--gradient-primary);
+    background-size: 100% 100%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 2px 12px rgba(124, 58, 237, 0.6));
@@ -133,6 +136,8 @@ body {
     text-shadow: 0 2px 18px rgba(124, 58, 237, 0.45);
 }
 .logo-highlight {
+    display: inline-block;
+    color: #7dd3fc;
     background: linear-gradient(135deg, #22d3ee, #60a5fa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
