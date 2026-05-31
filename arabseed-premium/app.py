@@ -361,6 +361,8 @@ def build_filtered_seasons(all_episodes_data: list, active_url: str) -> list:
         s_num = parse_season_num(ep_title)
         e_num = parse_episode_num(ep_title)
         is_dubbed, is_bw, is_special = extract_version_flags(ep_title)
+        if is_bw or is_special:
+            continue
         version_group = "مدبلج" if is_dubbed else "مترجم"
         
         if s_num not in seasons_map:
