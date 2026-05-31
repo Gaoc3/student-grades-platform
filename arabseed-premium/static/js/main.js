@@ -8,6 +8,7 @@
 // Global App State
 const state = {
     activePlayer: null,
+    previewHlsInstance: null,
     searchResults: [],
     categories: [],
     selectedItem: null,
@@ -1748,10 +1749,20 @@ function launchPlayer(server, title) {
     
     elements.playerModal.style.display = 'block';
     
+    // Hide details close button to prevent multiple overlapping close buttons
+    if (elements.closeDetailsBtn) {
+        elements.closeDetailsBtn.style.display = 'none';
+    }
+    
     // Clean existing Hls instance if present
     if (state.hlsInstance) {
         state.hlsInstance.destroy();
         state.hlsInstance = null;
+    }
+    
+    if (state.previewHlsInstance) {
+        state.previewHlsInstance.destroy();
+        state.previewHlsInstance = null;
     }
     
     if (server.type === 'embed') {
@@ -1794,6 +1805,19 @@ function launchPlayer(server, title) {
     }
     
     elements.playerRenderArea.appendChild(video);
+    
+    // Create and append custom YouTube-like preview tooltip container
+    const previewTooltip = document.createElement('div');
+    previewTooltip.id = 'plyr-preview-tooltip';
+    previewTooltip.className = 'plyr-preview-tooltip';
+    previewTooltip.style.display = 'none';
+    previewTooltip.innerHTML = `
+        <div class="plyr-preview-card">
+            <video id="plyr-preview-video" muted playsinline style="width: 160px; height: 90px; object-fit: cover; border-radius: 8px; background: #000;"></video>
+            <div class="plyr-preview-time" id="plyr-preview-time">00:00</div>
+        </div>
+    `;
+    elements.playerRenderArea.appendChild(previewTooltip);
     
     // Extract available quality resolutions
     const qualityOptions = [];
