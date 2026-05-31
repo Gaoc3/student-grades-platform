@@ -1280,11 +1280,22 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
                     xhr.withCredentials = false;
                 }
             });
+            
+            // Failsafe timeout for Hls.js initialization
+            let hlsTimeout = setTimeout(() => {
+                console.warn("Hls.js load timeout reached, forcing loader hide.");
+                hideLoaderSmoothly();
+            }, 10000);
+            
             hls.loadSource(server.url);
             hls.attachMedia(video);
             state.hlsInstance = hls;
             
             hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                if (hlsTimeout) {
+                    clearTimeout(hlsTimeout);
+                    hlsTimeout = null;
+                }
                 console.log("HLS Manifest parsed. Available levels:", hls.levels);
                 
                 // Parse quality height from current server name, e.g. "✨ سيرفر مباشر 1080p"
@@ -1333,6 +1344,11 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
             // Seamless Hls.js error recovery
             hls.on(Hls.Events.ERROR, function(event, data) {
                 if (data.fatal) {
+                    if (hlsTimeout) {
+                        clearTimeout(hlsTimeout);
+                        hlsTimeout = null;
+                    }
+                    hideLoaderSmoothly(); // Ensure loader hides on fatal errors
                     switch (data.type) {
                         case Hls.ErrorTypes.NETWORK_ERROR:
                             console.warn("HLS Network Error, attempting reload...");
@@ -1351,27 +1367,88 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
             });
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             // iOS / Safari Native HLS support
-            video.src = server.url;
-            video.load(); // CRITICAL: Force native pipeline load
+            let loadTimeout = null;
+            
+            const cleanListeners = () => {
+                video.removeEventListener('loadedmetadata', onLoaded);
+                video.removeEventListener('error', onError);
+                if (loadTimeout) {
+                    clearTimeout(loadTimeout);
+                    loadTimeout = null;
+                }
+            };
+            
             const onLoaded = () => {
                 if (progressTime > 0) video.currentTime = progressTime;
                 if (autoplay) state.activePlayer.play().catch(()=>{});
                 hideLoaderSmoothly();
-                video.removeEventListener('loadedmetadata', onLoaded);
+                cleanListeners();
             };
+            
+            const onError = (e) => {
+                console.error("Native HLS load error:", e);
+                hideLoaderSmoothly();
+                showToast("فشل تحميل مشغل HLS الأصلي، يرجى تجربة سيرفر آخر.", "error");
+                cleanListeners();
+            };
+            
+            // Register event listeners BEFORE setting source to prevent race conditions!
             video.addEventListener('loadedmetadata', onLoaded);
+            video.addEventListener('error', onError);
+            
+            // 10-second failsafe timeout
+            loadTimeout = setTimeout(() => {
+                console.warn("Native HLS load timeout reached, forcing loader hide.");
+                hideLoaderSmoothly();
+                if (autoplay) state.activePlayer.play().catch(()=>{});
+                cleanListeners();
+            }, 10000);
+            
+            video.src = server.url;
+            video.load(); // CRITICAL: Force native pipeline load
         }
     } else {
         // Direct MP4 Stream
-        video.src = server.url;
-        video.load(); // CRITICAL: Force native pipeline load to refresh play status
+        let loadTimeout = null;
+        
+        const cleanListeners = () => {
+            video.removeEventListener('loadedmetadata', onLoaded);
+            video.removeEventListener('error', onError);
+            if (loadTimeout) {
+                clearTimeout(loadTimeout);
+                loadTimeout = null;
+            }
+        };
+        
         const onLoaded = () => {
+            console.log("Direct MP4 metadata loaded successfully!");
             if (progressTime > 0) video.currentTime = progressTime;
             if (autoplay) state.activePlayer.play().catch(()=>{});
             hideLoaderSmoothly();
-            video.removeEventListener('loadedmetadata', onLoaded);
+            cleanListeners();
         };
+        
+        const onError = (e) => {
+            console.error("Direct MP4 load error occurred:", e);
+            hideLoaderSmoothly();
+            showToast("حدث خطأ أثناء الاتصال بسيرفر البث المباشر، يرجى تجربة سيرفر آخر.", "error");
+            cleanListeners();
+        };
+        
+        // Register event listeners BEFORE setting source to prevent race conditions!
         video.addEventListener('loadedmetadata', onLoaded);
+        video.addEventListener('error', onError);
+        
+        // 10-second failsafe timeout
+        loadTimeout = setTimeout(() => {
+            console.warn("Direct MP4 load timeout reached, forcing loader hide.");
+            hideLoaderSmoothly();
+            if (autoplay) state.activePlayer.play().catch(()=>{});
+            cleanListeners();
+        }, 10000);
+        
+        video.src = server.url;
+        video.load(); // CRITICAL: Force native pipeline load to refresh play status
     }
 }
 
