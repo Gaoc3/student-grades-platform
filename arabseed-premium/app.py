@@ -1087,8 +1087,8 @@ def api_stream_proxy():
                                         abs_key_url = "https://cinemana.cc/" + key_uri
                                     else:
                                         abs_key_url = key_uri
-                                    proxied_key_url = f"/api/stream?url={urllib.parse.quote(abs_key_url)}"
-                                    line_stripped = line_stripped.replace(key_uri, proxied_key_url)
+                                    # Load keys directly from Cinemana (natively supports CORS)
+                                    line_stripped = line_stripped.replace(key_uri, abs_key_url)
                             rewritten_lines.append(line_stripped)
                         else:
                             # It's a segment or sub-playlist URL
@@ -1097,8 +1097,14 @@ def api_stream_proxy():
                             else:
                                 abs_segment_url = line_stripped
                             
-                            proxied_segment_url = f"/api/stream?url={urllib.parse.quote(abs_segment_url)}"
-                            rewritten_lines.append(proxied_segment_url)
+                            if 'm3u8' in abs_segment_url.lower():
+                                # Recursive playlist proxying to rewrite sub-playlist relative segments
+                                proxied_segment_url = f"/api/stream?url={urllib.parse.quote(abs_segment_url)}"
+                                rewritten_lines.append(proxied_segment_url)
+                            else:
+                                # Direct CDN streaming for all heavy video segments (.ts files)!
+                                # Completely bypasses Flask proxy & heavily throttled free Cloudflare tunnel!
+                                rewritten_lines.append(abs_segment_url)
                             
                     rewritten_content = '\n'.join(rewritten_lines)
                     
