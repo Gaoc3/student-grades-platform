@@ -259,9 +259,17 @@ def resolve_fasel_stream(url: str) -> list:
             for s in result.get('servers', []):
                 # Wrap in our own /api/stream proxy to solve CORS and segment rewrite
                 proxied_url = f"/api/stream?url={urllib.parse.quote(s['url'])}"
+                q_label = s['quality'].strip()
+                if q_label.lower() == 'auto':
+                    server_label = "✨ سيرفر مباشر تلقائي (Auto)"
+                elif q_label.lower().endswith('p'):
+                    server_label = f"✨ سيرفر مباشر {q_label}"
+                else:
+                    server_label = f"✨ سيرفر مباشر {q_label}p"
+                    
                 servers.append({
                     'type': 'direct',
-                    'server': f"✨ سيرفر مباشر {s['quality']}p",
+                    'server': server_label,
                     'url': proxied_url
                 })
             return servers
