@@ -348,6 +348,33 @@ def build_filtered_seasons(all_episodes_data: list, active_url: str) -> list:
     active_url_clean = active_url.rstrip('/') if active_url else ""
     version_order = {"مترجم": 0, "مدبلج": 1}
     
+    def filter_episode_cluster(ep_map: dict) -> dict:
+        if not ep_map:
+            return ep_map
+        nums = sorted(ep_map.keys())
+        clusters = []
+        current = [nums[0]]
+        for n in nums[1:]:
+            if n == current[-1] + 1:
+                current.append(n)
+            else:
+                clusters.append(current)
+                current = [n]
+        clusters.append(current)
+        
+        if len(clusters) == 1:
+            return ep_map
+        
+        chosen = None
+        for cluster in clusters:
+            if 1 in cluster:
+                chosen = cluster
+                break
+        if chosen is None:
+            chosen = sorted(clusters, key=lambda c: (-len(c), min(c)))[0]
+        
+        return {n: ep_map[n] for n in chosen}
+    
     def should_replace_episode(existing, candidate):
         if candidate["active"] and not existing["active"]:
             return True
@@ -394,7 +421,8 @@ def build_filtered_seasons(all_episodes_data: list, active_url: str) -> list:
         sorted_versions = sorted(versions_bucket.keys(), key=lambda v: version_order.get(v, 99))
         for version_name in sorted_versions:
             s_data = versions_bucket[version_name]
-            sorted_eps = sorted(s_data["episodes"].values(), key=lambda x: x["ep_num"])
+            filtered_map = filter_episode_cluster(s_data["episodes"])
+            sorted_eps = sorted(filtered_map.values(), key=lambda x: x["ep_num"])
             cleaned_eps = []
             for ep in sorted_eps:
                 cleaned_eps.append({
