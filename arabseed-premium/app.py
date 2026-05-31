@@ -563,6 +563,30 @@ def get_home_data_fresh():
                             executor.map(lambda s: fetch_slide_title(s, cinemana_api.session), slides)
         except Exception as slide_err:
             print(f"Error scraping hero slides: {slide_err}")
+        
+        if not slides:
+            fallback = []
+            seen_urls = set()
+            for cat in categories:
+                for card in cat.get('cards', []):
+                    if not card.get('poster') or not card.get('url'):
+                        continue
+                    if card['url'] in seen_urls:
+                        continue
+                    seen_urls.add(card['url'])
+                    fallback.append({
+                        "url": card['url'],
+                        "poster": card['poster'],
+                        "title": card.get('title', 'عرض مميز'),
+                        "type": card.get('type', 'فيلم'),
+                        "rating": card.get('rating', '7.8'),
+                        "quality": card.get('quality', '1080p')
+                    })
+                    if len(fallback) >= 5:
+                        break
+                if len(fallback) >= 5:
+                    break
+            slides = fallback
             
         res = {
             'categories': categories,
