@@ -12,7 +12,7 @@ from app import app
 
 # Create a test client
 client = app.test_client()
-url = "https://cinemana.cc/watch=3021048/"
+url = "https://cinemana.cc/watch=3021048"
 print(f"Requesting /api/details for: {url}")
 response = client.get(f"/api/details?url={url}")
 data = json.loads(response.data)
