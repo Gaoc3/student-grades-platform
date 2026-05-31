@@ -1371,13 +1371,17 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
                     }
                 });
                 
-                // Cap auto level to target quality; allow ABR to adapt if bandwidth is weak
+                // Force highest quality (or exact target if available)
                 if (targetLevelIdx !== -1) {
-                    console.log(`Capping HLS auto level to index: ${targetLevelIdx} (${targetHeight}p)`);
-                    hls.autoLevelCapping = targetLevelIdx;
+                    console.log(`Forcing HLS quality level index: ${targetLevelIdx} (${targetHeight}p)`);
+                    hls.currentLevel = targetLevelIdx;
+                    hls.loadLevel = targetLevelIdx;
+                    hls.startLevel = targetLevelIdx;
                 } else {
-                    console.log(`No specific quality match. Allowing auto up to max level: ${maxLevelIdx} (${maxHeight}p)`);
-                    hls.autoLevelCapping = -1;
+                    console.log(`Specific quality level not found. Forcing highest level: ${maxLevelIdx} (${maxHeight}p)`);
+                    hls.currentLevel = maxLevelIdx;
+                    hls.loadLevel = maxLevelIdx;
+                    hls.startLevel = maxLevelIdx;
                 }
 
                 if (progressTime > 0) {
