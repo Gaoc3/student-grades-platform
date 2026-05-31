@@ -2082,6 +2082,11 @@ function closePlayerModal() {
         state.hlsInstance = null;
     }
     
+    if (state.previewHlsInstance) {
+        state.previewHlsInstance.destroy();
+        state.previewHlsInstance = null;
+    }
+    
     state.currentPlayingServer = null;
     elements.playerRenderArea.innerHTML = '';
     elements.playerModal.style.display = 'none';
@@ -2089,5 +2094,10 @@ function closePlayerModal() {
     // Show poster wrapper again
     const posterWrapper = document.getElementById('modal-poster-wrapper');
     if (posterWrapper) posterWrapper.style.display = 'block';
+    
+    // Show close details button again
+    if (elements.closeDetailsBtn) {
+        elements.closeDetailsBtn.style.display = 'flex';
+    }
 }
 
