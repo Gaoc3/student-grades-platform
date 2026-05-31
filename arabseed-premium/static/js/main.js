@@ -1322,12 +1322,12 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
         // HLS Stream (.m3u8) using Hls.js
         if (Hls.isSupported()) {
             const hls = new Hls({
-                maxBufferLength: 30,
-                maxMaxBufferLength: 60,
-                maxBufferSize: 62914560,
-                backBufferLength: 30,
+                maxBufferLength: 10,
+                maxMaxBufferLength: 15,
+                maxBufferSize: 31457280, // 30MB for rapid buffer fills
+                backBufferLength: 10,
                 enableWorker: true,
-                lowLatencyMode: false,
+                lowLatencyMode: true, // Enable low latency for fast seek response!
                 progressive: true,
                 capLevelToPlayerSize: true,
                 startLevel: -1,
