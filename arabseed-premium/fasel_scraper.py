@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 """
-FaselHD Scraper Engine (Robust Cloudflare Edition)
---------------------------------------------------
+FaselHD Scraper Engine (Cloudflare-Immune impersonation Edition)
+-----------------------------------------------------------------
 A professional, high-performance scraper for FaselHD.
 Seamlessly aggregates search results, homepage loops, details, seasons, and episodes.
-Equipped with robust sequential loading, request retries, and browser fingerprinting.
+Leverages the curl_cffi TLS impersonation engine to bypass all Cloudflare 403 blocks.
 """
 
 import sys
@@ -14,7 +14,7 @@ import re
 import urllib.parse
 import time
 from typing import List, Dict, Any
-import requests
+from curl_cffi import requests
 from bs4 import BeautifulSoup
 
 # Ensure UTF-8 output to support Arabic characters in all terminals
@@ -52,6 +52,7 @@ class FaselAPI:
     def get_with_retry(self, url: str, timeout: int = 12, params: dict = None, referer: str = None) -> requests.Response:
         """
         Thread-safe requests.get wrapper with smart retries and backoff for Cloudflare bypass.
+        Leverages curl_cffi impersonate Chrome fingerprint.
         """
         headers = self.headers.copy()
         if referer:
@@ -59,7 +60,8 @@ class FaselAPI:
             
         for i in range(3):
             try:
-                r = self.session.get(url, headers=headers, params=params, timeout=timeout)
+                # Impersonate modern Chrome 120 client TLS fingerprinter
+                r = self.session.get(url, headers=headers, params=params, timeout=timeout, impersonate="chrome120")
                 if r.status_code == 200:
                     return r
                 elif r.status_code == 403:
@@ -70,7 +72,7 @@ class FaselAPI:
                 time.sleep(1.0 * (i + 1))
                 
         # Final request attempt (fallback)
-        return self.session.get(url, headers=headers, params=params, timeout=timeout)
+        return self.session.get(url, headers=headers, params=params, timeout=timeout, impersonate="chrome120")
 
     def parse_card(self, div) -> Dict[str, str]:
         """
@@ -139,7 +141,7 @@ class FaselAPI:
 
     def get_homepage_categories(self) -> List[Dict[str, Any]]:
         """
-        Scrapes https://web53112x.faselhdx.bid/main and compiles horizontal lists.
+        Scrapes homepage categories sequentially with spacing to avoid Cloudflare triggers.
         """
         categories = []
         try:
