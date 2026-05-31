@@ -51,9 +51,6 @@ const elements = {
     modalSeasonsSection: document.getElementById('modal-seasons-section'),
     modalSeasonsGrid: document.getElementById('modal-seasons-grid'),
     
-    // Versions Section
-    modalVersionsSection: document.getElementById('modal-versions-section'),
-    modalVersionsGrid: document.getElementById('modal-versions-grid'),
     
     // Episodes Section
     modalEpisodesSection: document.getElementById('modal-episodes-section'),
