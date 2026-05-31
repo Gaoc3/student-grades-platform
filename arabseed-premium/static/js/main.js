@@ -972,9 +972,15 @@ function handleEpisodeFilter() {
     
     elements.modalEpisodesGrid.innerHTML = '';
     
-    // Find active season title
+    // Find active season title and version
     const activeSeasonBtn = elements.modalSeasonsGrid.querySelector('.season-btn.active');
-    const seasonTitle = activeSeasonBtn ? activeSeasonBtn.getAttribute('data-title') : "";
+    let seasonTitle = "";
+    if (activeSeasonBtn) {
+        const sNum = activeSeasonBtn.getAttribute('data-season-num');
+        const activeVersionPill = elements.modalVersionsGrid.querySelector('.version-pill.active');
+        const ver = activeVersionPill ? activeVersionPill.getAttribute('data-version') : "";
+        seasonTitle = ver && ver !== "مترجم" ? `موسم ${sNum} (${ver})` : `موسم ${sNum}`;
+    }
     
     filtered.forEach((ep) => {
         const btn = document.createElement('button');
