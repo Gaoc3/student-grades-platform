@@ -731,7 +731,27 @@ def api_details():
             try:
                 base_query = clean_for_search(raw_title)
                 if base_query:
-                    search_results = cinemana_api.search(base_query, max_pages=4)
+                    # Parallelized season-specific search queries to bypass Cinemana's 120 search results cap!
+                    season_words = ["الاول", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر", "الحادي عشر", "الثاني عشر"]
+                    queries = [base_query]
+                    for word in season_words:
+                        queries.append(f"{base_query} الموسم {word}")
+                    
+                    search_results = []
+                    seen_urls = set()
+                    
+                    import concurrent.futures
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=len(queries)) as executor:
+                        futures = {executor.submit(cinemana_api.search, q): q for q in queries}
+                        for future in concurrent.futures.as_completed(futures):
+                            try:
+                                page_results = future.result()
+                                for r in page_results:
+                                    if r['url'] not in seen_urls:
+                                        seen_urls.add(r['url'])
+                                        search_results.append(r)
+                            except Exception as search_err:
+                                print(f"Parallel search err: {search_err}")
                     
                     orig_base_cleaned = normalize_arabic(clean_for_search(raw_title))
                     matched_items = []
