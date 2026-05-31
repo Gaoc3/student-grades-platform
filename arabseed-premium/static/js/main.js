@@ -99,10 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.closePlayerBtn.onclick = closePlayerModal;
     elements.episodeFilterInput.addEventListener('input', handleEpisodeFilter);
     
-    // Play button overlay click action
-    const posterPlayBtn = document.getElementById('modal-poster-play-btn');
-    if (posterPlayBtn) {
-        posterPlayBtn.onclick = () => {
+    // Play button / Entire Poster Wrapper overlay click action
+    const posterWrapper = document.getElementById('modal-poster-wrapper');
+    if (posterWrapper) {
+        posterWrapper.onclick = () => {
             // Trigger the prominent quick play button click
             if (elements.modalQuickPlayBtn && elements.modalQuickPlayBtn.style.display !== 'none' && elements.modalQuickPlayBtn.onclick) {
                 elements.modalQuickPlayBtn.click();
@@ -273,7 +273,10 @@ function updateNavActive(activeBtn) {
 function handleSearchSubmit(e) {
     e.preventDefault();
     const query = elements.searchInput.value.trim();
-    if (!query) return;
+    if (!query) {
+        showToast("الرجاء إدخال كلمة للبحث عن العروض...", "warning");
+        return;
+    }
     updateNavActive(null); // Clear active navigation states
     elements.liveSearchDropdown.style.display = 'none'; // Hide dropdown on full submit
     performSearch(query);
