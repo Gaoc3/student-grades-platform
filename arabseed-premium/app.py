@@ -92,12 +92,17 @@ def parse_episode_num(title: str) -> int:
     """Parses episode number from Arabic/English title string using context scanning."""
     t_clean = re.sub(r'\s+', ' ', title)
     
-    # 1. Look for explicit digits in episode context
+    # 1. Look for compact S01E02 or 1x02 patterns
+    m = re.search(r'\b(?:s\s*\d+\s*e\s*(\d+)|\d+\s*x\s*(\d+))\b', t_clean, re.IGNORECASE)
+    if m:
+        return int(m.group(1) or m.group(2))
+        
+    # 2. Look for explicit digits in episode context
     m = re.search(r'(?:الحلقة|الحلقه|حلقة|حلقه|ep|episode)\s*(\d+)', t_clean, re.IGNORECASE)
     if m:
         return int(m.group(1))
         
-    # 2. Look for Arabic word digits in episode context
+    # 3. Look for Arabic word digits in episode context
     m = re.search(r'(?:الحلقة|الحلقه|حلقة|حلقه)\s+([\u0600-\u06FF\s]+)', t_clean)
     if m:
         ep_chunk = m.group(1).strip()
@@ -105,18 +110,36 @@ def parse_episode_num(title: str) -> int:
             if arabic_word in ep_chunk:
                 return ARABIC_NUMBERS[arabic_word]
                 
-    # 3. Fallback to check for any Arabic word digit strictly preceded by الحلقة/حلقة
+    # 4. Fallback to check for any Arabic word digit strictly preceded by الحلقة/حلقة
     for arabic_word in sorted(ARABIC_NUMBERS.keys(), key=lambda x: len(x), reverse=True):
         if re.search(r'(?:الحلقة|الحلقه|حلقة|حلقه)\s+' + re.escape(arabic_word), t_clean):
             return ARABIC_NUMBERS[arabic_word]
             
-    # 4. Fallback to general last resort: look for lonely digits that are NOT standard release years
+    # 5. Fallback to general last resort: look for lonely digits that are NOT standard release years
     for m in re.finditer(r'\b(\d+)\b', t_clean):
         val = int(m.group(1))
         if not (1900 <= val <= 2030):
             return val
             
     return 1 # Default to Episode 1
+
+
+def is_black_and_white_version(title: str) -> bool:
+    t = title.lower()
+    bw_keywords = [
+        "الأبيض والأسود", "الابيض والاسود", "الأبيض والاسود", "الابيض والأسود",
+        "ابيض واسود", "أبيض وأسود", "أبيض و أسود", "ابيض و اسود",
+        "black & white", "black and white", "b&w"
+    ]
+    if any(k in t for k in bw_keywords):
+        return True
+        
+    # Treat "noir" as a version only when explicitly labeled as such
+    if re.search(r'\bnoir\b', t):
+        if "نسخة" in t or "version" in t or "edition" in t or re.search(r'\(([^)]*noir[^)]*)\)', t):
+            return True
+            
+    return False
 
 
 def clean_for_search(title: str) -> str:
@@ -303,6 +326,84 @@ def normalize_arabic(text: str) -> str:
     t = re.sub(r'[\u064B-\u065F]', '', t)  # Remove diacritics
     t = re.sub(r'[-\s/|–\.,:\?!\(\)\[\]\{\}_]+', ' ', t)
     return re.sub(r'\s+', ' ', t).strip()
+
+def get_version_rank(version: str) -> int:
+    """Lower rank means higher priority when merging multiple versions."""
+    if not version:
+        return 0
+    v = normalize_arabic(version)
+    is_dubbed = "مدبلج" in v or "دبلج" in v
+    is_bw = "الابيض" in v and "الاسود" in v
+    is_special = "خاص" in v or "سبيشال" in v or "special" in v
+    if is_special:
+        return 4
+    if is_dubbed and is_bw:
+        return 3
+    if is_bw:
+        return 2
+    if is_dubbed:
+        return 1
+    return 5
+
+def build_merged_seasons(all_episodes_data: list, active_url: str) -> list:
+    """Merges all versions into a single clean season list with unique episodes."""
+    seasons_map = {}
+    active_url_clean = active_url.rstrip('/') if active_url else ""
+    
+    def should_replace_episode(existing, candidate):
+        if candidate["active"] and not existing["active"]:
+            return True
+        if existing["active"] and not candidate["active"]:
+            return False
+        if candidate["version_rank"] < existing["version_rank"]:
+            return True
+        return False
+    
+    for ep_title, ep_url in all_episodes_data:
+        s_num, e_num, ver = parse_episode_title(ep_title)
+        season_key = s_num
+        if season_key not in seasons_map:
+            seasons_map[season_key] = {
+                "title": f"موسم {s_num}",
+                "season_num": s_num,
+                "episodes": {}
+            }
+        
+        active = ep_url.rstrip('/') == active_url_clean
+        episode_data = {
+            "title": f"الحلقة {e_num}",
+            "url": ep_url,
+            "active": active,
+            "ep_num": e_num,
+            "version_rank": get_version_rank(ver)
+        }
+        
+        existing = seasons_map[season_key]["episodes"].get(e_num)
+        if existing is None or should_replace_episode(existing, episode_data):
+            seasons_map[season_key]["episodes"][e_num] = episode_data
+    
+    sorted_seasons = []
+    for s_num in sorted(seasons_map.keys()):
+        s_data = seasons_map[s_num]
+        sorted_eps = sorted(s_data["episodes"].values(), key=lambda x: x["ep_num"])
+        cleaned_eps = []
+        for ep in sorted_eps:
+            cleaned_eps.append({
+                "title": ep["title"],
+                "url": ep["url"],
+                "active": ep["active"]
+            })
+        
+        sorted_seasons.append({
+            "title": s_data["title"],
+            "active": any(ep["active"] for ep in cleaned_eps),
+            "episodes": cleaned_eps
+        })
+    
+    if sorted_seasons and not any(s["active"] for s in sorted_seasons):
+        sorted_seasons[0]["active"] = True
+    
+    return sorted_seasons
 
 def calculate_match_score(item_title: str, query: str) -> int:
     """Calculates a relevance matching score between search query and item title."""
@@ -700,12 +801,7 @@ def parse_episode_title(title):
         tags.append("مدبلج")
         
     title_lower = title.lower()
-    noir_keywords = [
-        "الأبيض والأسود", "الابيض والاسود", "الأبيض والاسود", "الابيض والأسود",
-        "ابيض واسود", "أبيض وأسود", "أبيض و أسود", "ابيض و اسود",
-        "noir", "black & white", "black and white"
-    ]
-    if any(k in title_lower for k in noir_keywords):
+    if is_black_and_white_version(title):
         tags.append("نسخة الأبيض والأسود")
         
     if "خاصة" in title or "خاصه" in title or "سبيشال" in title or "special" in title_lower:
