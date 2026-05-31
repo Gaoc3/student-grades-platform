@@ -1614,8 +1614,15 @@ body {
 .plyr__controls {
     background: linear-gradient(180deg, rgba(8, 6, 18, 0) 0%, rgba(8, 6, 18, 0.88) 100%) !important;
     backdrop-filter: blur(10px) !webkit-backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255, 255, 255, 0.04) !important;
+    border-top: none !important;
     padding: 15px 20px 20px 20px !important;
+    box-shadow: none !important;
+}
+
+.plyr__progress, .plyr__progress__container {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 /* Custom Neon Progress Bar */
