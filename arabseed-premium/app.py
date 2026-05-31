@@ -758,6 +758,8 @@ def api_details():
                     orig_base_cleaned = normalize_arabic(clean_for_search(raw_title))
                     matched_items = []
                     for r in search_results:
+                        if r.get('type') == 'فيلم':
+                            continue
                         r_base_cleaned = normalize_arabic(clean_for_search(r['title']))
                         if r_base_cleaned == orig_base_cleaned:
                             matched_items.append(r)
