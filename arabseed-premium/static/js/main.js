@@ -1948,5 +1948,9 @@ function closePlayerModal() {
     state.currentPlayingServer = null;
     elements.playerRenderArea.innerHTML = '';
     elements.playerModal.style.display = 'none';
+    
+    // Show poster wrapper again
+    const posterWrapper = document.getElementById('modal-poster-wrapper');
+    if (posterWrapper) posterWrapper.style.display = 'block';
 }
 
