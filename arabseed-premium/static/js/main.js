@@ -861,15 +861,19 @@ function renderVersionsForSeason(seasonGroup) {
     
     const versionKeys = Object.keys(seasonGroup.versions);
     
-    // Filter versionKeys to at most 2 canonical/available versions
-    let filteredKeys = versionKeys.filter(k => k === "مترجم" || k === "مدبلج");
-    if (filteredKeys.length === 0) {
-        filteredKeys = versionKeys.slice(0, 2);
-    } else if (filteredKeys.length === 1 && versionKeys.length > 1) {
-        const other = versionKeys.find(k => k !== filteredKeys[0]);
-        if (other) filteredKeys.push(other);
-    }
-    filteredKeys = filteredKeys.slice(0, 2);
+    // Sort versions to put canonical first, then other unique ones, preventing duplicates
+    const versionOrder = {
+        "مترجم": 1,
+        "مدبلج": 2,
+        "نسخة الأبيض والأسود": 3,
+        "مدبلج - نسخة الأبيض والأسود": 4,
+        "حلقة خاصة": 5
+    };
+    const filteredKeys = versionKeys.sort((a, b) => {
+        const orderA = versionOrder[a] || 99;
+        const orderB = versionOrder[b] || 99;
+        return orderA - orderB;
+    });
     
     if (filteredKeys.length <= 1) {
         // Hide versions section if only 1 version is available
