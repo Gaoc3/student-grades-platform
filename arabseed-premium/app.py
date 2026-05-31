@@ -17,8 +17,10 @@ from flask import Flask, request, Response, render_template, jsonify
 # Force UTF-8 output to support Arabic characters in all terminals
 sys.stdout.reconfigure(encoding='utf-8')
 
-# Import Cinemana Scraper
-from cinemana_scraper import CinemanaAPI
+# Import Fasel Scraper and Subprocess
+import subprocess
+import json
+from fasel_scraper import FaselAPI
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
@@ -27,7 +29,7 @@ def index():
     return render_template('index.html')
 
 # Initialize Scrapers
-cinemana_api = CinemanaAPI()
+fasel_api = FaselAPI("https://web53112x.faselhdx.bid")
 
 # Arabic numbers mapping to digits for robust season/episode matching
 ARABIC_NUMBERS = {
