@@ -696,103 +696,9 @@ def api_series():
     cached_val = app_cache.get("series_data")
     if cached_val:
         return jsonify(cached_val)
-    return jsonify(get_series_data_fresh())
-
-@app.route('/api/anime')
-def api_anime():
-    """Scrapes pages 1-4 in parallel and deduplicates anime episodes."""
-    cached_val = app_cache.get("anime_data")
-    if cached_val:
-        return jsonify(cached_val)
-    return jsonify(get_anime_data_fresh())
-
-@app.route('/api/search')
-def api_search():
-    """Searches Cinemana for query and ranks results intelligently using Arabic letter relevance."""
-    query = request.args.get('q', '').strip()
-    if not query:
-        return jsonify({'error': 'Search query is required.'}), 400
-        
-    try:
-        # Fallback for old endpoints if main.js is cached on client
-        if query == '__home__':
-            return api_home()
-        elif query == '__movies__':
-            return api_movies()
-        elif query == '__series__':
-            return api_series()
-        elif query == '__anime__':
-            return api_anime()
-            
-        cache_key = f"search_{query}"
-        cached_val = app_cache.get(cache_key)
-        if cached_val:
-            return jsonify(cached_val)
-            
-        results = cinemana_api.search(query)
-        
-        # Deduplicate episodes in search results
-        deduped_results = []
-        seen_bases = set()
-        for r in results:
-            title = r.get('title', '')
-            r_type = r.get('type', 'فيلم')
-            is_special = "special" in title.lower() or "سبيشال" in title or "خاص" in title or "فيلم" in title
-            if not is_special and (r_type == 'مسلسل' or any(x in title for x in ["مسلسل", "الحلقة", "الحلقه", "حلقة", "حلقه", "الموسم"])):
-                base = clean_for_search(title).lower().strip()
-                if base in seen_bases:
-                    continue
-                seen_bases.add(base)
-                r['title'] = clean_display_title(title, 'مسلسل')
-                r['type'] = 'مسلسل'
-            deduped_results.append(r)
-            
-        # Rank results intelligently based on relevance score
-        scored_results = []
-        for r in deduped_results:
-            score = calculate_match_score(r['title'], query)
-            scored_results.append((score, r))
-            
-        # Sort descending by score, maintaining stable order for equal scores
-        scored_results.sort(key=lambda x: x[0], reverse=True)
-        final_results = [item for score, item in scored_results]
-        
-        res = {
-            'results': final_results,
-            'category': f"البحث عن: {query}"
-        }
-        
-        if final_results:
-            app_cache.set(cache_key, res, ttl=300)
-            
-        return jsonify(res)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-
-def parse_episode_title(title):
-    season_num = parse_season_num(title)
-    ep_num = parse_episode_num(title)
-            
-    # Extract version/tags
-    tags = []
-    is_dubbed, is_bw, is_special = extract_version_flags(title)
-    if is_dubbed:
-        tags.append("مدبلج")
-    if is_bw:
-        tags.append("نسخة الأبيض والأسود")
-    if is_special:
-        tags.append("حلقة خاصة")
-        
-    version = " - ".join(tags) if tags else ""
-    return season_num, ep_num, version
-
-@app.route('/api/details')
+    r@app.route('/api/details')
 def api_details():
-    """Fetches stories, seasons, and episodes from Cinemana's details page.
-    For series, dynamically aggregates and deduplicates all episodes across
-    all matching seasons/versions via a fast parallelized/unified Cinemana search."""
+    """Fetches story description, seasons, and episodes from FaselHD's details page."""
     url = request.args.get('url', '').strip()
     if not url:
         return jsonify({'error': 'URL is required.'}), 400
@@ -803,50 +709,13 @@ def api_details():
         if cached_val:
             return jsonify(cached_val)
             
-        details = cinemana_api.get_details(url)
+        details = fasel_api.get_details(url)
         
-        raw_title = details.get('title', '')
-        if raw_title:
-            r_type = 'مسلسل' if details.get('is_series') else 'فيلم'
-            details['title'] = clean_display_title(raw_title, r_type)
-        
-        merged_from_search = False
-            
-        # Smart Search-Based Series Aggregation
-        if details.get('is_series') and raw_title:
-            try:
-                base_query = clean_for_search(raw_title)
-                if base_query:
-                    # Parallelized season-specific search queries to bypass Cinemana's 120 search results cap!
-                    season_words = ["الاول", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر", "الحادي عشر", "الثاني عشر"]
-                    queries = [base_query]
-                    for word in season_words:
-                        queries.append(f"{base_query} الموسم {word}")
-                    
-                    search_results = []
-                    seen_urls = set()
-                    
-                    import concurrent.futures
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=len(queries)) as executor:
-                        futures = {executor.submit(cinemana_api.search, q): q for q in queries}
-                        for future in concurrent.futures.as_completed(futures):
-                            try:
-                                page_results = future.result()
-                                for r in page_results:
-                                    if r['url'] not in seen_urls:
-                                        seen_urls.add(r['url'])
-                                        search_results.append(r)
-                            except Exception as search_err:
-                                print(f"Parallel search err: {search_err}")
-                    
-                    orig_base_cleaned = normalize_arabic(clean_for_search(raw_title))
-                    matched_items = []
-                    for r in search_results:
-                        if r.get('type') == 'فيلم':
-                            continue
-                        r_base_cleaned = normalize_arabic(clean_for_search(r['title']))
-                        if r_base_cleaned == orig_base_cleaned:
-                            matched_items.append(r)
+        # Cache details for 1 hour
+        app_cache.set(cache_key, details, ttl=3600)
+        return jsonify(details)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500pend(r)
                             
                     if matched_items:
                         # Combine search results and original scraped episodes
