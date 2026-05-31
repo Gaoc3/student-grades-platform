@@ -671,8 +671,6 @@ async function openDetailsModal(item) {
     elements.modalStoryText.innerText = "جاري تحميل تفاصيل القصة وجدول الحلقات من مكتبة AleX CINEMA...";
     elements.modalSeasonsSection.style.display = 'none';
     elements.modalSeasonsGrid.innerHTML = '';
-    elements.modalVersionsSection.style.display = 'none';
-    elements.modalVersionsGrid.innerHTML = '';
     elements.modalEpisodesSection.style.display = 'none';
     elements.modalQuickPlayBtn.style.display = 'none';
     state.bestServer = null;
@@ -690,10 +688,8 @@ async function loadSeasonData(url, seasonTitle) {
     closePlayerModal(); // Stop any active player and restore poster view
     elements.modalEpisodesSection.style.display = 'none';
     elements.modalSeasonsSection.style.display = 'none';
-    elements.modalVersionsSection.style.display = 'none';
     elements.modalQuickPlayBtn.style.display = 'none';
     elements.modalSeasonsGrid.innerHTML = '';
-    elements.modalVersionsGrid.innerHTML = '';
     elements.modalEpisodesGrid.innerHTML = '';
     elements.modalServersList.innerHTML = '';
     elements.serversLoader.style.display = 'block';
