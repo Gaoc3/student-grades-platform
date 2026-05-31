@@ -227,10 +227,17 @@ class CinemanaAPI:
             season_triggers = soup.find_all(class_='season-trigger')
             season_wrappers = soup.find_all(class_='season-wrapper')
             
-            if season_triggers and len(season_triggers) == len(season_wrappers):
+            if season_triggers and season_wrappers:
                 is_series = True
-                for i, trigger in enumerate(season_triggers):
+                seasons_map = {}
+                num_seasons = min(len(season_triggers), len(season_wrappers))
+                
+                for i in range(num_seasons):
+                    trigger = season_triggers[i]
                     s_title = trigger.get_text(strip=True)
+                    if not s_title:
+                        continue
+                        
                     # Check if active
                     active_season = 'bg-red-600' in trigger.get('class', []) or 'block' in season_wrappers[i].get('class', [])
                     
@@ -256,18 +263,30 @@ class CinemanaAPI:
                                 "active": active_ep
                             })
                             
-                    # Sort episodes logically (lowest episode first)
-                    if episodes:
+                    if s_title in seasons_map:
+                        # Merge episodes and deduplicate them by url or title
+                        existing_eps = seasons_map[s_title]['episodes']
+                        for ep in episodes:
+                            if not any(x['url'] == ep['url'] or x['title'] == ep['title'] for x in existing_eps):
+                                existing_eps.append(ep)
+                        if active_season:
+                            seasons_map[s_title]['active'] = True
+                    else:
+                        seasons_map[s_title] = {
+                            "title": s_title,
+                            "active": active_season,
+                            "episodes": episodes
+                        }
+                        
+                # Sort episodes logically inside each season
+                for s_title, s_data in seasons_map.items():
+                    if s_data['episodes']:
                         def extract_ep_num(ep):
                             m = re.search(r'\d+', ep['title'])
-                            return int(m.group()) if m else 0
-                        episodes = sorted(episodes, key=extract_ep_num)
+                            return int(m.group()) if m else 9999
+                        s_data['episodes'] = sorted(s_data['episodes'], key=extract_ep_num)
                         
-                    seasons.append({
-                        "title": s_title,
-                        "active": active_season,
-                        "episodes": episodes
-                    })
+                seasons = list(seasons_map.values())
             else:
                 # Standalone movie/video if there are no season triggers or wrappers
                 is_series = False
