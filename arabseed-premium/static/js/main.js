@@ -1322,10 +1322,10 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
         // HLS Stream (.m3u8) using Hls.js
         if (Hls.isSupported()) {
             const hls = new Hls({
-                maxBufferLength: 10,
-                maxMaxBufferLength: 15,
+                maxBufferLength: 20,
+                maxMaxBufferLength: 30,
                 maxBufferSize: 31457280, // 30MB for rapid buffer fills
-                backBufferLength: 10,
+                backBufferLength: 60, // cache up to 1 minute of played content for instant backward seek/scrubbing!
                 enableWorker: true,
                 lowLatencyMode: true, // Enable low latency for fast seek response!
                 progressive: true,
@@ -1847,12 +1847,50 @@ function launchPlayer(server, title) {
     state.activePlayer.on('ready', () => {
         const seekInput = elements.playerRenderArea.querySelector('.plyr__progress input[data-plyr="seek"], .plyr__progress input[type="range"]');
         if (seekInput) {
-            // Force immediate seek on input range drag
-            seekInput.addEventListener('input', () => {
-                const targetTime = (seekInput.value / 100) * video.duration;
-                if (isFinite(targetTime)) {
+            let lastSeekTime = 0;
+            let seekTimeout = null;
+            
+            const isTimeBuffered = (time) => {
+                try {
+                    const buffered = video.buffered;
+                    for (let i = 0; i < buffered.length; i++) {
+                        if (time >= buffered.start(i) && time <= buffered.end(i)) {
+                            return true;
+                        }
+                    }
+                } catch (e) {}
+                return false;
+            };
+
+            const performSeek = (targetTime) => {
+                if (isFinite(targetTime) && video.duration) {
                     video.currentTime = targetTime;
                 }
+            };
+
+            seekInput.addEventListener('input', () => {
+                const targetTime = (seekInput.value / 100) * video.duration;
+                if (!isFinite(targetTime) || !video.duration) return;
+                
+                const now = Date.now();
+                const buffered = isTimeBuffered(targetTime);
+                const throttleInterval = buffered ? 33 : 150; // 30fps for buffered, 150ms for network
+
+                if (now - lastSeekTime > throttleInterval) {
+                    lastSeekTime = now;
+                    performSeek(targetTime);
+                } else {
+                    if (seekTimeout) clearTimeout(seekTimeout);
+                    seekTimeout = setTimeout(() => {
+                        performSeek(targetTime);
+                    }, throttleInterval);
+                }
+            });
+
+            seekInput.addEventListener('change', () => {
+                if (seekTimeout) clearTimeout(seekTimeout);
+                const targetTime = (seekInput.value / 100) * video.duration;
+                performSeek(targetTime);
             });
         }
     });
