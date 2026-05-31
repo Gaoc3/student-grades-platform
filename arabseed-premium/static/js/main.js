@@ -1008,7 +1008,8 @@ function renderEpisodes(episodes, seasonTitle = "") {
                 state.selectedItem.title, 
                 true, 
                 seasonTitle, 
-                ep.title
+                ep.title,
+                true
             );
         };
         
