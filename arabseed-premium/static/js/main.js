@@ -838,10 +838,20 @@ function renderVersionsForSeason(seasonGroup) {
     
     const versionKeys = Object.keys(seasonGroup.versions);
     
-    if (versionKeys.length <= 1) {
+    // Filter versionKeys to at most 2 canonical/available versions
+    let filteredKeys = versionKeys.filter(k => k === "مترجم" || k === "مدبلج");
+    if (filteredKeys.length === 0) {
+        filteredKeys = versionKeys.slice(0, 2);
+    } else if (filteredKeys.length === 1 && versionKeys.length > 1) {
+        const other = versionKeys.find(k => k !== filteredKeys[0]);
+        if (other) filteredKeys.push(other);
+    }
+    filteredKeys = filteredKeys.slice(0, 2);
+    
+    if (filteredKeys.length <= 1) {
         // Hide versions section if only 1 version is available
         elements.modalVersionsSection.style.display = 'none';
-        const singleSeasonData = seasonGroup.versions[versionKeys[0]];
+        const singleSeasonData = seasonGroup.versions[filteredKeys[0] || versionKeys[0]];
         state.currentEpisodes = singleSeasonData.episodes;
         renderEpisodes(singleSeasonData.episodes, singleSeasonData.title);
         elements.modalEpisodesSection.style.display = 'block';
@@ -865,7 +875,7 @@ function renderVersionsForSeason(seasonGroup) {
     // Show versions selector
     elements.modalVersionsSection.style.display = 'block';
     
-    versionKeys.forEach((versionName) => {
+    filteredKeys.forEach((versionName) => {
         const pill = document.createElement('button');
         pill.className = 'version-pill';
         
@@ -920,8 +930,8 @@ function renderVersionsForSeason(seasonGroup) {
     const firstPill = elements.modalVersionsGrid.querySelector('.version-pill');
     if (firstPill) {
         firstPill.classList.add('active');
-        const activeVersionName = firstPill.getAttribute('data-version');
-        const seasonData = seasonGroup.versions[activeVersionName];
+        const defaultVerName = filteredKeys[0];
+        const seasonData = seasonGroup.versions[defaultVerName];
         state.currentEpisodes = seasonData.episodes;
         renderEpisodes(seasonData.episodes, seasonData.title);
         elements.modalEpisodesSection.style.display = 'block';

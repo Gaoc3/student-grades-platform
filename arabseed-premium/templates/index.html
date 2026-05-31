@@ -123,31 +123,85 @@
             <button class="modal-close-btn" id="close-details-btn"><i class="fa-solid fa-xmark"></i></button>
             
             <div class="modal-body-layout">
-                <!-- Left: Poster Column -->
-                <div class="modal-poster-col">
-                    <div class="modal-poster-wrapper">
-                        <img src="" alt="Poster" class="modal-poster-img" id="modal-poster" referrerpolicy="no-referrer">
+                <!-- Top Section: Media + Info side-by-side -->
+                <div class="modal-top-layout">
+                    <!-- Left: Media Column (16:9 Cinematic Video Player & Poster) -->
+                    <div class="modal-media-col">
+                        <div class="modal-media-viewport">
+                            <!-- Poster Placeholder View (visible by default) -->
+                            <div class="modal-poster-wrapper" id="modal-poster-wrapper">
+                                <div class="poster-blur-bg" id="modal-poster-blur-bg"></div>
+                                <img src="" alt="Poster" class="modal-poster-img" id="modal-poster" referrerpolicy="no-referrer">
+                                <button class="modal-play-overlay-btn" id="modal-poster-play-btn">
+                                    <i class="fa-solid fa-play"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Embedded Video Player View (hidden by default) -->
+                            <div class="modal-player-viewport" id="modal-player-viewport" style="display: none;">
+                                <div id="modal-player-render-area" style="width: 100%; height: 100%;">
+                                    <!-- Injected via JavaScript -->
+                                </div>
+                                <button class="modal-close-player-btn" id="modal-close-player-btn" title="إغلاق المشغل">
+                                    <i class="fa-solid fa-rectangle-xmark"></i> إغلاق
+                                </button>
+                                
+                                <!-- Ultra-Premium Custom Loader Overlay -->
+                                <div class="player-custom-loader" id="player-custom-loader" style="display: none;">
+                                    <div class="loader-content">
+                                        <i class="fa-solid fa-wand-magic-sparkles loader-pulse-icon"></i>
+                                        <div class="pulse-spinner"></div>
+                                        <span class="loader-status-text" id="player-loader-status">جارِ تهيئة البث السينمائي الفاخر...</span>
+                                    </div>
+                                </div>
+
+                                <!-- Custom Keyboard/Gesture Center Micro-Indicator -->
+                                <div class="player-center-indicator" id="player-center-indicator" style="display: none;">
+                                    <i class="fa-solid fa-play"></i>
+                                </div>
+
+                                <!-- Netflix-style Next Episode Card Overlay -->
+                                <div class="player-next-episode-card" id="player-next-episode-card" style="display: none;">
+                                    <span class="next-label"><i class="fa-solid fa-circle-play"></i> الحلقة القادمة تبدأ قريباً...</span>
+                                    <h3 class="next-title" id="player-next-episode-title">الحلقة 2</h3>
+                                    <div class="next-countdown-wrapper">
+                                        <svg class="countdown-svg" viewBox="0 0 36 36">
+                                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                            <path class="circle-progress" id="countdown-progress-ring" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        </svg>
+                                        <div class="next-countdown-seconds" id="player-next-countdown-text">5</div>
+                                    </div>
+                                    <button class="next-play-btn" id="player-next-skip-btn"><i class="fa-solid fa-forward-step"></i> تشغيل الآن</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Badges below the player -->
+                        <div class="modal-meta-badges">
+                            <span class="meta-badge rating-badge" id="modal-rating"><i class="fa-solid fa-star"></i> 7.8</span>
+                            <span class="meta-badge quality-badge" id="modal-quality">1080p FHD</span>
+                            <span class="meta-badge type-badge" id="modal-type">فيلم</span>
+                            <span class="active-server-badge" id="player-server-badge" style="display: none;">سيرفر مباشر</span>
+                        </div>
                     </div>
-                    <div class="modal-meta-badges">
-                        <span class="meta-badge rating-badge" id="modal-rating"><i class="fa-solid fa-star"></i> 7.8</span>
-                        <span class="meta-badge quality-badge" id="modal-quality">1080p FHD</span>
-                        <span class="meta-badge type-badge" id="modal-type">فيلم</span>
+                    
+                    <!-- Right: Info Column -->
+                    <div class="modal-info-col">
+                        <h2 class="modal-title" id="modal-title-text">اسم الفيلم بالكامل</h2>
+                        <div class="modal-divider"></div>
+                        
+                        <h4 class="info-label"><i class="fa-solid fa-quote-right"></i> القصة والتفاصيل:</h4>
+                        <p class="modal-story" id="modal-story-text">جاري تحميل قصة العرض...</p>
+                        
+                        <!-- Netflix-style Watch Button (Prominent Playback Trigger) -->
+                        <button class="quick-play-btn" id="modal-quick-play-btn" style="display: none;">
+                            <i class="fa-solid fa-play"></i> مشاهدة الآن (بأعلى جودة)
+                        </button>
                     </div>
                 </div>
                 
-                <!-- Right: Detailed Info Column -->
-                <div class="modal-info-col">
-                    <h2 class="modal-title" id="modal-title-text">اسم الفيلم بالكامل</h2>
-                    <div class="modal-divider"></div>
-                    
-                    <h4 class="info-label"><i class="fa-solid fa-quote-right"></i> القصة والتفاصيل:</h4>
-                    <p class="modal-story" id="modal-story-text">جاري تحميل قصة العرض...</p>
-                    
-                    <!-- Netflix-style Watch Button (Prominent Playback Trigger) -->
-                    <button class="quick-play-btn" id="modal-quick-play-btn" style="display: none;">
-                        <i class="fa-solid fa-play"></i> مشاهدة الآن (بأعلى جودة)
-                    </button>
-                    
+                <!-- Bottom Section: Seasons / Versions / Episodes / Servers (Full Width) -->
+                <div class="modal-bottom-layout">
                     <!-- Seasons Section -->
                     <div class="seasons-wrapper" id="modal-seasons-section" style="display: none;">
                         <h4 class="info-label"><i class="fa-solid fa-folder-open"></i> المواسم المتوفرة:</h4>
