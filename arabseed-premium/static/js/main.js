@@ -1290,6 +1290,10 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
         state.hlsInstance.destroy();
         state.hlsInstance = null;
     }
+    if (state.previewHlsInstance) {
+        state.previewHlsInstance.destroy();
+        state.previewHlsInstance = null;
+    }
     
     const video = document.getElementById('video-player');
     if (!video) return;
@@ -1348,6 +1352,31 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
             hls.loadSource(server.url);
             hls.attachMedia(video);
             state.hlsInstance = hls;
+            
+            // Preview Hls.js setup
+            const previewVideo = document.getElementById('plyr-preview-video');
+            if (previewVideo) {
+                const previewHls = new Hls({
+                    maxBufferLength: 5,
+                    maxMaxBufferLength: 10,
+                    maxBufferSize: 5242880, // 5MB for tiny preview chunks
+                    backBufferLength: 0,
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    progressive: true,
+                    autoStartLoad: true
+                });
+                
+                previewHls.loadSource(server.url);
+                previewHls.attachMedia(previewVideo);
+                state.previewHlsInstance = previewHls;
+                
+                // Force preview to strictly load the lowest quality level (index 0)
+                previewHls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    previewHls.currentLevel = 0;
+                    previewHls.loadLevel = 0;
+                });
+            }
             
             hls.on(Hls.Events.MANIFEST_PARSED, function() {
                 if (hlsTimeout) {
