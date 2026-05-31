@@ -573,12 +573,12 @@ def get_home_data_fresh():
         return {'categories': [], 'slides': [], 'category': 'الرئيسية'}
 
 def get_movies_data_fresh():
-    """Fetch pages 1-4 in parallel for movies listing."""
+    """Fetch pages 1-3 in parallel for movies listing."""
     try:
-        urls = [f"https://cinemana.cc/movies/page/{p}/" for p in [1, 2, 3, 4]]
+        urls = [f"{fasel_api.base_url}/movies/page/{p}/" for p in [1, 2, 3]]
         results = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-            futures = {executor.submit(cinemana_api.scrape_listing_page, url): url for url in urls}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            futures = {executor.submit(fasel_api.scrape_listing_page, url): url for url in urls}
             for f in concurrent.futures.as_completed(futures):
                 try:
                     page_results = f.result()
@@ -600,12 +600,12 @@ def get_movies_data_fresh():
         return {'results': [], 'category': 'الأفلام'}
 
 def get_series_data_fresh():
-    """Fetch pages 1-4 in parallel and deduplicate for series listing."""
+    """Fetch pages 1-3 in parallel for series listing."""
     try:
-        urls = [f"https://cinemana.cc/series/page/{p}/" for p in [1, 2, 3, 4]]
+        urls = [f"{fasel_api.base_url}/series/page/{p}/" for p in [1, 2, 3]]
         results = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-            futures = {executor.submit(cinemana_api.scrape_listing_page, url): url for url in urls}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            futures = {executor.submit(fasel_api.scrape_listing_page, url): url for url in urls}
             for f in concurrent.futures.as_completed(futures):
                 try:
                     page_results = f.result()
@@ -615,23 +615,11 @@ def get_series_data_fresh():
                 except Exception as e:
                     print(f"Error parallel scraping series: {e}")
                     
-        deduped_results = []
-        seen_bases = set()
-        for r in results:
-            title = r.get('title', '')
-            base = clean_for_search(title).lower().strip()
-            if base in seen_bases:
-                continue
-            seen_bases.add(base)
-            r['title'] = clean_display_title(title, 'مسلسل')
-            r['type'] = 'مسلسل'
-            deduped_results.append(r)
-            
         res = {
-            'results': deduped_results,
+            'results': results,
             'category': 'المسلسلات'
         }
-        if deduped_results:
+        if results:
             app_cache.set("series_data", res, ttl=1200)
         return res
     except Exception as e:
@@ -639,12 +627,12 @@ def get_series_data_fresh():
         return {'results': [], 'category': 'المسلسلات'}
 
 def get_anime_data_fresh():
-    """Fetch pages 1-4 in parallel and deduplicate for anime listing."""
+    """Fetch pages 1-3 in parallel for anime listing."""
     try:
-        urls = [f"https://cinemana.cc/watch=category/أنمي/page/{p}/" for p in [1, 2, 3, 4]]
+        urls = [f"{fasel_api.base_url}/anime-series/page/{p}/" for p in [1, 2, 3]]
         results = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-            futures = {executor.submit(cinemana_api.scrape_listing_page, url): url for url in urls}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            futures = {executor.submit(fasel_api.scrape_listing_page, url): url for url in urls}
             for f in concurrent.futures.as_completed(futures):
                 try:
                     page_results = f.result()
@@ -654,23 +642,11 @@ def get_anime_data_fresh():
                 except Exception as e:
                     print(f"Error parallel scraping anime: {e}")
                     
-        deduped_results = []
-        seen_bases = set()
-        for r in results:
-            title = r.get('title', '')
-            base = clean_for_search(title).lower().strip()
-            if base in seen_bases:
-                continue
-            seen_bases.add(base)
-            r['title'] = clean_display_title(title, 'مسلسل')
-            r['type'] = 'مسلسل'
-            deduped_results.append(r)
-            
         res = {
-            'results': deduped_results,
+            'results': results,
             'category': 'عالم الأنمي'
         }
-        if deduped_results:
+        if results:
             app_cache.set("anime_data", res, ttl=1200)
         return res
     except Exception as e:
