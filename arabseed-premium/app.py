@@ -692,11 +692,13 @@ def api_movies():
 
 @app.route('/api/series')
 def api_series():
-    """Scrapes pages 1-4 in parallel and deduplicates series episodes."""
+    """Scrapes pages in parallel for series listing."""
     cached_val = app_cache.get("series_data")
     if cached_val:
         return jsonify(cached_val)
-    r@app.route('/api/details')
+    return jsonify(get_series_data_fresh())
+
+@app.route('/api/details')
 def api_details():
     """Fetches story description, seasons, and episodes from FaselHD's details page."""
     url = request.args.get('url', '').strip()
@@ -713,41 +715,6 @@ def api_details():
         
         # Cache details for 1 hour
         app_cache.set(cache_key, details, ttl=3600)
-        return jsonify(details)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500pend(r)
-                            
-                    if matched_items:
-                        # Combine search results and original scraped episodes
-                        all_episodes_data = []
-                        seen_urls = set()
-                        
-                        for item in matched_items:
-                            if item['url'] not in seen_urls:
-                                seen_urls.add(item['url'])
-                                all_episodes_data.append((item['title'], item['url']))
-                                
-                        for s in details.get('seasons', []):
-                            for ep in s.get('episodes', []):
-                                if ep['url'] not in seen_urls:
-                                    seen_urls.add(ep['url'])
-                                    all_episodes_data.append((f"{details['title']} - {s['title']} - {ep['title']}", ep['url']))
-                        
-                        details['seasons'] = build_filtered_seasons(all_episodes_data, url)
-                        merged_from_search = True
-            except Exception as agg_err:
-                print(f"⚠️ Search-based series aggregation failed: {agg_err}")
-        
-        if details.get('is_series') and details.get('seasons') and not merged_from_search:
-            merged_data = []
-            base_title = details.get('title') or raw_title
-            for s in details.get('seasons', []):
-                for ep in s.get('episodes', []):
-                    merged_data.append((f"{base_title} - {s.get('title', '')} - {ep.get('title', '')}", ep.get('url', '')))
-            if merged_data:
-                details['seasons'] = build_filtered_seasons(merged_data, url)
-                
-        app_cache.set(cache_key, details, ttl=3600) # Cache details for 1 hour
         return jsonify(details)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
