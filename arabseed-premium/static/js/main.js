@@ -966,21 +966,59 @@ function highlightActiveEpisode(activeUrl) {
     });
 }
 
+function normalizeArabicText(text) {
+    if (!text) return "";
+    return text
+        .replace(/[أإآ]/g, 'ا')
+        .replace(/ة/g, 'ه')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function getActiveSeasonTitle() {
+    const activeSeasonBtn = elements.modalSeasonsGrid.querySelector('.season-btn.active');
+    if (!activeSeasonBtn) return "";
+    
+    const sNum = activeSeasonBtn.getAttribute('data-season-num');
+    const activeVersionPill = elements.modalVersionsGrid.querySelector('.version-pill.active');
+    const ver = activeVersionPill ? activeVersionPill.getAttribute('data-version') : "";
+    return ver && ver !== "مترجم" ? `موسم ${sNum} (${ver})` : `موسم ${sNum}`;
+}
+
 function handleEpisodeFilter() {
     const filter = elements.episodeFilterInput.value.toLowerCase().trim();
-    const filtered = state.currentEpisodes.filter(ep => ep.title.toLowerCase().includes(filter));
+    if (!filter) {
+        renderEpisodes(state.currentEpisodes, getActiveSeasonTitle());
+        return;
+    }
+    
+    // Check if it is a pure numeric or numeric prefix search (e.g. "5", "ep 5", "الحلقة 5")
+    let targetEpNum = null;
+    const numMatch = filter.match(/^(?:#|ep|e|الحلقة|الحلقه|حلقة|حلقه)?\s*(\d+)$/i);
+    if (numMatch) {
+        targetEpNum = parseInt(numMatch[1]);
+    }
+    
+    const normalizedFilter = normalizeArabicText(filter);
+    
+    const filtered = state.currentEpisodes.filter(ep => {
+        const epTitle = ep.title;
+        const titleMatch = epTitle.match(/\d+/);
+        const epNum = titleMatch ? parseInt(titleMatch[0]) : null;
+        
+        // 1. Exact numeric matching (typing 5 matches only episode 5, not 15 or 25)
+        if (targetEpNum !== null && epNum !== null) {
+            return epNum === targetEpNum;
+        }
+        
+        // 2. Fallback to smart normalized Arabic text matching
+        const normalizedTitle = normalizeArabicText(epTitle.toLowerCase());
+        return normalizedTitle.includes(normalizedFilter);
+    });
     
     elements.modalEpisodesGrid.innerHTML = '';
     
-    // Find active season title and version
-    const activeSeasonBtn = elements.modalSeasonsGrid.querySelector('.season-btn.active');
-    let seasonTitle = "";
-    if (activeSeasonBtn) {
-        const sNum = activeSeasonBtn.getAttribute('data-season-num');
-        const activeVersionPill = elements.modalVersionsGrid.querySelector('.version-pill.active');
-        const ver = activeVersionPill ? activeVersionPill.getAttribute('data-version') : "";
-        seasonTitle = ver && ver !== "مترجم" ? `موسم ${sNum} (${ver})` : `موسم ${sNum}`;
-    }
+    const seasonTitle = getActiveSeasonTitle();
     
     filtered.forEach((ep) => {
         const btn = document.createElement('button');
