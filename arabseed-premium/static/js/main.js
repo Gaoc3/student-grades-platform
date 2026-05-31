@@ -1151,7 +1151,8 @@ function handleEpisodeFilter() {
                 state.selectedItem.title, 
                 true, 
                 seasonTitle, 
-                ep.title
+                ep.title,
+                true
             );
         };
         
