@@ -831,6 +831,8 @@ def api_details():
         if raw_title:
             r_type = 'مسلسل' if details.get('is_series') else 'فيلم'
             details['title'] = clean_display_title(raw_title, r_type)
+        
+        merged_from_search = False
             
         # Smart Search-Based Series Aggregation
         if details.get('is_series') and raw_title:
@@ -883,71 +885,20 @@ def api_details():
                                 if ep['url'] not in seen_urls:
                                     seen_urls.add(ep['url'])
                                     all_episodes_data.append((f"{details['title']} - {s['title']} - {ep['title']}", ep['url']))
-                                    
-                        # Group by Season Number and Version
-                        seasons_map = {}
-                        for ep_title, ep_url in all_episodes_data:
-                            s_num, e_num, ver = parse_episode_title(ep_title)
-                            
-                            ver_suffix = f" ({ver})" if ver else ""
-                            season_display_title = f"موسم {s_num}{ver_suffix}"
-                            
-                            season_key = (s_num, ver)
-                            if season_key not in seasons_map:
-                                seasons_map[season_key] = {
-                                    "title": season_display_title,
-                                    "season_num": s_num,
-                                    "version": ver,
-                                    "episodes": []
-                                }
-                                
-                            display_ep_title = f"الحلقة {e_num}"
-                            active = ep_url.rstrip('/') == url.rstrip('/')
-                            
-                            seasons_map[season_key]["episodes"].append({
-                                "title": display_ep_title,
-                                "url": ep_url,
-                                "active": active,
-                                "ep_num": e_num
-                            })
-                            
-                        # Sort episodes within seasons, and sort seasons
-                        sorted_seasons = []
-                        sorted_keys = sorted(seasons_map.keys(), key=lambda x: (x[0], x[1]))
                         
-                        for key in sorted_keys:
-                            s_data = seasons_map[key]
-                            # Deduplicate episodes by ep_num (keep active one or first one)
-                            unique_eps = {}
-                            for ep in s_data["episodes"]:
-                                num = ep["ep_num"]
-                                if num not in unique_eps or ep["active"]:
-                                    unique_eps[num] = ep
-                                    
-                            sorted_eps = sorted(unique_eps.values(), key=lambda x: x["ep_num"])
-                            
-                            cleaned_eps = []
-                            for ep in sorted_eps:
-                                cleaned_eps.append({
-                                    "title": ep["title"],
-                                    "url": ep["url"],
-                                    "active": ep["active"]
-                                })
-                                
-                            sorted_seasons.append({
-                                "title": s_data["title"],
-                                "active": any(ep["active"] for ep in cleaned_eps),
-                                "episodes": cleaned_eps
-                            })
-                            
-                        # Mark active season
-                        if sorted_seasons:
-                            has_active = any(s["active"] for s in sorted_seasons)
-                            if not has_active:
-                                sorted_seasons[0]["active"] = True
-                            details['seasons'] = sorted_seasons
+                        details['seasons'] = build_merged_seasons(all_episodes_data, url)
+                        merged_from_search = True
             except Exception as agg_err:
                 print(f"⚠️ Search-based series aggregation failed: {agg_err}")
+        
+        if details.get('is_series') and details.get('seasons') and not merged_from_search:
+            merged_data = []
+            base_title = details.get('title') or raw_title
+            for s in details.get('seasons', []):
+                for ep in s.get('episodes', []):
+                    merged_data.append((f"{base_title} - {s.get('title', '')} - {ep.get('title', '')}", ep.get('url', '')))
+            if merged_data:
+                details['seasons'] = build_merged_seasons(merged_data, url)
                 
         app_cache.set(cache_key, details, ttl=3600) # Cache details for 1 hour
         return jsonify(details)
