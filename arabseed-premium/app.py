@@ -696,11 +696,19 @@ def parse_episode_title(title):
             
     # Extract version/tags
     tags = []
-    if "مدبلج" in title or "مدبلجة" in title:
+    if "مدبلج" in title or "مدبلجة" in title or "دبلج" in title:
         tags.append("مدبلج")
-    if "الأبيض والاسود" in title or "الأبيض والأسود" in title or "الابيض والاسود" in title:
+        
+    title_lower = title.lower()
+    noir_keywords = [
+        "الأبيض والأسود", "الابيض والاسود", "الأبيض والاسود", "الابيض والأسود",
+        "ابيض واسود", "أبيض وأسود", "أبيض و أسود", "ابيض و اسود",
+        "noir", "black & white", "black and white"
+    ]
+    if any(k in title_lower for k in noir_keywords):
         tags.append("نسخة الأبيض والأسود")
-    if "خاصة" in title or "خاصه" in title or "سبيشال" in title:
+        
+    if "خاصة" in title or "خاصه" in title or "سبيشال" in title or "special" in title_lower:
         tags.append("حلقة خاصة")
         
     version = " - ".join(tags) if tags else ""
