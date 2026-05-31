@@ -1490,6 +1490,11 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
                 cleanListeners();
             }, 10000);
             
+            const previewVideo = document.getElementById('plyr-preview-video');
+            if (previewVideo) {
+                previewVideo.src = server.url;
+            }
+            
             video.src = server.url;
             video.load(); // CRITICAL: Force native pipeline load
         }
@@ -1532,6 +1537,11 @@ function loadPlayerSource(server, startTime = 0, autoplay = true) {
             if (autoplay) state.activePlayer.play().catch(()=>{});
             cleanListeners();
         }, 10000);
+        
+        const previewVideo = document.getElementById('plyr-preview-video');
+        if (previewVideo) {
+            previewVideo.src = server.url;
+        }
         
         video.src = server.url;
         video.load(); // CRITICAL: Force native pipeline load to refresh play status
