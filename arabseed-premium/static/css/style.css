@@ -957,7 +957,7 @@ body {
 }
 
 .modal-info-col {
-    width: 42%;
+    width: 100% !important;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -1005,6 +1005,7 @@ body {
 }
 
 .modal-info-col {
+    width: 100% !important;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -1017,7 +1018,7 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     line-height: 1.3;
-    padding-left: 50px; /* Clear close button on left */
+    padding-left: 0;
 }
 .modal-divider {
     height: 1px;
