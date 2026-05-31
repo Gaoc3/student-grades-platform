@@ -2,9 +2,8 @@
 """
 AleX CINEMA - Premium Ad-Free Web Portal Backend
 ------------------------------------------------
-A Flask server that integrates the Shabakaty Cinemana scraping engine and resolves
-high-quality, ad-free video streams transparently via ArabSeed search matching.
-Acts as a transparent Range-compliant video stream proxy to bypass 403 blocks and popups.
+A Flask server that integrates the Shabakaty Cinemana scraping engine.
+Acts as a transparent Range-compliant HLS/MP4 video stream proxy to bypass 403 blocks and popups.
 """
 
 import os
@@ -119,7 +118,7 @@ def parse_episode_num(title: str) -> int:
     return 1 # Default to Episode 1
 
 def clean_for_search(title: str) -> str:
-    """Cleans up Cinemana title to base name for ArabSeed searches and dynamic grouping."""
+    """Cleans up Cinemana title to base name for robust search matching and dynamic grouping."""
     t = title
     
     # 1. Lowercase to normalize English titles
@@ -832,7 +831,7 @@ def api_watch():
     """
     Direct Cinemana stream playback. Resolves Cinemana watch URL
     directly to HLS streams and returns them.
-    Supports hybrid ArabSeed watch resolution for blazing-fast buffer-free streaming.
+    Supports high-speed transparent stream proxying for buffer-free playback.
     """
     url = request.args.get('url', '').strip()
     if not url:
