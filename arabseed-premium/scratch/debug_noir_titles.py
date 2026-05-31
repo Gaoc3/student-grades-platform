@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 import sys
-import re
+import os
 sys.stdout.reconfigure(encoding='utf-8')
+
+# Configure python path to find local modules
+sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.abspath('.'))
 
 from cinemana_scraper import CinemanaAPI
 from app import clean_for_search, normalize_arabic, parse_episode_num, parse_season_num, parse_episode_title
 
 api = CinemanaAPI()
-query = "سبايدرمان نوار"
+query = "سبايدر نوار"
 print(f"Searching for: {query}")
 results = api.search(query)
 print(f"Found {len(results)} results:")
