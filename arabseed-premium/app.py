@@ -421,10 +421,11 @@ def resolve_arabseed_stream(title: str, is_series: bool, season_str: str, episod
                     mp4_url = extract_direct_mp4(direct_link)
                     if mp4_url:
                         print(f"🚀 Hybrid Resolver: Successfully extracted direct MP4 URL -> {mp4_url}")
+                        proxied_mp4_url = f"/api/stream?url={urllib.parse.quote(mp4_url)}"
                         formatted_servers.append({
                             'type': 'direct',
                             'server': f'🚀 سيرفر عرب سيد السريع 1080p (خالٍ من التقطيع)',
-                            'url': mp4_url,
+                            'url': proxied_mp4_url,
                             'original_url': direct_link
                         })
                         continue
@@ -1184,12 +1185,25 @@ def api_stream_proxy():
             except Exception as decode_err:
                 print(f"Decoding HLS playlist failed, falling back to direct stream: {decode_err}")
                 
-        excluded_headers = ['connection', 'transfer-encoding', 'keep-alive', 'content-encoding']
+        # Force strip content-disposition to prevent browsers forcing a download dialog
+        excluded_headers = ['connection', 'transfer-encoding', 'keep-alive', 'content-encoding', 'content-disposition']
         resp_headers = []
+        has_content_type = False
         for name, value in r.headers.items():
             if name.lower() not in excluded_headers:
-                resp_headers.append((name, value))
-                
+                if name.lower() == 'content-type':
+                    has_content_type = True
+                    # Force video/mp4 for video/audio streams marked as octet-stream
+                    if 'octet-stream' in value.lower() or not value:
+                        resp_headers.append((name, 'video/mp4'))
+                    else:
+                        resp_headers.append((name, value))
+                else:
+                    resp_headers.append((name, value))
+                    
+        if not has_content_type:
+            resp_headers.append(('Content-Type', 'video/mp4'))
+            
         # Inject CORS headers for dynamic web clients
         resp_headers.append(('Access-Control-Allow-Origin', '*'))
         resp_headers.append(('Access-Control-Allow-Headers', '*'))
