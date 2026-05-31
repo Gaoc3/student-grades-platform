@@ -1720,8 +1720,11 @@ function launchPlayer(server, title) {
     const centerIndicator = document.getElementById('player-center-indicator');
     if (centerIndicator) centerIndicator.style.display = 'none';
     
-    // Display Player Overlay Panel
-    elements.playerModal.style.display = 'flex';
+    // Hide poster wrapper, show player wrapper inline
+    const posterWrapper = document.getElementById('modal-poster-wrapper');
+    if (posterWrapper) posterWrapper.style.display = 'none';
+    
+    elements.playerModal.style.display = 'block';
     
     // Clean existing Hls instance if present
     if (state.hlsInstance) {
