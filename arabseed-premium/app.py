@@ -1146,9 +1146,6 @@ def api_stream_proxy():
                 if text_content.strip().startswith('#EXTM3U'):
                     lines = text_content.split('\n')
                     rewritten_lines = []
-                    scheme = request.scheme
-                    host = request.host
-                    
                     for line in lines:
                         line_stripped = line.strip()
                         if not line_stripped:
@@ -1164,7 +1161,7 @@ def api_stream_proxy():
                                         abs_key_url = "https://cinemana.cc/" + key_uri
                                     else:
                                         abs_key_url = key_uri
-                                    proxied_key_url = f"{scheme}://{host}/api/stream?url={urllib.parse.quote(abs_key_url)}"
+                                    proxied_key_url = f"/api/stream?url={urllib.parse.quote(abs_key_url)}"
                                     line_stripped = line_stripped.replace(key_uri, proxied_key_url)
                             rewritten_lines.append(line_stripped)
                         else:
@@ -1174,7 +1171,7 @@ def api_stream_proxy():
                             else:
                                 abs_segment_url = line_stripped
                             
-                            proxied_segment_url = f"{scheme}://{host}/api/stream?url={urllib.parse.quote(abs_segment_url)}"
+                            proxied_segment_url = f"/api/stream?url={urllib.parse.quote(abs_segment_url)}"
                             rewritten_lines.append(proxied_segment_url)
                             
                     rewritten_content = '\n'.join(rewritten_lines)
