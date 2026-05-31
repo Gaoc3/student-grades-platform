@@ -327,45 +327,49 @@ def normalize_arabic(text: str) -> str:
     t = re.sub(r'[-\s/|–\.,:\?!\(\)\[\]\{\}_]+', ' ', t)
     return re.sub(r'\s+', ' ', t).strip()
 
-def get_version_rank(version: str) -> int:
-    """Lower rank means higher priority when merging multiple versions."""
-    if not version:
-        return 0
-    v = normalize_arabic(version)
-    is_dubbed = "مدبلج" in v or "دبلج" in v
-    is_bw = "الابيض" in v and "الاسود" in v
-    is_special = "خاص" in v or "سبيشال" in v or "special" in v
-    if is_special:
-        return 4
-    if is_dubbed and is_bw:
-        return 3
-    if is_bw:
-        return 2
-    if is_dubbed:
-        return 1
-    return 5
+def extract_version_flags(title: str) -> tuple:
+    t = title.lower()
+    is_dubbed = "مدبلج" in t or "مدبلجة" in t or "دبلج" in t
+    is_bw = is_black_and_white_version(title)
+    is_special = "خاصة" in t or "خاصه" in t or "سبيشال" in t or "special" in t
+    return is_dubbed, is_bw, is_special
 
-def build_merged_seasons(all_episodes_data: list, active_url: str) -> list:
-    """Merges all versions into a single clean season list with unique episodes."""
+def get_variant_rank(is_bw: bool, is_special: bool) -> int:
+    rank = 0
+    if is_bw:
+        rank += 2
+    if is_special:
+        rank += 3
+    return rank
+
+def build_filtered_seasons(all_episodes_data: list, active_url: str) -> list:
+    """Builds seasons with only subtitled/dubbed versions and unique episodes per version."""
     seasons_map = {}
     active_url_clean = active_url.rstrip('/') if active_url else ""
+    version_order = {"مترجم": 0, "مدبلج": 1}
     
     def should_replace_episode(existing, candidate):
         if candidate["active"] and not existing["active"]:
             return True
         if existing["active"] and not candidate["active"]:
             return False
-        if candidate["version_rank"] < existing["version_rank"]:
+        if candidate["variant_rank"] < existing["variant_rank"]:
             return True
         return False
     
     for ep_title, ep_url in all_episodes_data:
-        s_num, e_num, ver = parse_episode_title(ep_title)
-        season_key = s_num
-        if season_key not in seasons_map:
-            seasons_map[season_key] = {
-                "title": f"موسم {s_num}",
+        s_num = parse_season_num(ep_title)
+        e_num = parse_episode_num(ep_title)
+        is_dubbed, is_bw, is_special = extract_version_flags(ep_title)
+        version_group = "مدبلج" if is_dubbed else "مترجم"
+        
+        if s_num not in seasons_map:
+            seasons_map[s_num] = {}
+        if version_group not in seasons_map[s_num]:
+            seasons_map[s_num][version_group] = {
+                "title": f"موسم {s_num} ({version_group})",
                 "season_num": s_num,
+                "version": version_group,
                 "episodes": {}
             }
         
@@ -375,30 +379,33 @@ def build_merged_seasons(all_episodes_data: list, active_url: str) -> list:
             "url": ep_url,
             "active": active,
             "ep_num": e_num,
-            "version_rank": get_version_rank(ver)
+            "variant_rank": get_variant_rank(is_bw, is_special)
         }
         
-        existing = seasons_map[season_key]["episodes"].get(e_num)
+        existing = seasons_map[s_num][version_group]["episodes"].get(e_num)
         if existing is None or should_replace_episode(existing, episode_data):
-            seasons_map[season_key]["episodes"][e_num] = episode_data
+            seasons_map[s_num][version_group]["episodes"][e_num] = episode_data
     
     sorted_seasons = []
     for s_num in sorted(seasons_map.keys()):
-        s_data = seasons_map[s_num]
-        sorted_eps = sorted(s_data["episodes"].values(), key=lambda x: x["ep_num"])
-        cleaned_eps = []
-        for ep in sorted_eps:
-            cleaned_eps.append({
-                "title": ep["title"],
-                "url": ep["url"],
-                "active": ep["active"]
+        versions_bucket = seasons_map[s_num]
+        sorted_versions = sorted(versions_bucket.keys(), key=lambda v: version_order.get(v, 99))
+        for version_name in sorted_versions:
+            s_data = versions_bucket[version_name]
+            sorted_eps = sorted(s_data["episodes"].values(), key=lambda x: x["ep_num"])
+            cleaned_eps = []
+            for ep in sorted_eps:
+                cleaned_eps.append({
+                    "title": ep["title"],
+                    "url": ep["url"],
+                    "active": ep["active"]
+                })
+            
+            sorted_seasons.append({
+                "title": s_data["title"],
+                "active": any(ep["active"] for ep in cleaned_eps),
+                "episodes": cleaned_eps
             })
-        
-        sorted_seasons.append({
-            "title": s_data["title"],
-            "active": any(ep["active"] for ep in cleaned_eps),
-            "episodes": cleaned_eps
-        })
     
     if sorted_seasons and not any(s["active"] for s in sorted_seasons):
         sorted_seasons[0]["active"] = True
@@ -797,14 +804,12 @@ def parse_episode_title(title):
             
     # Extract version/tags
     tags = []
-    if "مدبلج" in title or "مدبلجة" in title or "دبلج" in title:
+    is_dubbed, is_bw, is_special = extract_version_flags(title)
+    if is_dubbed:
         tags.append("مدبلج")
-        
-    title_lower = title.lower()
-    if is_black_and_white_version(title):
+    if is_bw:
         tags.append("نسخة الأبيض والأسود")
-        
-    if "خاصة" in title or "خاصه" in title or "سبيشال" in title or "special" in title_lower:
+    if is_special:
         tags.append("حلقة خاصة")
         
     version = " - ".join(tags) if tags else ""
@@ -886,7 +891,7 @@ def api_details():
                                     seen_urls.add(ep['url'])
                                     all_episodes_data.append((f"{details['title']} - {s['title']} - {ep['title']}", ep['url']))
                         
-                        details['seasons'] = build_merged_seasons(all_episodes_data, url)
+                        details['seasons'] = build_filtered_seasons(all_episodes_data, url)
                         merged_from_search = True
             except Exception as agg_err:
                 print(f"⚠️ Search-based series aggregation failed: {agg_err}")
@@ -898,7 +903,7 @@ def api_details():
                 for ep in s.get('episodes', []):
                     merged_data.append((f"{base_title} - {s.get('title', '')} - {ep.get('title', '')}", ep.get('url', '')))
             if merged_data:
-                details['seasons'] = build_merged_seasons(merged_data, url)
+                details['seasons'] = build_filtered_seasons(merged_data, url)
                 
         app_cache.set(cache_key, details, ttl=3600) # Cache details for 1 hour
         return jsonify(details)
