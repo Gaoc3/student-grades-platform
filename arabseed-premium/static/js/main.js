@@ -1160,7 +1160,7 @@ function handleEpisodeFilter() {
     });
 }
 
-async function fetchStreamingServers(url, displayTitle, title = "", isSeries = false, season = "", episode = "") {
+async function fetchStreamingServers(url, displayTitle, title = "", isSeries = false, season = "", episode = "", autoPlay = false) {
     elements.modalServersList.innerHTML = '';
     elements.serversLoader.style.display = 'block';
     elements.modalQuickPlayBtn.style.display = 'none';
@@ -1191,6 +1191,12 @@ async function fetchStreamingServers(url, displayTitle, title = "", isSeries = f
                 elements.modalQuickPlayBtn.onclick = () => {
                     launchPlayer(state.bestServer, displayTitle);
                 };
+                
+                // Widescreen auto-play update
+                const isPlayerActive = elements.playerModal && elements.playerModal.style.display !== 'none';
+                if (autoPlay || isPlayerActive) {
+                    launchPlayer(state.bestServer, displayTitle);
+                }
             } else {
                 elements.modalQuickPlayBtn.style.display = 'flex';
                 elements.modalQuickPlayBtn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> العرض غير متوفر حالياً`;
